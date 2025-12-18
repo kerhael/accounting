@@ -9,7 +9,14 @@
 ## Launch the service
 ```bash
 go run ./cmd/api
+```
 
 ## Launch tests
 ```bash
 go test ./...
+```
+
+## Access PostgreSQL : 
+```bash
+docker compose exec db psql -U accounting accounting
+``` 
