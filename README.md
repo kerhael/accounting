@@ -6,12 +6,18 @@
 - `internal/handler` → logic
 - `pkg/` → common middlewares
 
-## Launch the service
+## Use the service
+### Installation
 ```bash
-go run ./cmd/api
+docker compose build
 ```
 
-## Launch tests
+### Launch
+```bash
+docker compose up
+```
+
+## Test the service
 ```bash
 go test ./...
 ```
