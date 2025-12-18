@@ -16,7 +16,13 @@ go run ./cmd/api
 go test ./...
 ```
 
-## Access PostgreSQL : 
+## Database
+### Access PostgreSQL
 ```bash
 docker compose exec db psql -U accounting accounting
 ``` 
+
+### Cancel migration
+```bash
+docker compose run --rm migrate down 1
+```

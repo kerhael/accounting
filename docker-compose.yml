@@ -15,6 +15,22 @@ services:
       timeout: 3s
       retries: 5
 
+  migrate:
+    image: migrate/migrate
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./migrations:/migrations
+    environment:
+      PGPASSWORD: accounting
+    command: [
+      "-path", "/migrations",
+      "-database", "postgres://accounting:accounting@db:5432/accounting?sslmode=disable",
+      "up"
+    ]
+    restart: "no"
+
   api:
     build:
       context: .
@@ -29,8 +45,10 @@ services:
       DB_SSLMODE: disable
       LOG_LEVEL: info
     depends_on:
-      db:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    env_file:
+      - .env
     ports:
       - "8080:8080"
 
