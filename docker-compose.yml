@@ -2,15 +2,15 @@ services:
   db:
     image: postgres:18-alpine
     environment:
-      POSTGRES_DB: accounting
-      POSTGRES_USER: accounting
-      POSTGRES_PASSWORD: accounting
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - pgdata:/var/lib/postgresql
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U accounting -d accounting"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -26,29 +26,24 @@ services:
       PGPASSWORD: accounting
     command: [
       "-path", "/migrations",
-      "-database", "postgres://accounting:accounting@db:5432/accounting?sslmode=disable",
+      "-database", "postgres://${DB_USER}:${DB_PASSWORD}@db:${DB_PORT}/${DB_NAME}?sslmode=${DB_SSLMODE}",
       "up"
     ]
     restart: "no"
 
   api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: api-app:latest
+    build: .
     environment:
-      DB_HOST: db
-      DB_PORT: 5432
-      DB_USER: accounting
-      DB_PASSWORD: accounting
-      DB_NAME: accounting
-      DB_SSLMODE: disable
-      LOG_LEVEL: info
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_SSLMODE: ${DB_SSLMODE}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
     depends_on:
       migrate:
         condition: service_completed_successfully
-    env_file:
-      - .env
     ports:
       - "8080:8080"
 

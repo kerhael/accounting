@@ -2,10 +2,7 @@ module github.com/kerhael/accounting
 
 go 1.25.1
 
-require (
-	github.com/jackc/pgx/v5 v5.7.6
-	github.com/joho/godotenv v1.5.1
-)
+require github.com/jackc/pgx/v5 v5.7.6
 
 require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect

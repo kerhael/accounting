@@ -2,11 +2,8 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"strings"
-
-	"github.com/joho/godotenv"
 )
 
 type DatabaseConfig struct {
@@ -23,11 +20,6 @@ type Config struct {
 }
 
 func Load() (*Config, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Println("missing .env file")
-	}
-
 	var cfgErr []string
 	if os.Getenv("DB_HOST") == "" {
 		cfgErr = append(cfgErr, "DB_HOST")
