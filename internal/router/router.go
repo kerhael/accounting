@@ -8,4 +8,5 @@ import (
 
 func RegisterRoutes(mux *http.ServeMux, h *handler.Handlers) {
 	mux.Handle("GET /health", h.Health)
+	mux.Handle("POST /categories", h.Category)
 }

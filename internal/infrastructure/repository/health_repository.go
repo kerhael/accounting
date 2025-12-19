@@ -14,7 +14,7 @@ type PostgresHealthRepository struct {
 	db *pgxpool.Pool
 }
 
-func NewPostgresHealthRepository(db *pgxpool.Pool) *PostgresHealthRepository {
+func NewHealthRepository(db *pgxpool.Pool) *PostgresHealthRepository {
 	return &PostgresHealthRepository{db: db}
 }
 

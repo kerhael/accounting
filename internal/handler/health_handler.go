@@ -4,15 +4,15 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/kerhael/accounting/internal/repository"
+	"github.com/kerhael/accounting/internal/service"
 )
 
 type HealthHandler struct {
-	repo repository.HealthRepository
+	service *service.HealthService
 }
 
-func NewHealthHandler(repo repository.HealthRepository) *HealthHandler {
-	return &HealthHandler{repo: repo}
+func NewHealthHandler(service *service.HealthService) *HealthHandler {
+	return &HealthHandler{service: service}
 }
 
 func (h *HealthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -22,7 +22,7 @@ func (h *HealthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		"server": "ok",
 	}
 
-	if err := h.repo.Check(r.Context()); err != nil {
+	if err := h.service.Check(r.Context()); err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		_ = json.NewEncoder(w).Encode(map[string]string{
 			"db": "ko",

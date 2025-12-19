@@ -32,3 +32,14 @@ docker compose exec db psql -U accounting accounting
 ```bash
 docker compose run --rm migrate down 1
 ```
+
+## Routes
+
+* healthcheck: 
+```bash
+ curl http://localhost:8080/health   -H "Content-Type: application/json"
+ ```
+* create category: 
+```bash
+ curl -X POST http://localhost:8080/categories   -H "Content-Type: application/json"   -d '{"label":"Dood"}'
+ ```
