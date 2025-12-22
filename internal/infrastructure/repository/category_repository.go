@@ -10,6 +10,7 @@ import (
 type CategoryRepository interface {
 	Create(ctx context.Context, c *domain.Category) error
 	FindById(ctx context.Context, id int) (*domain.Category, error)
+	DeleteById(ctx context.Context, id int) error
 }
 
 type PostgresCategoryRepository struct {
@@ -43,4 +44,14 @@ func (r *PostgresCategoryRepository) FindById(ctx context.Context, id int) (*dom
 	}
 
 	return &c, nil
+}
+
+func (r *PostgresCategoryRepository) DeleteById(ctx context.Context, id int) error {
+	query := `
+		DELETE FROM categories
+		WHERE id = $1
+	`
+
+	_, err := r.db.Exec(ctx, query, id)
+	return err
 }

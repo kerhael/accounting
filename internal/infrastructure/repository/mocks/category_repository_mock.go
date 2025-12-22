@@ -26,3 +26,8 @@ func (m *CategoryRepository) FindById(ctx context.Context, id int) (*domain.Cate
 
 	return category, args.Error(1)
 }
+
+func (m *CategoryRepository) DeleteById(ctx context.Context, id int) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}

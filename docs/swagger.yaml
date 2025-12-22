@@ -57,6 +57,32 @@ paths:
       tags:
       - categories
   /api/v1/categories/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a category by id
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Delete a category
+      tags:
+      - categories
     get:
       consumes:
       - application/json

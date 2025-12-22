@@ -39,13 +39,17 @@ Swagger documentation is available at `http://localhost:8080/swagger/index.html`
 
 * healthcheck: 
 ```bash
- curl http://localhost:8080/api/v1/health   -H "Content-Type: application/json"
+ curl http://localhost:8080/api/v1/health -H "Content-Type: application/json"
  ```
 * create category: 
 ```bash
- curl -X POST http://localhost:8080/api/v1/categories   -H "Content-Type: application/json"   -d '{"label":"Food"}'
+ curl -X POST http://localhost:8080/api/v1/categories -H "Content-Type: application/json" -d '{"label":"Food"}'
  ```
 * retrieve a category by ID: 
 ```bash
- curl http://localhost:8080/api/v1/categories/1   -H "Content-Type: application/json"
+ curl http://localhost:8080/api/v1/categories/1 -H "Content-Type: application/json"
+ ```
+* remove a category by ID: 
+```bash
+ curl -X DELETE http://localhost:8080/api/v1/categories/1 -H "Content-Type: application/json"
  ```

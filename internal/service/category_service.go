@@ -13,6 +13,7 @@ import (
 type CategoryServiceInterface interface {
 	Create(ctx context.Context, label string) (*domain.Category, error)
 	GetById(ctx context.Context, id int) (*domain.Category, error)
+	DeleteById(ctx context.Context, id int) error
 }
 
 type CategoryService struct {
@@ -60,4 +61,14 @@ func (s *CategoryService) GetById(ctx context.Context, id int) (*domain.Category
 	}
 
 	return category, nil
+}
+
+func (s *CategoryService) DeleteById(ctx context.Context, id int) error {
+	if id <= 0 {
+		return &domain.InvalidEntityError{
+			UnderlyingCause: errors.New("invalid id"),
+		}
+	}
+
+	return s.repo.DeleteById(ctx, id)
 }

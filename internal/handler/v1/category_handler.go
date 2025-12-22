@@ -92,6 +92,39 @@ func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(category)
+}
+
+// Delete a category
+// @Summary      Delete a category
+// @Description Delete a category by id
+// @Tags         categories
+// @Accept       json
+// @Produce      json
+// @Param 		id path int true "Category ID"
+// @Success      204       "No Content"
+// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
+// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/categories/{id} [delete]
+func (h *CategoryHandler) DeleteCategoryById(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "ivalid id", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteById(r.Context(), id)
+	if err != nil {
+		if _, ok := err.(*domain.InvalidEntityError); ok {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

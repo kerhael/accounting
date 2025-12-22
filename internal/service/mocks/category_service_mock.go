@@ -26,3 +26,8 @@ func (m *CategoryService) GetById(ctx context.Context, id int) (*domain.Category
 	}
 	return nil, args.Error(1)
 }
+
+func (m *CategoryService) DeleteById(ctx context.Context, id int) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
