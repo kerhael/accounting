@@ -2,6 +2,10 @@ package domain
 
 import "fmt"
 
+type ErrorResponse struct {
+	Message string `json:"message"`
+}
+
 type InvalidEntityError struct {
 	UnderlyingCause error
 }

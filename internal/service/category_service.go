@@ -25,7 +25,7 @@ func (s *CategoryService) Create(ctx context.Context, label string) (*domain.Cat
 	label = strings.TrimSpace(label)
 	if label == "" {
 		return nil, &domain.InvalidEntityError{
-			UnderlyingCause: errors.New("label cannot be empty"),
+			UnderlyingCause: errors.New("label is required"),
 		}
 	}
 

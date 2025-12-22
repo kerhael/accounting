@@ -16,10 +16,17 @@ func NewCategoryHandler(service service.CategoryServiceInterface) *CategoryHandl
 	return &CategoryHandler{service: service}
 }
 
-type CreateCategoryRequest struct {
-	Label string `json:"label"`
-}
-
+// Create a category
+// @Summary      Create a category
+// @Description Create a new category
+// @Tags         categories
+// @Accept       json
+// @Produce      json
+// @Param        category  body      CreateCategoryRequest  true  "Category payload"
+// @Success      201       {object}   CreateCategoryResponse
+// @Failure      400       {object}   domain.ErrorResponse  "Bad request"
+// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/categories [post]
 func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 	var req CreateCategoryRequest
 

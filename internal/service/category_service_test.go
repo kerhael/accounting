@@ -45,7 +45,7 @@ func TestCreateCategory_InvalidLabel(t *testing.T) {
 
 	var invalidErr *domain.InvalidEntityError
 	assert.True(t, errors.As(err, &invalidErr))
-	assert.Equal(t, "label cannot be empty", invalidErr.UnderlyingCause.Error())
+	assert.Equal(t, "label is required", invalidErr.UnderlyingCause.Error())
 }
 
 func TestCreateCategory_RepoError(t *testing.T) {

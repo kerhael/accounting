@@ -35,11 +35,13 @@ docker compose run --rm migrate down 1
 
 ## Routes
 
+Swagger documentation is available at `http://localhost:8080/swagger/index.html`
+
 * healthcheck: 
 ```bash
- curl http://localhost:8080/health   -H "Content-Type: application/json"
+ curl http://localhost:8080/api/v1/health   -H "Content-Type: application/json"
  ```
 * create category: 
 ```bash
- curl -X POST http://localhost:8080/categories   -H "Content-Type: application/json"   -d '{"label":"Dood"}'
+ curl -X POST http://localhost:8080/api/v1/categories   -H "Content-Type: application/json"   -d '{"label":"Food"}'
  ```

@@ -1,0 +1,78 @@
+basePath: /api/v1/
+definitions:
+  domain.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  v1.CreateCategoryRequest:
+    properties:
+      label:
+        type: string
+    type: object
+  v1.CreateCategoryResponse:
+    properties:
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
+info:
+  contact:
+    email: kerhael.me@gmail.com
+    name: API Support
+  description: API de suivi de comptabilité
+  termsOfService: https://example.com/terms/
+  title: Accounting API
+  version: "1.0"
+paths:
+  /api/v1/categories:
+    post:
+      consumes:
+      - application/json
+      description: Create a new category
+      parameters:
+      - description: Category payload
+        in: body
+        name: category
+        required: true
+        schema:
+          $ref: '#/definitions/v1.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.CreateCategoryResponse'
+        "400":
+          description: Bad request
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Create a category
+      tags:
+      - categories
+  /api/v1/health:
+    get:
+      description: Check server and database connectivity
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "503":
+          description: Service Unavailable
+          schema:
+            type: string
+      summary: Health check
+      tags:
+      - health
+schemes:
+- http
+swagger: "2.0"
