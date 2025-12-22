@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"context"
@@ -49,7 +49,7 @@ func TestHealthHandler(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/health", nil)
 			rec := httptest.NewRecorder()
 
-			handler.ServeHTTP(rec, req)
+			handler.Check(rec, req)
 
 			if rec.Code != tt.expectedStatus {
 				t.Errorf("got status %d, want %d", rec.Code, tt.expectedStatus)

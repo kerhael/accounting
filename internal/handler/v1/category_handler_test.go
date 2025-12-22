@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"bytes"
@@ -32,7 +32,7 @@ func TestCategoryHandler_ServeHTTP_Success(t *testing.T) {
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	handler.ServeHTTP(w, req)
+	handler.PostCategory(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -58,7 +58,7 @@ func TestCategoryHandler_ServeHTTP_InvalidLabel(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
-	handler.ServeHTTP(w, req)
+	handler.PostCategory(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -74,7 +74,7 @@ func TestCategoryHandler_ServeHTTP_InvalidJSON(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
-	handler.ServeHTTP(w, req)
+	handler.PostCategory(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -96,7 +96,7 @@ func TestCategoryHandler_ServeHTTP_ServiceError(t *testing.T) {
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
-	handler.ServeHTTP(w, req)
+	handler.PostCategory(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()

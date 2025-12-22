@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"encoding/json"
@@ -15,7 +15,7 @@ func NewHealthHandler(service *service.HealthService) *HealthHandler {
 	return &HealthHandler{service: service}
 }
 
-func (h *HealthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *HealthHandler) Check(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 
 	res := map[string]string{

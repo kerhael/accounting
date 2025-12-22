@@ -1,4 +1,4 @@
-package handler
+package v1
 
 import (
 	"encoding/json"
@@ -20,7 +20,7 @@ type CreateCategoryRequest struct {
 	Label string `json:"label"`
 }
 
-func (h *CategoryHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 	var req CreateCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
