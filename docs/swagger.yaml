@@ -5,15 +5,15 @@ definitions:
       message:
         type: string
     type: object
-  v1.CreateCategoryRequest:
-    properties:
-      label:
-        type: string
-    type: object
-  v1.CreateCategoryResponse:
+  v1.CategoryResponse:
     properties:
       id:
         type: integer
+      label:
+        type: string
+    type: object
+  v1.CreateCategoryRequest:
+    properties:
       label:
         type: string
     type: object
@@ -44,9 +44,9 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/v1.CreateCategoryResponse'
+            $ref: '#/definitions/v1.CategoryResponse'
         "400":
-          description: Bad request
+          description: Bad request error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
         "500":
@@ -54,6 +54,39 @@ paths:
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       summary: Create a category
+      tags:
+      - categories
+  /api/v1/categories/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a category by id
+      parameters:
+      - description: Category ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.CategoryResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not found error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get a category
       tags:
       - categories
   /api/v1/health:

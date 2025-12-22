@@ -17,3 +17,15 @@ func (e *InvalidEntityError) Error() string {
 func (e *InvalidEntityError) Unwrap() error {
 	return e.UnderlyingCause
 }
+
+type EntityNotFoundError struct {
+	UnderlyingCause error
+}
+
+func (e *EntityNotFoundError) Error() string {
+	return fmt.Sprintf("entity not found: %v", e.UnderlyingCause)
+}
+
+func (e *EntityNotFoundError) Unwrap() error {
+	return e.UnderlyingCause
+}

@@ -15,3 +15,14 @@ func (m *CategoryRepository) Create(ctx context.Context, c *domain.Category) err
 	args := m.Called(ctx, c)
 	return args.Error(0)
 }
+
+func (m *CategoryRepository) FindById(ctx context.Context, id int) (*domain.Category, error) {
+	args := m.Called(ctx, id)
+
+	var category *domain.Category
+	if args.Get(0) != nil {
+		category = args.Get(0).(*domain.Category)
+	}
+
+	return category, args.Error(1)
+}

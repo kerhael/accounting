@@ -47,11 +47,61 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/v1.CreateCategoryResponse"
+                            "$ref": "#/definitions/v1.CategoryResponse"
                         }
                     },
                     "400": {
-                        "description": "Bad request",
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/categories/{id}": {
+            "get": {
+                "description": "Retrieve a category by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "categories"
+                ],
+                "summary": "Get a category",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Category ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.CategoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -101,20 +151,20 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.CreateCategoryRequest": {
-            "type": "object",
-            "properties": {
-                "label": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1.CreateCategoryResponse": {
+        "v1.CategoryResponse": {
             "type": "object",
             "properties": {
                 "id": {
                     "type": "integer"
                 },
+                "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.CreateCategoryRequest": {
+            "type": "object",
+            "properties": {
                 "label": {
                     "type": "string"
                 }

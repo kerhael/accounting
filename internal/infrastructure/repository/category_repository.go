@@ -9,6 +9,7 @@ import (
 
 type CategoryRepository interface {
 	Create(ctx context.Context, c *domain.Category) error
+	FindById(ctx context.Context, id int) (*domain.Category, error)
 }
 
 type PostgresCategoryRepository struct {
@@ -26,4 +27,20 @@ func (r *PostgresCategoryRepository) Create(ctx context.Context, c *domain.Categ
 		RETURNING id
 	`
 	return r.db.QueryRow(ctx, query, c.Label).Scan(&c.ID)
+}
+
+func (r *PostgresCategoryRepository) FindById(ctx context.Context, id int) (*domain.Category, error) {
+	var c domain.Category
+
+	query := `
+		SELECT id, label FROM categories
+		WHERE id = $1
+	`
+
+	err := r.db.QueryRow(ctx, query, id).Scan(&c.ID, &c.Label)
+	if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }

@@ -6,4 +6,4 @@ type CreateCategoryRequest struct {
 	Label string `json:"label"`
 }
 
-type CreateCategoryResponse domain.Category
+type CategoryResponse domain.Category

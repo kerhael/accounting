@@ -45,3 +45,7 @@ Swagger documentation is available at `http://localhost:8080/swagger/index.html`
 ```bash
  curl -X POST http://localhost:8080/api/v1/categories   -H "Content-Type: application/json"   -d '{"label":"Food"}'
  ```
+* retrieve a category by ID: 
+```bash
+ curl http://localhost:8080/api/v1/categories/1   -H "Content-Type: application/json"
+ ```
