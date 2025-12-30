@@ -68,6 +68,56 @@ func TestCreateCategory_RepoError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+func TestDeleteById_Success(t *testing.T) {
+	mockRepo := new(mocks.CategoryRepository)
+	service := NewCategoryService(mockRepo)
+
+	ctx := context.Background()
+	id := 1
+
+	mockRepo.On("DeleteById", ctx, id).Return(nil)
+
+	err := service.DeleteById(ctx, id)
+
+	assert.NoError(t, err)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestDeleteById_InvalidId(t *testing.T) {
+	mockRepo := new(mocks.CategoryRepository)
+	service := NewCategoryService(mockRepo)
+
+	ctx := context.Background()
+	invalidId := -1
+
+	err := service.DeleteById(ctx, invalidId)
+
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+	assert.Equal(t, "invalid id", invalidErr.UnderlyingCause.Error())
+}
+
+func TestDeleteById_RepositoryError(t *testing.T) {
+	mockRepo := new(mocks.CategoryRepository)
+	service := NewCategoryService(mockRepo)
+
+	ctx := context.Background()
+	id := 1
+	repoErr := errors.New("foreign key constraint violation")
+
+	mockRepo.On("DeleteById", ctx, id).Return(repoErr)
+
+	err := service.DeleteById(ctx, id)
+
+	assert.Error(t, err)
+	assert.Equal(t, repoErr.Error(), err.Error())
+
+	mockRepo.AssertExpectations(t)
+}
+
 func TestGetCategoryById_Success(t *testing.T) {
 	mockRepo := new(mocks.CategoryRepository)
 	service := NewCategoryService(mockRepo)
@@ -120,6 +170,50 @@ func TestGetCategoryById_NotFound(t *testing.T) {
 
 	var notFoundErr *domain.EntityNotFoundError
 	assert.True(t, errors.As(err, &notFoundErr), "expected EntityNotFoundError")
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetAllCategories_Success(t *testing.T) {
+	mockRepo := new(mocks.CategoryRepository)
+	service := NewCategoryService(mockRepo)
+
+	ctx := context.Background()
+	category1 := domain.Category{
+		ID:    1,
+		Label: "Books",
+	}
+	category2 := domain.Category{
+		ID:    2,
+		Label: "Food",
+	}
+
+	mockRepo.On("FindAll", ctx).Return([]domain.Category{category1, category2}, nil)
+
+	categories, err := service.GetAll(ctx)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, []domain.Category{category1, category2})
+
+	assert.Equal(t, categories[0].ID, category1.ID)
+	assert.Equal(t, categories[1].ID, category2.ID)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetAllCategories_RepositoryError(t *testing.T) {
+	mockRepo := new(mocks.CategoryRepository)
+	service := NewCategoryService(mockRepo)
+
+	ctx := context.Background()
+	repoErr := errors.New("database connection failed")
+	mockRepo.On("FindAll", ctx).Return(nil, repoErr)
+
+	categories, err := service.GetAll(ctx)
+
+	assert.Nil(t, categories)
+	assert.Error(t, err)
+	assert.Equal(t, repoErr.Error(), err.Error())
 
 	mockRepo.AssertExpectations(t)
 }

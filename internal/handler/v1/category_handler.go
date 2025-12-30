@@ -56,6 +56,27 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(category)
 }
 
+// Get all categories
+// @Summary      Get all categories
+// @Description Retrieve all categories
+// @Tags         categories
+// @Accept       json
+// @Produce      json
+// @Success      200       {array}   CategoriesResponse
+// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/categories/ [get]
+func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
+	categories, err := h.service.GetAll(r.Context())
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(categories)
+}
+
 // Get a category
 // @Summary      Get a category
 // @Description Retrieve a category by id

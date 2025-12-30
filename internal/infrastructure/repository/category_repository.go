@@ -9,6 +9,7 @@ import (
 
 type CategoryRepository interface {
 	Create(ctx context.Context, c *domain.Category) error
+	FindAll(ctx context.Context) ([]domain.Category, error)
 	FindById(ctx context.Context, id int) (*domain.Category, error)
 	DeleteById(ctx context.Context, id int) error
 }
@@ -28,6 +29,31 @@ func (r *PostgresCategoryRepository) Create(ctx context.Context, c *domain.Categ
 		RETURNING id
 	`
 	return r.db.QueryRow(ctx, query, c.Label).Scan(&c.ID)
+}
+
+func (r *PostgresCategoryRepository) FindAll(ctx context.Context) ([]domain.Category, error) {
+	query := `SELECT id, label FROM categories ORDER BY label`
+
+	rows, err := r.db.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var categories []domain.Category
+	for rows.Next() {
+		var c domain.Category
+		if err := rows.Scan(&c.ID, &c.Label); err != nil {
+			return nil, err
+		}
+		categories = append(categories, c)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return categories, nil
 }
 
 func (r *PostgresCategoryRepository) FindById(ctx context.Context, id int) (*domain.Category, error) {

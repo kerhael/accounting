@@ -16,6 +16,17 @@ func (m *CategoryRepository) Create(ctx context.Context, c *domain.Category) err
 	return args.Error(0)
 }
 
+func (m *CategoryRepository) FindAll(ctx context.Context) ([]domain.Category, error) {
+	args := m.Called(ctx)
+
+	var categories []domain.Category
+	if args.Get(0) != nil {
+		categories = args.Get(0).([]domain.Category)
+	}
+
+	return categories, args.Error(1)
+}
+
 func (m *CategoryRepository) FindById(ctx context.Context, id int) (*domain.Category, error) {
 	args := m.Called(ctx, id)
 

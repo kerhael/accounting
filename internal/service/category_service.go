@@ -12,6 +12,7 @@ import (
 
 type CategoryServiceInterface interface {
 	Create(ctx context.Context, label string) (*domain.Category, error)
+	GetAll(ctx context.Context) ([]domain.Category, error)
 	GetById(ctx context.Context, id int) (*domain.Category, error)
 	DeleteById(ctx context.Context, id int) error
 }
@@ -41,6 +42,15 @@ func (s *CategoryService) Create(ctx context.Context, label string) (*domain.Cat
 	}
 
 	return category, nil
+}
+
+func (s *CategoryService) GetAll(ctx context.Context) ([]domain.Category, error) {
+	categories, err := s.repo.FindAll(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return categories, nil
 }
 
 func (s *CategoryService) GetById(ctx context.Context, id int) (*domain.Category, error) {

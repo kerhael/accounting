@@ -7,3 +7,5 @@ type CreateCategoryRequest struct {
 }
 
 type CategoryResponse domain.Category
+
+type CategoriesResponse []domain.Category

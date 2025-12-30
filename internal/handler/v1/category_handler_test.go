@@ -345,3 +345,87 @@ func TestCategoryHandler_DeleteCategoryById_ServiceError(t *testing.T) {
 
 	mockService.AssertExpectations(t)
 }
+
+func TestCategoryHandler_GetAllCategories_Success(t *testing.T) {
+	mockService := new(mocks.CategoryService)
+	handler := NewCategoryHandler(mockService)
+
+	ctx := context.Background()
+	expectedCategories := []domain.Category{
+		{ID: 1, Label: "Food"},
+		{ID: 2, Label: "Travel"},
+		{ID: 3, Label: "Books"},
+	}
+	mockService.On("GetAll", ctx).Return(expectedCategories, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/categories", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllCategories(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+
+	var data []domain.Category
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 3)
+	assert.Equal(t, expectedCategories, data)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCategoryHandler_GetAllCategories_ServiceError(t *testing.T) {
+	mockService := new(mocks.CategoryService)
+	handler := NewCategoryHandler(mockService)
+
+	ctx := context.Background()
+	serviceErr := errors.New("database connection failed")
+	mockService.On("GetAll", ctx).Return(nil, serviceErr)
+
+	req := httptest.NewRequest(http.MethodGet, "/categories", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllCategories(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestCategoryHandler_GetAllCategories_EmptyList(t *testing.T) {
+	mockService := new(mocks.CategoryService)
+	handler := NewCategoryHandler(mockService)
+
+	ctx := context.Background()
+	expectedCategories := []domain.Category{}
+	mockService.On("GetAll", ctx).Return(expectedCategories, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/categories", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllCategories(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+
+	var data []domain.Category
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 0)
+	assert.Equal(t, expectedCategories, data)
+
+	mockService.AssertExpectations(t)
+}

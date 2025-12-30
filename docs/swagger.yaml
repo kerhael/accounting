@@ -1,5 +1,12 @@
 basePath: /api/v1/
 definitions:
+  domain.Category:
+    properties:
+      id:
+        type: integer
+      label:
+        type: string
+    type: object
   domain.ErrorResponse:
     properties:
       message:
@@ -54,6 +61,29 @@ paths:
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       summary: Create a category
+      tags:
+      - categories
+  /api/v1/categories/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/domain.Category'
+              type: array
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get all categories
       tags:
       - categories
   /api/v1/categories/{id}:
