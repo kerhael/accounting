@@ -28,7 +28,7 @@ func TestCategoryHandler_PostCategory_Success(t *testing.T) {
 		Label: "Food",
 	}, nil)
 
-	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -55,7 +55,7 @@ func TestCategoryHandler_PostCategory_InvalidLabel(t *testing.T) {
 	input := map[string]string{"label": ""}
 	body, _ := json.Marshal(input)
 
-	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	handler.PostCategory(w, req)
@@ -73,7 +73,7 @@ func TestCategoryHandler_PostCategory_MissingLabelField(t *testing.T) {
 	input := map[string]interface{}{}
 	body, _ := json.Marshal(input)
 
-	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	handler.PostCategory(w, req)
@@ -89,7 +89,7 @@ func TestCategoryHandler_PostCategory_InvalidJSON(t *testing.T) {
 	handler := NewCategoryHandler(mockService)
 
 	body := []byte(`{invalid json}`)
-	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
 	w := httptest.NewRecorder()
 
 	handler.PostCategory(w, req)
@@ -110,7 +110,7 @@ func TestCategoryHandler_PostCategory_ServiceError(t *testing.T) {
 	ctx := context.Background()
 	mockService.On("Create", ctx, "Travel").Return(nil, errors.New("db failure"))
 
-	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -133,7 +133,7 @@ func TestCategoryHandler_PostCategory_InvalidEntityError(t *testing.T) {
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("category already exists")}
 	mockService.On("Create", ctx, "InvalidCategory").Return(nil, invalidEntityErr)
 
-	req := httptest.NewRequest(http.MethodPost, "/categories", bytes.NewReader(body))
+	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -358,7 +358,7 @@ func TestCategoryHandler_GetAllCategories_Success(t *testing.T) {
 	}
 	mockService.On("GetAll", ctx).Return(expectedCategories, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/categories", nil)
+	req := httptest.NewRequest(http.MethodGet, "/categories/", nil)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -387,7 +387,7 @@ func TestCategoryHandler_GetAllCategories_ServiceError(t *testing.T) {
 	serviceErr := errors.New("database connection failed")
 	mockService.On("GetAll", ctx).Return(nil, serviceErr)
 
-	req := httptest.NewRequest(http.MethodGet, "/categories", nil)
+	req := httptest.NewRequest(http.MethodGet, "/categories/", nil)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -409,7 +409,7 @@ func TestCategoryHandler_GetAllCategories_EmptyList(t *testing.T) {
 	expectedCategories := []domain.Category{}
 	mockService.On("GetAll", ctx).Return(expectedCategories, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/categories", nil)
+	req := httptest.NewRequest(http.MethodGet, "/categories/", nil)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 

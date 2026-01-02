@@ -27,7 +27,7 @@ func NewCategoryHandler(service service.CategoryServiceInterface) *CategoryHandl
 // @Success      201       {object}   CategoryResponse
 // @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
 // @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
-// @Router       /api/v1/categories [post]
+// @Router       /api/v1/categories/ [post]
 func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 	var req CreateCategoryRequest
 
@@ -62,7 +62,7 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 // @Tags         categories
 // @Accept       json
 // @Produce      json
-// @Success      200       {array}   CategoriesResponse
+// @Success      200       {array}   CategoryResponse
 // @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
 // @Router       /api/v1/categories/ [get]
 func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
