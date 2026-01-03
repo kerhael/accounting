@@ -57,3 +57,7 @@ Swagger documentation is available at `http://localhost:8080/swagger/index.html`
 ```bash
  curl -X DELETE http://localhost:8080/api/v1/categories/1 -H "Content-Type: application/json"
  ```
+ * create outcome:
+```bash
+ curl -X POST http://localhost:8080/api/v1/outcomes/ -H "Content-Type: application/json" -d '{"name":"Restaurant", "amount": 1999, "categoryId": 1, "createdAt": "2026-01-01T00:00:00Z"}'
+ ```

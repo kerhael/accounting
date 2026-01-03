@@ -17,6 +17,34 @@ definitions:
       label:
         type: string
     type: object
+  v1.CreateOutcomeRequest:
+    properties:
+      amount:
+        description: 'Amount in cents (ex: 1999 for 19.99€)'
+        type: integer
+      categoryId:
+        description: ID of the associated category
+        type: integer
+      createdAt:
+        description: 'Date of the expense (ex: "2026-01-01T00:00:00Z")'
+        type: string
+      name:
+        description: Name of the expense
+        type: string
+    type: object
+  v1.OutcomeResponse:
+    properties:
+      amount:
+        type: integer
+      categoryId:
+        type: integer
+      createdAt:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
 info:
   contact:
     email: kerhael.me@gmail.com
@@ -50,21 +78,21 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new category
+      description: Create a new outcome
       parameters:
-      - description: Category payload
+      - description: Outcome payload
         in: body
-        name: category
+        name: outcome
         required: true
         schema:
-          $ref: '#/definitions/v1.CreateCategoryRequest'
+          $ref: '#/definitions/v1.CreateOutcomeRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/v1.CategoryResponse'
+            $ref: '#/definitions/v1.OutcomeResponse'
         "400":
           description: Bad request error
           schema:
@@ -73,9 +101,9 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
-      summary: Create a category
+      summary: Create an outcome
       tags:
-      - categories
+      - outcomes
   /api/v1/categories/{id}:
     delete:
       consumes:

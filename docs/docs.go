@@ -51,7 +51,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new category",
+                "description": "Create a new outcome",
                 "consumes": [
                     "application/json"
                 ],
@@ -59,17 +59,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "categories"
+                    "outcomes"
                 ],
-                "summary": "Create a category",
+                "summary": "Create an outcome",
                 "parameters": [
                     {
-                        "description": "Category payload",
-                        "name": "category",
+                        "description": "Outcome payload",
+                        "name": "outcome",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.CreateCategoryRequest"
+                            "$ref": "#/definitions/v1.CreateOutcomeRequest"
                         }
                     }
                 ],
@@ -77,7 +77,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/v1.CategoryResponse"
+                            "$ref": "#/definitions/v1.OutcomeResponse"
                         }
                     },
                     "400": {
@@ -235,6 +235,47 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "label": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.CreateOutcomeRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Amount in cents (ex: 1999 for 19.99€)",
+                    "type": "integer"
+                },
+                "categoryId": {
+                    "description": "ID of the associated category",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "Date of the expense (ex: \"2026-01-01T00:00:00Z\")",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name of the expense",
+                    "type": "string"
+                }
+            }
+        },
+        "v1.OutcomeResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "categoryId": {
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
                     "type": "string"
                 }
             }
