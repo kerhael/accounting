@@ -159,6 +159,15 @@ curl -X POST http://localhost:8080/api/v1/outcomes/ \
   }'
 ```
 
+**GET** `/api/v1/outcomes/`
+
+Retrieve all outcomes.
+
+```bash
+curl http://localhost:8080/api/v1/outcomes/
+curl http://localhost:8080/api/v1/outcomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+```
+
 ## Database Management
 
 ### Access PostgreSQL

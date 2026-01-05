@@ -94,7 +94,7 @@ func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ivalid id", http.StatusBadRequest)
+		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 
@@ -133,7 +133,7 @@ func (h *CategoryHandler) DeleteCategoryById(w http.ResponseWriter, r *http.Requ
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "ivalid id", http.StatusBadRequest)
+		http.Error(w, "invalid id", http.StatusBadRequest)
 		return
 	}
 

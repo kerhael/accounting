@@ -180,6 +180,40 @@ paths:
       summary: Health check
       tags:
       - health
+  /api/v1/outcomes/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all outcomes with optional date filtering
+      parameters:
+      - description: Start date filter (ISO 8601 format)
+        in: query
+        name: from
+        type: string
+      - description: End date filter (ISO 8601 format)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.OutcomeResponse'
+            type: array
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get all outcomes
+      tags:
+      - outcomes
 schemes:
 - http
 swagger: "2.0"

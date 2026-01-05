@@ -238,3 +238,95 @@ func TestCreateOutcome_RepoError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 	mockCategoryRepo.AssertExpectations(t)
 }
+
+func TestGetAllOutcomes_Success(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	expectedOutcomes := []domain.Outcome{
+		{
+			ID:         1,
+			Name:       "Restaurant",
+			Amount:     1999,
+			CategoryId: 1,
+			CreatedAt:  &time.Time{},
+		},
+		{
+			ID:         2,
+			Name:       "Groceries",
+			Amount:     5000,
+			CategoryId: 2,
+			CreatedAt:  &time.Time{},
+		},
+	}
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedOutcomes, nil)
+
+	outcomes, err := service.GetAll(ctx, nil, nil)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, outcomes)
+	assert.Len(t, outcomes, 2)
+	assert.Equal(t, expectedOutcomes[0].ID, outcomes[0].ID)
+	assert.Equal(t, expectedOutcomes[0].Name, outcomes[0].Name)
+	assert.Equal(t, expectedOutcomes[1].ID, outcomes[1].ID)
+	assert.Equal(t, expectedOutcomes[1].Name, outcomes[1].Name)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetAllOutcomes_InvalidDates(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	to := time.Now()
+	from := to.Add(24 * time.Hour)
+
+	outcomes, err := service.GetAll(ctx, &from, &to)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcomes)
+	assert.IsType(t, &domain.InvalidDateError{}, err)
+
+	// Repository should not be called since validation happens first
+	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestGetAllOutcomes_EmptyList(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	expectedOutcomes := []domain.Outcome{}
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedOutcomes, nil)
+
+	outcomes, err := service.GetAll(ctx, nil, nil)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, outcomes)
+	assert.Len(t, outcomes, 0)
+	assert.Empty(t, outcomes)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetAllOutcomes_RepoError(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Outcome(nil), errors.New("repo error"))
+
+	outcomes, err := service.GetAll(ctx, nil, nil)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcomes)
+	assert.Equal(t, "repo error", err.Error())
+
+	mockRepo.AssertExpectations(t)
+}

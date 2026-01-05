@@ -6,6 +6,18 @@ type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
+type InvalidDateError struct {
+	UnderlyingCause error
+}
+
+func (e *InvalidDateError) Error() string {
+	return fmt.Sprintf("invalid date: %v", e.UnderlyingCause)
+}
+
+func (e *InvalidDateError) Unwrap() error {
+	return e.UnderlyingCause
+}
+
 type InvalidEntityError struct {
 	UnderlyingCause error
 }

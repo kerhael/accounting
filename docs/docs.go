@@ -209,6 +209,58 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/outcomes/": {
+            "get": {
+                "description": "Retrieve all outcomes with optional date filtering",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Get all outcomes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date filter (ISO 8601 format)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (ISO 8601 format)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.OutcomeResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
