@@ -16,4 +16,5 @@ func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers) {
 
 	mux.HandleFunc("POST /api/v1/outcomes/", h.V1.Outcomes.PostOutcome)
 	mux.HandleFunc("GET /api/v1/outcomes/", h.V1.Outcomes.GetAllOutcomes)
+	mux.HandleFunc("GET /api/v1/outcomes/{id}", h.V1.Outcomes.GetOutcomeById)
 }

@@ -12,6 +12,7 @@ import (
 type OutcomeRepository interface {
 	Create(ctx context.Context, c *domain.Outcome) error
 	FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
+	FindById(ctx context.Context, id int) (*domain.Outcome, error)
 }
 
 type PostgresOutcomeRepository struct {
@@ -78,4 +79,20 @@ func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time
 	}
 
 	return outcomes, nil
+}
+
+func (r *PostgresOutcomeRepository) FindById(ctx context.Context, id int) (*domain.Outcome, error) {
+	var c domain.Outcome
+
+	query := `
+		SELECT id, name, amount, category_id, created_at FROM outcomes
+		WHERE id = $1
+	`
+
+	err := r.db.QueryRow(ctx, query, id).Scan(&c.ID, &c.Name, &c.Amount, &c.CategoryId, &c.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &c, nil
 }

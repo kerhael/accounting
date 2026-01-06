@@ -27,3 +27,14 @@ func (m *OutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *ti
 
 	return outcomes, args.Error(1)
 }
+
+func (m *OutcomeRepository) FindById(ctx context.Context, id int) (*domain.Outcome, error) {
+	args := m.Called(ctx, id)
+
+	var outcome *domain.Outcome
+	if args.Get(0) != nil {
+		outcome = args.Get(0).(*domain.Outcome)
+	}
+
+	return outcome, args.Error(1)
+}

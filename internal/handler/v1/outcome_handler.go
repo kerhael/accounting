@@ -134,3 +134,43 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(outcomes)
 }
+
+// Get an outcome
+// @Summary      Get an outcome
+// @Description Retrieve an outcome by id
+// @Tags         outcomes
+// @Accept       json
+// @Produce      json
+// @Param 		id path int true "Outcome ID"
+// @Success      200       {object}   OutcomeResponse
+// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
+// @Failure      404       {object}   domain.ErrorResponse  "Not found error"
+// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/outcomes/{id} [get]
+func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	outcome, err := h.service.GetById(r.Context(), id)
+	if err != nil {
+		if _, ok := err.(*domain.InvalidEntityError); ok {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if _, ok := err.(*domain.EntityNotFoundError); ok {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(outcome)
+}

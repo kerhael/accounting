@@ -506,3 +506,126 @@ func TestOutcomeHandler_GetAllOutcomes_ServiceError(t *testing.T) {
 
 	mockService.AssertExpectations(t)
 }
+
+func TestOutcomeHandler_GetOutcomeById_Success(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	expectedOutcome := &domain.Outcome{
+		ID:         1,
+		Name:       "Restaurant",
+		Amount:     1999,
+		CategoryId: 1,
+		CreatedAt:  &time.Time{},
+	}
+	mockService.On("GetById", ctx, 1).Return(expectedOutcome, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/1", nil)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data domain.Outcome
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutcome.ID, data.ID)
+	assert.Equal(t, expectedOutcome.Name, data.Name)
+	assert.Equal(t, expectedOutcome.Amount, data.Amount)
+	assert.Equal(t, expectedOutcome.CategoryId, data.CategoryId)
+	assert.Equal(t, expectedOutcome.CreatedAt, data.CreatedAt)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomeById_InvalidId(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/invalid", nil)
+	req.SetPathValue("id", "invalid")
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestOutcomeHandler_GetOutcomeById_InvalidEntityError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid outcome id")}
+	mockService.On("GetById", ctx, -1).Return(nil, invalidEntityErr)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/-1", nil)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "-1")
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomeById_EntityNotFoundError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("outcome not found")}
+	mockService.On("GetById", ctx, 999).Return(nil, entityNotFoundErr)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/999", nil)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "999")
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomeById_ServiceError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	serviceErr := errors.New("database connection failed")
+	mockService.On("GetById", ctx, 1).Return(nil, serviceErr)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/1", nil)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}

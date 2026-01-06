@@ -30,3 +30,11 @@ func (m *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.T
 
 	return outcomes, args.Error(1)
 }
+
+func (m *OutcomeService) GetById(ctx context.Context, id int) (*domain.Outcome, error) {
+	args := m.Called(ctx, id)
+	if cat, ok := args.Get(0).(*domain.Outcome); ok {
+		return cat, args.Error(1)
+	}
+	return nil, args.Error(1)
+}

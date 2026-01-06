@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/infrastructure/repository"
 )
@@ -13,6 +14,7 @@ import (
 type OutcomeServiceInterface interface {
 	Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
 	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
+	GetById(ctx context.Context, id int) (*domain.Outcome, error)
 }
 
 type OutcomeService struct {
@@ -92,4 +94,24 @@ func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.T
 	}
 
 	return outcomes, nil
+}
+
+func (s *OutcomeService) GetById(ctx context.Context, id int) (*domain.Outcome, error) {
+	if id <= 0 {
+		return nil, &domain.InvalidEntityError{
+			UnderlyingCause: errors.New("invalid id"),
+		}
+	}
+
+	outcome, err := s.repo.FindById(ctx, id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &domain.EntityNotFoundError{
+				UnderlyingCause: err,
+			}
+		}
+		return nil, err
+	}
+
+	return outcome, nil
 }

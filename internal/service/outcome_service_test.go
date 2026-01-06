@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/infrastructure/repository/mocks"
 	"github.com/stretchr/testify/assert"
@@ -346,6 +347,99 @@ func TestGetAllOutcomes_RepoError(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, outcomes)
 	assert.Equal(t, "repo error", err.Error())
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetById_Success(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	expectedOutcome := &domain.Outcome{
+		ID:         1,
+		Name:       "Restaurant",
+		Amount:     1999,
+		CategoryId: 1,
+		CreatedAt:  &time.Time{},
+	}
+	mockRepo.On("FindById", ctx, 1).Return(expectedOutcome, nil)
+
+	outcome, err := service.GetById(ctx, 1)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, outcome)
+	assert.Equal(t, expectedOutcome.ID, outcome.ID)
+	assert.Equal(t, expectedOutcome.Name, outcome.Name)
+	assert.Equal(t, expectedOutcome.Amount, outcome.Amount)
+	assert.Equal(t, expectedOutcome.CategoryId, outcome.CategoryId)
+	assert.Equal(t, expectedOutcome.CreatedAt, outcome.CreatedAt)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetById_InvalidId_Zero(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	outcome, err := service.GetById(ctx, 0)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcome)
+	assert.IsType(t, &domain.InvalidEntityError{}, err)
+
+	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything)
+}
+
+func TestGetById_InvalidId_Negative(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	outcome, err := service.GetById(ctx, -1)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcome)
+	assert.IsType(t, &domain.InvalidEntityError{}, err)
+
+	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything)
+}
+
+func TestGetById_NotFound(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	mockRepo.On("FindById", ctx, 999).Return((*domain.Outcome)(nil), pgx.ErrNoRows)
+
+	outcome, err := service.GetById(ctx, 999)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcome)
+	assert.IsType(t, &domain.EntityNotFoundError{}, err)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetById_RepoError(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	repoErr := errors.New("repo error")
+	mockRepo.On("FindById", ctx, 1).Return((*domain.Outcome)(nil), repoErr)
+
+	outcome, err := service.GetById(ctx, 1)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcome)
+	assert.Equal(t, repoErr, err)
 
 	mockRepo.AssertExpectations(t)
 }
