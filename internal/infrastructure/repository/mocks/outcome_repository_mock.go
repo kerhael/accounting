@@ -17,8 +17,8 @@ func (m *OutcomeRepository) Create(ctx context.Context, o *domain.Outcome) error
 	return args.Error(0)
 }
 
-func (m *OutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Outcome, error) {
-	args := m.Called(ctx, from, to)
+func (m *OutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error) {
+	args := m.Called(ctx, from, to, categoryId)
 
 	var outcomes []domain.Outcome
 	if args.Get(0) != nil {

@@ -261,9 +261,9 @@ func TestGetAllOutcomes_Success(t *testing.T) {
 			CreatedAt:  &time.Time{},
 		},
 	}
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedOutcomes, nil)
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(expectedOutcomes, nil)
 
-	outcomes, err := service.GetAll(ctx, nil, nil)
+	outcomes, err := service.GetAll(ctx, nil, nil, 0)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcomes)
@@ -285,11 +285,30 @@ func TestGetAllOutcomes_InvalidDates(t *testing.T) {
 	to := time.Now()
 	from := to.Add(24 * time.Hour)
 
-	outcomes, err := service.GetAll(ctx, &from, &to)
+	outcomes, err := service.GetAll(ctx, &from, &to, 0)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcomes)
 	assert.IsType(t, &domain.InvalidDateError{}, err)
+
+	// Repository should not be called since validation happens first
+	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestGetAllOutcomes_CategoryNotFound(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	categoryId := 1
+	mockCategoryRepo.On("FindById", ctx, categoryId).Return((*domain.Category)(nil), errors.New("not found"))
+
+	outcomes, err := service.GetAll(ctx, nil, nil, categoryId)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcomes)
+	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
 	// Repository should not be called since validation happens first
 	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything)
@@ -302,9 +321,9 @@ func TestGetAllOutcomes_EmptyList(t *testing.T) {
 	ctx := context.Background()
 
 	expectedOutcomes := []domain.Outcome{}
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedOutcomes, nil)
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(expectedOutcomes, nil)
 
-	outcomes, err := service.GetAll(ctx, nil, nil)
+	outcomes, err := service.GetAll(ctx, nil, nil, 0)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcomes)
@@ -320,9 +339,9 @@ func TestGetAllOutcomes_RepoError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Outcome(nil), errors.New("repo error"))
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return([]domain.Outcome(nil), errors.New("repo error"))
 
-	outcomes, err := service.GetAll(ctx, nil, nil)
+	outcomes, err := service.GetAll(ctx, nil, nil, 0)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcomes)

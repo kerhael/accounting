@@ -12,7 +12,7 @@ import (
 
 type OutcomeServiceInterface interface {
 	Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
-	GetAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Outcome, error)
+	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
 }
 
 type OutcomeService struct {
@@ -70,14 +70,23 @@ func (s *OutcomeService) Create(ctx context.Context, name string, amount int, ca
 	return outcome, nil
 }
 
-func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Outcome, error) {
+func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error) {
 	if from != nil && to != nil && from.After(*to) {
 		return nil, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
 		}
 	}
 
-	outcomes, err := s.repo.FindAll(ctx, from, to)
+	if categoryId != 0 {
+		_, err := s.categoryRepo.FindById(ctx, categoryId)
+		if err != nil {
+			return nil, &domain.InvalidEntityError{
+				UnderlyingCause: errors.New("invalid category"),
+			}
+		}
+	}
+
+	outcomes, err := s.repo.FindAll(ctx, from, to, categoryId)
 	if err != nil {
 		return nil, err
 	}

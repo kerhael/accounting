@@ -14,8 +14,9 @@ type CreateOutcomeRequest struct {
 }
 
 type GetAllOutcomeRequest struct {
-	From time.Time `json:"from"` // Start date (optional)
-	To   time.Time `json:"to"`   // End date (optional)
+	From       time.Time `json:"from"`       // Start date (optional)
+	To         time.Time `json:"to"`         // End date (optional)
+	CategoryId int       `json:"categoryId"` // ID of a category (optional)
 }
 
 type OutcomeResponse domain.Outcome

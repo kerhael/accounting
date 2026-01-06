@@ -268,7 +268,7 @@ func TestOutcomeHandler_GetAllOutcomes_Success(t *testing.T) {
 			CreatedAt:  &time.Time{},
 		},
 	}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedOutcomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(expectedOutcomes, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/", nil)
 	req = req.WithContext(ctx)
@@ -299,7 +299,7 @@ func TestOutcomeHandler_GetAllOutcomes_EmptyList(t *testing.T) {
 
 	ctx := context.Background()
 	expectedOutcomes := []domain.Outcome{}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedOutcomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(expectedOutcomes, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/", nil)
 	req = req.WithContext(ctx)
@@ -338,7 +338,7 @@ func TestOutcomeHandler_GetAllOutcomes_WithDateFilters(t *testing.T) {
 			CreatedAt:  &time.Time{},
 		},
 	}
-	mockService.On("GetAll", ctx, &from, &to).Return(expectedOutcomes, nil)
+	mockService.On("GetAll", ctx, &from, &to, 0).Return(expectedOutcomes, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
@@ -356,6 +356,52 @@ func TestOutcomeHandler_GetAllOutcomes_WithDateFilters(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Len(t, data, 1)
 	assert.Equal(t, expectedOutcomes[0].ID, data[0].ID)
+	assert.Equal(t, expectedOutcomes[0].Name, data[0].Name)
+	assert.Equal(t, expectedOutcomes[0].Amount, data[0].Amount)
+	assert.Equal(t, expectedOutcomes[0].CategoryId, data[0].CategoryId)
+	assert.Equal(t, expectedOutcomes[0].CreatedAt, data[0].CreatedAt)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetAllOutcomes_WithCategoryFilter(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	categoryId := 1
+
+	expectedOutcomes := []domain.Outcome{
+		{
+			ID:         1,
+			Name:       "Restaurant",
+			Amount:     1999,
+			CategoryId: categoryId,
+			CreatedAt:  &time.Time{},
+		},
+	}
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), categoryId).Return(expectedOutcomes, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/?categoryId=1", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllOutcomes(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data []domain.Outcome
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 1)
+	assert.Equal(t, expectedOutcomes[0].ID, data[0].ID)
+	assert.Equal(t, expectedOutcomes[0].Name, data[0].Name)
+	assert.Equal(t, expectedOutcomes[0].Amount, data[0].Amount)
+	assert.Equal(t, expectedOutcomes[0].CategoryId, data[0].CategoryId)
+	assert.Equal(t, expectedOutcomes[0].CreatedAt, data[0].CreatedAt)
 
 	mockService.AssertExpectations(t)
 }
@@ -366,7 +412,7 @@ func TestOutcomeHandler_GetAllOutcomes_BadFromAndToDates(t *testing.T) {
 
 	ctx := context.Background()
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Outcome(nil), invalidDatesErr)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return([]domain.Outcome(nil), invalidDatesErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
 	w := httptest.NewRecorder()
@@ -418,12 +464,34 @@ func TestOutcomeHandler_GetAllOutcomes_InvalidToDate(t *testing.T) {
 	assert.Contains(t, string(bodyBytes), "invalid 'to' date format")
 }
 
+func TestOutcomeHandler_GetAllOutcomes_CategoryNotFound(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category")}
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 1).Return([]domain.Outcome(nil), invalidEntityErr)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/?categoryId=1", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetAllOutcomes(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid category")
+}
+
 func TestOutcomeHandler_GetAllOutcomes_ServiceError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
 	ctx := context.Background()
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Outcome(nil), assert.AnError)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return([]domain.Outcome(nil), assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/", nil)
 	req = req.WithContext(ctx)

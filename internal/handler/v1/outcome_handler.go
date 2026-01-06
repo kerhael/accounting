@@ -3,6 +3,7 @@ package v1
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/kerhael/accounting/internal/domain"
@@ -78,10 +79,12 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 // @Param        to    query     string  false  "End date filter (ISO 8601 format)"
 // @Success      200   {array}   OutcomeResponse
 // @Failure      400   {object}  domain.ErrorResponse  "Bad request error"
+// @Failure      404   {object}  domain.ErrorResponse  "Not found error"
 // @Failure      500   {object}  domain.ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/ [get]
 func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) {
 	var from, to *time.Time
+	var categoryId int
 
 	fromStr := r.URL.Query().Get("from")
 	if fromStr != "" {
@@ -103,10 +106,24 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 		to = &parsedTo
 	}
 
-	outcomes, err := h.service.GetAll(r.Context(), from, to)
+	categoryIdStr := r.URL.Query().Get("categoryId")
+	if categoryIdStr != "" {
+		categoryIdInt, err := strconv.Atoi(categoryIdStr)
+		if err != nil {
+			http.Error(w, "invalid category", http.StatusBadRequest)
+			return
+		}
+		categoryId = categoryIdInt
+	}
+
+	outcomes, err := h.service.GetAll(r.Context(), from, to, categoryId)
 	if err != nil {
 		if _, ok := err.(*domain.InvalidDateError); ok {
 			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if _, ok := err.(*domain.InvalidEntityError); ok {
+			http.Error(w, err.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)

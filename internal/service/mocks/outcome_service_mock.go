@@ -20,8 +20,8 @@ func (m *OutcomeService) Create(ctx context.Context, name string, amount int, ca
 	return nil, args.Error(1)
 }
 
-func (m *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Outcome, error) {
-	args := m.Called(ctx, from, to)
+func (m *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error) {
+	args := m.Called(ctx, from, to, categoryId)
 
 	var outcomes []domain.Outcome
 	if args.Get(0) != nil {
