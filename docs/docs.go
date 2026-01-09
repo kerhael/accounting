@@ -212,7 +212,7 @@ const docTemplate = `{
         },
         "/api/v1/outcomes/": {
             "get": {
-                "description": "Retrieve all outcomes with optional date filtering",
+                "description": "Retrieve all outcomes with optional date filtering (defaults to current month if not provided)",
                 "consumes": [
                     "application/json"
                 ],
@@ -226,13 +226,13 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "Start date filter (ISO 8601 format)",
+                        "description": "Start date filter (ISO 8601 format, defaults to first day of current month)",
                         "name": "from",
                         "in": "query"
                     },
                     {
                         "type": "string",
-                        "description": "End date filter (ISO 8601 format)",
+                        "description": "End date filter (ISO 8601 format, defaults to now)",
                         "name": "to",
                         "in": "query"
                     }
@@ -299,6 +299,70 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/outcomes/sums-by-category": {
+            "get": {
+                "description": "Get the total amount of outcomes between dates (defaults to current month if not provided), optionally filtered by category",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Get sum of outcomes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date filter (ISO 8601 format, defaults to first day of current month)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (ISO 8601 format, defaults to now)",
+                        "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Category ID filter",
+                        "name": "categoryId",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.CategorySumResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -479,6 +543,19 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.CategorySumResponse": {
+            "type": "object",
+            "properties": {
+                "categoryId": {
+                    "description": "Category ID",
+                    "type": "integer"
+                },
+                "total": {
+                    "description": "Total amount in cents for this category",
+                    "type": "integer"
+                }
+            }
+        },
         "v1.CreateCategoryRequest": {
             "type": "object",
             "properties": {
@@ -512,18 +589,23 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "amount": {
+                    "description": "Amount in cents (ex: 1999 for 19.99€)",
                     "type": "integer"
                 },
                 "categoryId": {
+                    "description": "ID of the associated category",
                     "type": "integer"
                 },
                 "createdAt": {
+                    "description": "Date of the expense (ex: \"2026-01-01T00:00:00Z\")",
                     "type": "string"
                 },
                 "id": {
+                    "description": "ID of the expense",
                     "type": "integer"
                 },
                 "name": {
+                    "description": "Name of the expense",
                     "type": "string"
                 }
             }

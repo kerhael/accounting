@@ -990,3 +990,240 @@ func TestOutcomeHandler_DeleteOutcomeById_ServiceError(t *testing.T) {
 
 	mockService.AssertExpectations(t)
 }
+
+func TestOutcomeHandler_GetOutcomesSum_Success_NoFilters(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	categorySums := []domain.CategorySum{
+		{CategoryId: 1, Total: 3000},
+		{CategoryId: 2, Total: 1500},
+	}
+	mockService.On("GetSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(categorySums, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data SumOutcomeResponse
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 2)
+	assert.Equal(t, 1, data[0].CategoryId)
+	assert.Equal(t, 3000, data[0].Total)
+	assert.Equal(t, 2, data[1].CategoryId)
+	assert.Equal(t, 1500, data[1].Total)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSum_Success_WithFilters(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	categorySums := []domain.CategorySum{
+		{CategoryId: 1, Total: 3000},
+	}
+	mockService.On("GetSum", ctx, &from, &to, 1).Return(categorySums, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z&categoryId=1", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data SumOutcomeResponse
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 1)
+	assert.Equal(t, 1, data[0].CategoryId)
+	assert.Equal(t, 3000, data[0].Total)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSum_DefaultCurrentMonth(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	categorySums := []domain.CategorySum{
+		{CategoryId: 1, Total: 3000},
+	}
+	mockService.On("GetSum", ctx, mock.MatchedBy(func(t *time.Time) bool {
+		now := time.Now()
+		expected := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		return t.Equal(expected)
+	}), mock.MatchedBy(func(t *time.Time) bool {
+		now := time.Now()
+		diff := now.Sub(*t)
+		return diff >= 0 && diff < time.Second
+	}), 0).Return(categorySums, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data SumOutcomeResponse
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 1)
+	assert.Equal(t, 1, data[0].CategoryId)
+	assert.Equal(t, 3000, data[0].Total)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSum_InvalidFromDate(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?from=invalid-date", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid 'from' date format")
+
+	mockService.AssertNotCalled(t, "GetSum", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestOutcomeHandler_GetOutcomesSum_InvalidToDate(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?to=invalid-date", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid 'to' date format")
+
+	mockService.AssertNotCalled(t, "GetSum", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestOutcomeHandler_GetOutcomesSum_InvalidCategory(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?categoryId=invalid", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid category")
+
+	mockService.AssertNotCalled(t, "GetSum", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestOutcomeHandler_GetOutcomesSum_InvalidDateError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
+	mockService.On("GetSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(nil, invalidDatesErr)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "start date must be before end date")
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSum_InvalidEntityError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category")}
+	mockService.On("GetSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 1).Return(nil, invalidEntityErr)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?categoryId=1", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid category")
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSum_ServiceError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	mockService.On("GetSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(nil, assert.AnError)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSum(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}

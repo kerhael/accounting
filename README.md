@@ -169,6 +169,16 @@ curl http://localhost:8080/api/v1/outcomes/?from=2025-01-01T00:00:00Z&to=2026-01
 curl http://localhost:8080/api/v1/outcomes/?categoryId=1
 ```
 
+**GET** `/api/v1/outcomes/sums-by-category`
+
+Retrieve the sum of outcomes' amounts grouped by category.
+
+```bash
+curl http://localhost:8080/api/v1/outcomes/sums-by-category
+curl http://localhost:8080/api/v1/outcomes/sums-by-category?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+curl http://localhost:8080/api/v1/outcomes/sums-by-category?categoryId=1
+```
+
 **GET** `/api/v1/outcomes/{id}`
 
 Retrieve a specific outcome by ID.

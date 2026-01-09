@@ -661,3 +661,129 @@ func TestOutcomeDeleteById_RepoError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 	mockCategoryRepo.AssertNotCalled(t, "FindById")
 }
+
+func TestGetSum_Success_NoFilters(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	categorySums := []domain.CategorySum{
+		{CategoryId: 1, Total: 3000},
+		{CategoryId: 2, Total: 1500},
+	}
+	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(categorySums, nil)
+
+	result, err := service.GetSum(ctx, nil, nil, 0)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, 1, result[0].CategoryId)
+	assert.Equal(t, 3000, result[0].Total)
+	assert.Equal(t, 2, result[1].CategoryId)
+	assert.Equal(t, 1500, result[1].Total)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestGetSum_Success_WithFilters(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	category := &domain.Category{ID: 1, Label: "Food"}
+	mockCategoryRepo.On("FindById", ctx, 1).Return(category, nil)
+
+	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+
+	categorySums := []domain.CategorySum{
+		{CategoryId: 1, Total: 3000},
+	}
+	mockRepo.On("GetSumByCategory", ctx, &from, &to, 1).Return(categorySums, nil)
+
+	result, err := service.GetSum(ctx, &from, &to, 1)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+	assert.Equal(t, 1, result[0].CategoryId)
+	assert.Equal(t, 3000, result[0].Total)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertExpectations(t)
+}
+
+func TestGetSum_InvalidDates(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	to := time.Now()
+	from := to.Add(24 * time.Hour)
+
+	result, err := service.GetSum(ctx, &from, &to, 0)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &domain.InvalidDateError{}, err)
+
+	mockRepo.AssertNotCalled(t, "GetSumByCategory")
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestGetSum_InvalidCategory(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	mockCategoryRepo.On("FindById", ctx, 999).Return((*domain.Category)(nil), errors.New("not found"))
+
+	result, err := service.GetSum(ctx, nil, nil, 999)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &domain.InvalidEntityError{}, err)
+
+	mockRepo.AssertNotCalled(t, "GetSumByCategory")
+	mockCategoryRepo.AssertExpectations(t)
+}
+
+func TestGetSum_EmptyList(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	categorySums := []domain.CategorySum{}
+	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(categorySums, nil)
+
+	result, err := service.GetSum(ctx, nil, nil, 0)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 0)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestGetSum_RepoError(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return([]domain.CategorySum(nil), errors.New("repo error"))
+
+	result, err := service.GetSum(ctx, nil, nil, 0)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "repo error", err.Error())
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}

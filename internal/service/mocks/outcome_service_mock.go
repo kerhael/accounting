@@ -51,3 +51,14 @@ func (m *OutcomeService) DeleteById(ctx context.Context, id int) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+
+func (m *OutcomeService) GetSum(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error) {
+	args := m.Called(ctx, from, to, categoryId)
+
+	var sums []domain.CategorySum
+	if args.Get(0) != nil {
+		sums = args.Get(0).([]domain.CategorySum)
+	}
+
+	return sums, args.Error(1)
+}

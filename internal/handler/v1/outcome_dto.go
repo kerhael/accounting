@@ -27,3 +27,7 @@ type PatchOutcomeRequest struct {
 	Amount     *int       `json:"amount"`     // Amount in cents (optional, ex: 1999 for 19.99€)
 	CategoryId *int       `json:"categoryId"` // ID of the associated category (optional)
 }
+
+type CategorySumResponse domain.CategorySum
+
+type SumOutcomeResponse []CategorySumResponse

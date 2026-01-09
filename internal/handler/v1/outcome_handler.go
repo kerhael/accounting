@@ -72,12 +72,12 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 
 // Get all outcomes
 // @Summary      Get all outcomes
-// @Description  Retrieve all outcomes with optional date filtering
+// @Description  Retrieve all outcomes with optional date filtering (defaults to current month if not provided)
 // @Tags         outcomes
 // @Accept       json
 // @Produce      json
-// @Param        from  query     string  false  "Start date filter (ISO 8601 format)"
-// @Param        to    query     string  false  "End date filter (ISO 8601 format)"
+// @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
+// @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   OutcomeResponse
 // @Failure      400   {object}  domain.ErrorResponse  "Bad request error"
 // @Failure      404   {object}  domain.ErrorResponse  "Not found error"
@@ -115,6 +115,14 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 			return
 		}
 		categoryId = categoryIdInt
+	}
+
+	// If no dates provided, default to current month
+	if from == nil && to == nil {
+		now := time.Now()
+		from = &time.Time{}
+		*from = time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		to = &now
 	}
 
 	outcomes, err := h.service.GetAll(r.Context(), from, to, categoryId)
@@ -280,4 +288,79 @@ func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Reques
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// Get sum of outcomes
+// @Summary      Get sum of outcomes
+// @Description Get the total amount of outcomes between dates (defaults to current month if not provided), optionally filtered by category
+// @Tags         outcomes
+// @Accept       json
+// @Produce      json
+// @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
+// @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
+// @Param        categoryId query int false "Category ID filter"
+// @Success      200   {object}   SumOutcomeResponse
+// @Failure      400   {object}   domain.ErrorResponse  "Bad request error"
+// @Failure      404   {object}   domain.ErrorResponse  "Not found error"
+// @Failure      500   {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/outcomes/sums-by-category [get]
+func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) {
+	var from, to *time.Time
+	var categoryId int
+
+	fromStr := r.URL.Query().Get("from")
+	if fromStr != "" {
+		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
+		if err != nil {
+			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			return
+		}
+		from = &parsedFrom
+	}
+
+	toStr := r.URL.Query().Get("to")
+	if toStr != "" {
+		parsedTo, err := time.Parse(time.RFC3339, toStr)
+		if err != nil {
+			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			return
+		}
+		to = &parsedTo
+	}
+
+	// If no dates provided, default to current month
+	if from == nil && to == nil {
+		now := time.Now()
+		firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		from = &firstDayOfMonth
+		to = &now
+	}
+
+	categoryIdStr := r.URL.Query().Get("categoryId")
+	if categoryIdStr != "" {
+		categoryIdInt, err := strconv.Atoi(categoryIdStr)
+		if err != nil {
+			http.Error(w, "invalid category", http.StatusBadRequest)
+			return
+		}
+		categoryId = categoryIdInt
+	}
+
+	categorySums, err := h.service.GetSum(r.Context(), from, to, categoryId)
+	if err != nil {
+		if _, ok := err.(*domain.InvalidDateError); ok {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if _, ok := err.(*domain.InvalidEntityError); ok {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(categorySums)
 }

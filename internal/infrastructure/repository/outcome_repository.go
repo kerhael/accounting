@@ -15,6 +15,7 @@ type OutcomeRepository interface {
 	FindById(ctx context.Context, id int) (*domain.Outcome, error)
 	Update(ctx context.Context, o *domain.Outcome) error
 	DeleteById(ctx context.Context, id int) error
+	GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error)
 }
 
 type PostgresOutcomeRepository struct {
@@ -114,4 +115,67 @@ func (r *PostgresOutcomeRepository) DeleteById(ctx context.Context, id int) erro
 
 	_, err := r.db.Exec(ctx, query, id)
 	return err
+}
+
+func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error) {
+	query := `
+		SELECT c.id as category_id, COALESCE(SUM(o.amount), 0) as total
+		FROM categories c
+		LEFT JOIN outcomes o ON c.id = o.category_id`
+	args := []interface{}{}
+	argCount := 0
+
+	if from != nil || to != nil {
+		query += ` AND (`
+		conditionsAdded := false
+
+		if from != nil {
+			argCount++
+			query += `o.created_at >= $` + strconv.Itoa(argCount)
+			args = append(args, *from)
+			conditionsAdded = true
+		}
+
+		if to != nil {
+			if conditionsAdded {
+				query += ` AND `
+			}
+			argCount++
+			query += `o.created_at <= $` + strconv.Itoa(argCount)
+			args = append(args, *to)
+		} else if from != nil {
+			query += ` AND o.created_at <= NOW()`
+		}
+
+		query += `)`
+	}
+
+	if categoryId != 0 {
+		argCount++
+		query += ` WHERE c.id = $` + strconv.Itoa(argCount)
+		args = append(args, categoryId)
+	}
+
+	query += ` GROUP BY c.id ORDER BY c.id`
+
+	rows, err := r.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var sums []domain.CategorySum
+	for rows.Next() {
+		var s domain.CategorySum
+		if err := rows.Scan(&s.CategoryId, &s.Total); err != nil {
+			return nil, err
+		}
+		sums = append(sums, s)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return sums, nil
 }
