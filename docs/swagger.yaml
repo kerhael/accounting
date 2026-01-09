@@ -45,6 +45,21 @@ definitions:
       name:
         type: string
     type: object
+  v1.PatchOutcomeRequest:
+    properties:
+      amount:
+        description: 'Amount in cents (optional, ex: 1999 for 19.99€)'
+        type: integer
+      categoryId:
+        description: ID of the associated category (optional)
+        type: integer
+      createdAt:
+        description: 'Date of the expense (optional, ex: "2026-01-01T00:00:00Z")'
+        type: string
+      name:
+        description: Name of the expense (optional)
+        type: string
+    type: object
 info:
   contact:
     email: kerhael.me@gmail.com
@@ -249,6 +264,44 @@ paths:
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       summary: Get an outcome
+      tags:
+      - outcomes
+    patch:
+      consumes:
+      - application/json
+      description: Update an outcome
+      parameters:
+      - description: Outcome ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Outcome payload
+        in: body
+        name: outcome
+        required: true
+        schema:
+          $ref: '#/definitions/v1.PatchOutcomeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.OutcomeResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not found error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Update an outcome
       tags:
       - outcomes
 schemes:

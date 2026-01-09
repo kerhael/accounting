@@ -316,6 +316,63 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "patch": {
+                "description": "Update an outcome",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Update an outcome",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Outcome ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Outcome payload",
+                        "name": "outcome",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.PatchOutcomeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.OutcomeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
             }
         }
     },
@@ -384,6 +441,27 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.PatchOutcomeRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Amount in cents (optional, ex: 1999 for 19.99€)",
+                    "type": "integer"
+                },
+                "categoryId": {
+                    "description": "ID of the associated category (optional)",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "Date of the expense (optional, ex: \"2026-01-01T00:00:00Z\")",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name of the expense (optional)",
                     "type": "string"
                 }
             }

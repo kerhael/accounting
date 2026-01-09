@@ -13,6 +13,7 @@ type OutcomeRepository interface {
 	Create(ctx context.Context, c *domain.Outcome) error
 	FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
 	FindById(ctx context.Context, id int) (*domain.Outcome, error)
+	Update(ctx context.Context, o *domain.Outcome) error
 }
 
 type PostgresOutcomeRepository struct {
@@ -95,4 +96,11 @@ func (r *PostgresOutcomeRepository) FindById(ctx context.Context, id int) (*doma
 	}
 
 	return &c, nil
+}
+
+func (r *PostgresOutcomeRepository) Update(ctx context.Context, o *domain.Outcome) error {
+	query := `UPDATE outcomes SET name = $1, amount = $2, category_id = $3, created_at = $4 WHERE id = $5`
+
+	_, err := r.db.Exec(ctx, query, o.Name, o.Amount, o.CategoryId, o.CreatedAt, o.ID)
+	return err
 }

@@ -177,6 +177,19 @@ Retrieve a specific outcome by ID.
 curl http://localhost:8080/api/v1/outcomes/1
 ```
 
+**PATCH** `/api/v1/outcomes/{id}`
+
+Update a specific outcome (partial update).
+
+```bash
+curl -X PATCH http://localhost:8080/api/v1/outcomes/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Restaurant",
+    "amount": 2500
+  }'
+```
+
 ## Database Management
 
 ### Access PostgreSQL

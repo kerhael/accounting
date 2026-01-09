@@ -38,3 +38,8 @@ func (m *OutcomeRepository) FindById(ctx context.Context, id int) (*domain.Outco
 
 	return outcome, args.Error(1)
 }
+
+func (m *OutcomeRepository) Update(ctx context.Context, o *domain.Outcome) error {
+	args := m.Called(ctx, o)
+	return args.Error(0)
+}

@@ -443,3 +443,157 @@ func TestGetById_RepoError(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestPatchOutcome_Success_NameOnly(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	existingOutcome := &domain.Outcome{
+		ID:         1,
+		Name:       "Old Name",
+		Amount:     1000,
+		CategoryId: 1,
+		CreatedAt:  &time.Time{},
+	}
+	mockRepo.On("FindById", ctx, 1).Return(existingOutcome, nil)
+
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Outcome")).Return(nil).Run(func(args mock.Arguments) {
+		updated := args.Get(1).(*domain.Outcome)
+		assert.Equal(t, 1, updated.ID)
+		assert.Equal(t, "New Name", updated.Name)
+		assert.Equal(t, 1000, updated.Amount)
+		assert.Equal(t, 1, updated.CategoryId)
+		assert.Equal(t, existingOutcome.CreatedAt, updated.CreatedAt)
+	})
+
+	outcome, err := service.Patch(ctx, 1, "New Name", 0, 0, nil)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, outcome)
+	assert.Equal(t, 1, outcome.ID)
+	assert.Equal(t, "New Name", outcome.Name)
+	assert.Equal(t, 1000, outcome.Amount)
+	assert.Equal(t, 1, outcome.CategoryId)
+	assert.Equal(t, existingOutcome.CreatedAt, outcome.CreatedAt)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestPatchOutcome_Success_AllFields(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	existingOutcome := &domain.Outcome{
+		ID:         1,
+		Name:       "Old Name",
+		Amount:     1000,
+		CategoryId: 1,
+		CreatedAt:  &time.Time{},
+	}
+	mockRepo.On("FindById", ctx, 1).Return(existingOutcome, nil)
+
+	newCategory := &domain.Category{
+		ID:    2,
+		Label: "Transport",
+	}
+	mockCategoryRepo.On("FindById", ctx, 2).Return(newCategory, nil)
+
+	newCreatedAt := time.Now()
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Outcome")).Return(nil).Run(func(args mock.Arguments) {
+		updated := args.Get(1).(*domain.Outcome)
+		assert.Equal(t, 1, updated.ID)
+		assert.Equal(t, "New Name", updated.Name)
+		assert.Equal(t, 2000, updated.Amount)
+		assert.Equal(t, 2, updated.CategoryId)
+		assert.Equal(t, &newCreatedAt, updated.CreatedAt)
+	})
+
+	outcome, err := service.Patch(ctx, 1, "New Name", 2000, 2, &newCreatedAt)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, outcome)
+	assert.Equal(t, "New Name", outcome.Name)
+	assert.Equal(t, 2000, outcome.Amount)
+	assert.Equal(t, 2, outcome.CategoryId)
+	assert.Equal(t, &newCreatedAt, outcome.CreatedAt)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertExpectations(t)
+}
+
+func TestPatchOutcome_InvalidCategory(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	existingOutcome := &domain.Outcome{
+		ID:         1,
+		Name:       "Old Name",
+		Amount:     1000,
+		CategoryId: 1,
+		CreatedAt:  &time.Time{},
+	}
+	mockRepo.On("FindById", ctx, 1).Return(existingOutcome, nil)
+
+	mockCategoryRepo.On("FindById", ctx, 999).Return((*domain.Category)(nil), errors.New("not found"))
+
+	outcome, err := service.Patch(ctx, 1, "", 0, 999, nil)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcome)
+	assert.IsType(t, &domain.InvalidEntityError{}, err)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertExpectations(t)
+}
+
+func TestPatchOutcome_NotFound(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	mockRepo.On("FindById", ctx, 999).Return((*domain.Outcome)(nil), pgx.ErrNoRows)
+
+	outcome, err := service.Patch(ctx, 999, "New Name", 0, 0, nil)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcome)
+	assert.IsType(t, &domain.EntityNotFoundError{}, err)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestPatchOutcome_UpdateError(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	existingOutcome := &domain.Outcome{
+		ID:         1,
+		Name:       "Old Name",
+		Amount:     1000,
+		CategoryId: 1,
+		CreatedAt:  &time.Time{},
+	}
+	mockRepo.On("FindById", ctx, 1).Return(existingOutcome, nil)
+
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Outcome")).Return(errors.New("update error"))
+
+	outcome, err := service.Patch(ctx, 1, "New Name", 0, 0, nil)
+
+	assert.Error(t, err)
+	assert.Nil(t, outcome)
+	assert.Equal(t, "update error", err.Error())
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}

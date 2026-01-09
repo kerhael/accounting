@@ -629,3 +629,276 @@ func TestOutcomeHandler_GetOutcomeById_ServiceError(t *testing.T) {
 
 	mockService.AssertExpectations(t)
 }
+
+func TestOutcomeHandler_PatchOutcome_Success_NameOnly(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	name := "Restaurant"
+	input := PatchOutcomeRequest{
+		Name: &name,
+	}
+	body, _ := json.Marshal(input)
+
+	ctx := context.Background()
+	expectedOutcome := &domain.Outcome{
+		ID:         1,
+		Name:       name,
+		Amount:     1000,
+		CategoryId: 1,
+		CreatedAt:  &time.Time{},
+	}
+	mockService.On("Patch", ctx, 1, name, 0, 0, (*time.Time)(nil)).Return(expectedOutcome, nil)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data domain.Outcome
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutcome.ID, data.ID)
+	assert.Equal(t, expectedOutcome.Name, data.Name)
+	assert.Equal(t, expectedOutcome.Amount, data.Amount)
+	assert.Equal(t, expectedOutcome.CategoryId, data.CategoryId)
+	assert.Equal(t, expectedOutcome.CreatedAt, data.CreatedAt)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_PatchOutcome_Success_AllFields(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	name := "Restaurant"
+	amount := 2000
+	categoryId := 2
+	newCreatedAt := time.Now()
+	input := PatchOutcomeRequest{
+		Name:       &name,
+		Amount:     &amount,
+		CategoryId: &categoryId,
+		CreatedAt:  &newCreatedAt,
+	}
+	body, _ := json.Marshal(input)
+
+	ctx := context.Background()
+	expectedOutcome := &domain.Outcome{
+		ID:         1,
+		Name:       name,
+		Amount:     amount,
+		CategoryId: categoryId,
+		CreatedAt:  &newCreatedAt,
+	}
+	mockService.On("Patch", ctx, 1, name, amount, categoryId, mock.MatchedBy(func(t *time.Time) bool {
+		return t != nil && t.Equal(newCreatedAt)
+	})).Return(expectedOutcome, nil)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data domain.Outcome
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Equal(t, expectedOutcome.ID, data.ID)
+	assert.Equal(t, expectedOutcome.Name, data.Name)
+	assert.Equal(t, expectedOutcome.Amount, data.Amount)
+	assert.Equal(t, expectedOutcome.CategoryId, data.CategoryId)
+	assert.True(t, data.CreatedAt.Equal(newCreatedAt))
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_PatchOutcome_InvalidJSON(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader([]byte("invalid json")))
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+}
+
+func TestOutcomeHandler_PatchOutcome_InvalidId(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	name := "Restaurant"
+	input := PatchOutcomeRequest{
+		Name: &name,
+	}
+	body, _ := json.Marshal(input)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/invalid", bytes.NewReader(body))
+	req.SetPathValue("id", "invalid")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid id")
+}
+
+func TestOutcomeHandler_PatchOutcome_NegativeAmount(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	amount := -100
+	input := PatchOutcomeRequest{
+		Amount: &amount,
+	}
+	body, _ := json.Marshal(input)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "amount must be positive")
+}
+
+func TestOutcomeHandler_PatchOutcome_NegativeCategoryId(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	categoryId := -1
+	input := PatchOutcomeRequest{
+		CategoryId: &categoryId,
+	}
+	body, _ := json.Marshal(input)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid category ID")
+}
+
+func TestOutcomeHandler_PatchOutcome_InvalidEntityError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	name := "Restaurant"
+	input := PatchOutcomeRequest{
+		Name: &name,
+	}
+	body, _ := json.Marshal(input)
+
+	ctx := context.Background()
+	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category")}
+	mockService.On("Patch", ctx, 1, name, 0, 0, (*time.Time)(nil)).Return(nil, invalidEntityErr)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_PatchOutcome_EntityNotFoundError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	name := "Restaurant"
+	input := PatchOutcomeRequest{
+		Name: &name,
+	}
+	body, _ := json.Marshal(input)
+
+	ctx := context.Background()
+	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("outcome not found")}
+	mockService.On("Patch", ctx, 1, name, 0, 0, (*time.Time)(nil)).Return(nil, entityNotFoundErr)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_PatchOutcome_ServiceError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	name := "Restaurant"
+	input := PatchOutcomeRequest{
+		Name: &name,
+	}
+	body, _ := json.Marshal(input)
+
+	ctx := context.Background()
+	mockService.On("Patch", ctx, 1, name, 0, 0, (*time.Time)(nil)).Return(nil, assert.AnError)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.PatchOutcome(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}

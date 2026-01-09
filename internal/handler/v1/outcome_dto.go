@@ -20,3 +20,10 @@ type GetAllOutcomeRequest struct {
 }
 
 type OutcomeResponse domain.Outcome
+
+type PatchOutcomeRequest struct {
+	Name       *string    `json:"name"`       // Name of the expense (optional)
+	CreatedAt  *time.Time `json:"createdAt"`  // Date of the expense (optional, ex: "2026-01-01T00:00:00Z")
+	Amount     *int       `json:"amount"`     // Amount in cents (optional, ex: 1999 for 19.99€)
+	CategoryId *int       `json:"categoryId"` // ID of the associated category (optional)
+}

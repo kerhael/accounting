@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/kerhael/accounting/internal/domain"
@@ -157,6 +158,79 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 	}
 
 	outcome, err := h.service.GetById(r.Context(), id)
+	if err != nil {
+		if _, ok := err.(*domain.InvalidEntityError); ok {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if _, ok := err.(*domain.EntityNotFoundError); ok {
+			http.Error(w, err.Error(), http.StatusNotFound)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(outcome)
+}
+
+// Update an outcome
+// @Summary      Update an outcome
+// @Description  Update an outcome
+// @Tags         outcomes
+// @Accept       json
+// @Produce      json
+// @Param 		 id path int true "Outcome ID"
+// @Param        outcome  body      PatchOutcomeRequest  true  "Outcome payload"
+// @Success      200       {object}   OutcomeResponse
+// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
+// @Failure      404       {object}   domain.ErrorResponse  "Not found error"
+// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/outcomes/{id} [patch]
+func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	var req PatchOutcomeRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	name := ""
+	if req.Name != nil {
+		cleanName := strings.TrimSpace(*req.Name)
+		name = cleanName
+	}
+
+	amount := 0
+	if req.Amount != nil {
+		reqAmount := *req.Amount
+		if reqAmount < 0 {
+			http.Error(w, "amount must be positive", http.StatusBadRequest)
+			return
+		}
+		amount = reqAmount
+
+	}
+
+	categoryId := 0
+	if req.CategoryId != nil {
+		reqCategoryId := *req.CategoryId
+		if reqCategoryId < 0 {
+			http.Error(w, "invalid category ID", http.StatusBadRequest)
+			return
+		}
+		categoryId = reqCategoryId
+	}
+
+	outcome, err := h.service.Patch(r.Context(), id, name, amount, categoryId, req.CreatedAt)
 	if err != nil {
 		if _, ok := err.(*domain.InvalidEntityError); ok {
 			http.Error(w, err.Error(), http.StatusBadRequest)

@@ -15,6 +15,7 @@ type OutcomeServiceInterface interface {
 	Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
 	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
 	GetById(ctx context.Context, id int) (*domain.Outcome, error)
+	Patch(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
 }
 
 type OutcomeService struct {
@@ -114,4 +115,57 @@ func (s *OutcomeService) GetById(ctx context.Context, id int) (*domain.Outcome, 
 	}
 
 	return outcome, nil
+}
+
+func (s *OutcomeService) Patch(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error) {
+	outcome, err := s.repo.FindById(ctx, id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &domain.EntityNotFoundError{
+				UnderlyingCause: err,
+			}
+		}
+		return nil, err
+	}
+
+	o := &domain.Outcome{
+		ID: outcome.ID,
+	}
+
+	if name != "" {
+		o.Name = name
+	} else {
+		o.Name = outcome.Name
+	}
+
+	if amount != 0 {
+		o.Amount = amount
+	} else {
+		o.Amount = outcome.Amount
+	}
+
+	if categoryId != 0 && categoryId != outcome.CategoryId {
+		_, err := s.categoryRepo.FindById(ctx, categoryId)
+		if err != nil {
+			return nil, &domain.InvalidEntityError{
+				UnderlyingCause: errors.New("invalid category"),
+			}
+		}
+		o.CategoryId = categoryId
+	} else {
+		o.CategoryId = outcome.CategoryId
+	}
+
+	if createdAt != nil {
+		o.CreatedAt = createdAt
+	} else {
+		o.CreatedAt = outcome.CreatedAt
+	}
+
+	errUpdt := s.repo.Update(ctx, o)
+	if errUpdt != nil {
+		return nil, errUpdt
+	}
+
+	return o, nil
 }
