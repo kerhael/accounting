@@ -43,3 +43,8 @@ func (m *OutcomeRepository) Update(ctx context.Context, o *domain.Outcome) error
 	args := m.Called(ctx, o)
 	return args.Error(0)
 }
+
+func (m *OutcomeRepository) DeleteById(ctx context.Context, id int) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}

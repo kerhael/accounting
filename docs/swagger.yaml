@@ -93,21 +93,21 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new outcome
+      description: Create a new category
       parameters:
-      - description: Outcome payload
+      - description: Category payload
         in: body
-        name: outcome
+        name: category
         required: true
         schema:
-          $ref: '#/definitions/v1.CreateOutcomeRequest'
+          $ref: '#/definitions/v1.CreateCategoryRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/v1.OutcomeResponse'
+            $ref: '#/definitions/v1.CategoryResponse'
         "400":
           description: Bad request error
           schema:
@@ -116,9 +116,9 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
-      summary: Create an outcome
+      summary: Create a category
       tags:
-      - outcomes
+      - categories
   /api/v1/categories/{id}:
     delete:
       consumes:
@@ -233,7 +233,62 @@ paths:
       summary: Get all outcomes
       tags:
       - outcomes
+    post:
+      consumes:
+      - application/json
+      description: Create a new outcome
+      parameters:
+      - description: Outcome payload
+        in: body
+        name: outcome
+        required: true
+        schema:
+          $ref: '#/definitions/v1.CreateOutcomeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.OutcomeResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Create an outcome
+      tags:
+      - outcomes
   /api/v1/outcomes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an outcome by id
+      parameters:
+      - description: Outcome ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Delete an outcome
+      tags:
+      - outcomes
     get:
       consumes:
       - application/json

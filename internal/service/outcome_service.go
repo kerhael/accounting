@@ -16,6 +16,7 @@ type OutcomeServiceInterface interface {
 	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
 	GetById(ctx context.Context, id int) (*domain.Outcome, error)
 	Patch(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
+	DeleteById(ctx context.Context, id int) error
 }
 
 type OutcomeService struct {
@@ -168,4 +169,14 @@ func (s *OutcomeService) Patch(ctx context.Context, id int, name string, amount 
 	}
 
 	return o, nil
+}
+
+func (s *OutcomeService) DeleteById(ctx context.Context, id int) error {
+	if id <= 0 {
+		return &domain.InvalidEntityError{
+			UnderlyingCause: errors.New("invalid id"),
+		}
+	}
+
+	return s.repo.DeleteById(ctx, id)
 }

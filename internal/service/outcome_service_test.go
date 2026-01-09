@@ -597,3 +597,67 @@ func TestPatchOutcome_UpdateError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 	mockCategoryRepo.AssertNotCalled(t, "FindById")
 }
+
+func TestOutcomeDeleteById_Success(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	mockRepo.On("DeleteById", ctx, 1).Return(nil)
+
+	err := service.DeleteById(ctx, 1)
+
+	assert.NoError(t, err)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestOutcomeDeleteById_InvalidId_Zero(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	err := service.DeleteById(ctx, 0)
+
+	assert.Error(t, err)
+	assert.IsType(t, &domain.InvalidEntityError{}, err)
+
+	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestOutcomeDeleteById_InvalidId_Negative(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	err := service.DeleteById(ctx, -1)
+
+	assert.Error(t, err)
+	assert.IsType(t, &domain.InvalidEntityError{}, err)
+
+	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestOutcomeDeleteById_RepoError(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	repoErr := errors.New("repo error")
+	mockRepo.On("DeleteById", ctx, 1).Return(repoErr)
+
+	err := service.DeleteById(ctx, 1)
+
+	assert.Error(t, err)
+	assert.Equal(t, repoErr, err)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}

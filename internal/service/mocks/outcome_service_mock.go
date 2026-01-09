@@ -46,3 +46,8 @@ func (m *OutcomeService) Patch(ctx context.Context, id int, name string, amount 
 	}
 	return nil, args.Error(1)
 }
+
+func (m *OutcomeService) DeleteById(ctx context.Context, id int) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}

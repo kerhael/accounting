@@ -902,3 +902,91 @@ func TestOutcomeHandler_PatchOutcome_ServiceError(t *testing.T) {
 
 	mockService.AssertExpectations(t)
 }
+
+func TestOutcomeHandler_DeleteOutcomeById_Success(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	mockService.On("DeleteById", ctx, 1).Return(nil)
+
+	req := httptest.NewRequest(http.MethodDelete, "/outcomes/1", nil)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.DeleteOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusNoContent, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_DeleteOutcomeById_InvalidId(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodDelete, "/outcomes/invalid", nil)
+	req.SetPathValue("id", "invalid")
+	w := httptest.NewRecorder()
+
+	handler.DeleteOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid id")
+
+	mockService.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything)
+}
+
+func TestOutcomeHandler_DeleteOutcomeById_InvalidEntityError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid outcome id")}
+	mockService.On("DeleteById", ctx, 0).Return(invalidEntityErr)
+
+	req := httptest.NewRequest(http.MethodDelete, "/outcomes/0", nil)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "0")
+	w := httptest.NewRecorder()
+
+	handler.DeleteOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_DeleteOutcomeById_ServiceError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	mockService.On("DeleteById", ctx, 1).Return(assert.AnError)
+
+	req := httptest.NewRequest(http.MethodDelete, "/outcomes/1", nil)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", "1")
+	w := httptest.NewRecorder()
+
+	handler.DeleteOutcomeById(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}

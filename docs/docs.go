@@ -51,7 +51,7 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Create a new outcome",
+                "description": "Create a new category",
                 "consumes": [
                     "application/json"
                 ],
@@ -59,17 +59,17 @@ const docTemplate = `{
                     "application/json"
                 ],
                 "tags": [
-                    "outcomes"
+                    "categories"
                 ],
-                "summary": "Create an outcome",
+                "summary": "Create a category",
                 "parameters": [
                     {
-                        "description": "Outcome payload",
-                        "name": "outcome",
+                        "description": "Category payload",
+                        "name": "category",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.CreateOutcomeRequest"
+                            "$ref": "#/definitions/v1.CreateCategoryRequest"
                         }
                     }
                 ],
@@ -77,7 +77,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/v1.OutcomeResponse"
+                            "$ref": "#/definitions/v1.CategoryResponse"
                         }
                     },
                     "400": {
@@ -266,6 +266,50 @@ const docTemplate = `{
                         }
                     }
                 }
+            },
+            "post": {
+                "description": "Create a new outcome",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Create an outcome",
+                "parameters": [
+                    {
+                        "description": "Outcome payload",
+                        "name": "outcome",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.CreateOutcomeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.OutcomeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
             }
         },
         "/api/v1/outcomes/{id}": {
@@ -305,6 +349,45 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not found error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an outcome by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Delete an outcome",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Outcome ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad request error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }

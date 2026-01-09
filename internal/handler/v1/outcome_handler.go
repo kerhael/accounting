@@ -29,7 +29,7 @@ func NewOutcomeHandler(service service.OutcomeServiceInterface) *OutcomeHandler 
 // @Success      201       {object}   OutcomeResponse
 // @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
 // @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
-// @Router       /api/v1/categories/ [post]
+// @Router       /api/v1/outcomes/ [post]
 func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 	var req CreateOutcomeRequest
 
@@ -247,4 +247,37 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(outcome)
+}
+
+// Delete an outcome
+// @Summary      Delete an outcome
+// @Description Delete an outcome by id
+// @Tags         outcomes
+// @Accept       json
+// @Produce      json
+// @Param 		id path int true "Outcome ID"
+// @Success      204       "No Content"
+// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
+// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/outcomes/{id} [delete]
+func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Request) {
+	idStr := r.PathValue("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.DeleteById(r.Context(), id)
+	if err != nil {
+		if _, ok := err.(*domain.InvalidEntityError); ok {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

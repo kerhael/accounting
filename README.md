@@ -190,6 +190,14 @@ curl -X PATCH http://localhost:8080/api/v1/outcomes/1 \
   }'
 ```
 
+**DELETE** `/api/v1/outcomes/{id}`
+
+Delete an outcome by ID.
+
+```bash
+curl -X DELETE http://localhost:8080/api/v1/outcomes/1
+```
+
 ## Database Management
 
 ### Access PostgreSQL

@@ -14,6 +14,7 @@ type OutcomeRepository interface {
 	FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
 	FindById(ctx context.Context, id int) (*domain.Outcome, error)
 	Update(ctx context.Context, o *domain.Outcome) error
+	DeleteById(ctx context.Context, id int) error
 }
 
 type PostgresOutcomeRepository struct {
@@ -102,5 +103,15 @@ func (r *PostgresOutcomeRepository) Update(ctx context.Context, o *domain.Outcom
 	query := `UPDATE outcomes SET name = $1, amount = $2, category_id = $3, created_at = $4 WHERE id = $5`
 
 	_, err := r.db.Exec(ctx, query, o.Name, o.Amount, o.CategoryId, o.CreatedAt, o.ID)
+	return err
+}
+
+func (r *PostgresOutcomeRepository) DeleteById(ctx context.Context, id int) error {
+	query := `
+		DELETE FROM outcomes
+		WHERE id = $1
+	`
+
+	_, err := r.db.Exec(ctx, query, id)
 	return err
 }
