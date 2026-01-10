@@ -31,3 +31,7 @@ type PatchOutcomeRequest struct {
 type CategorySumResponse domain.CategorySum
 
 type SumOutcomeResponse []CategorySumResponse
+
+type TotalOutcomeResponse struct {
+	Total int `json:"total"` // Total amount in cents
+}

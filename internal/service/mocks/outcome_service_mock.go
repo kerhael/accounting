@@ -62,3 +62,14 @@ func (m *OutcomeService) GetSum(ctx context.Context, from *time.Time, to *time.T
 
 	return sums, args.Error(1)
 }
+
+func (m *OutcomeService) GetTotal(ctx context.Context, from *time.Time, to *time.Time) (int, error) {
+	args := m.Called(ctx, from, to)
+
+	var total int
+	if args.Get(0) != nil {
+		total = args.Get(0).(int)
+	}
+
+	return total, args.Error(1)
+}

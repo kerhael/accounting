@@ -74,6 +74,12 @@ definitions:
         description: Name of the expense (optional)
         type: string
     type: object
+  v1.TotalOutcomeResponse:
+    properties:
+      total:
+        description: Total amount in cents
+        type: integer
+    type: object
 info:
   contact:
     email: kerhael.me@gmail.com
@@ -379,8 +385,8 @@ paths:
     get:
       consumes:
       - application/json
-      description: Get the total amount of outcomes between dates (defaults to current
-        month if not provided), optionally filtered by category
+      description: Get the total amount of outcomes by category between dates (defaults
+        to current month if not provided), optionally filtered by category
       parameters:
       - description: Start date filter (ISO 8601 format, defaults to first day of
           current month)
@@ -416,7 +422,41 @@ paths:
           description: Internal server error
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
-      summary: Get sum of outcomes
+      summary: Get sum of outcomes by category
+      tags:
+      - outcomes
+  /api/v1/outcomes/total:
+    get:
+      consumes:
+      - application/json
+      description: Get the total amount of outcomes between dates (defaults to current
+        month if not provided)
+      parameters:
+      - description: Start date filter (ISO 8601 format, defaults to first day of
+          current month)
+        in: query
+        name: from
+        type: string
+      - description: End date filter (ISO 8601 format, defaults to now)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.TotalOutcomeResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get total of outcomes
       tags:
       - outcomes
 schemes:

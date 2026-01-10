@@ -16,6 +16,7 @@ type OutcomeRepository interface {
 	Update(ctx context.Context, o *domain.Outcome) error
 	DeleteById(ctx context.Context, id int) error
 	GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error)
+	GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error)
 }
 
 type PostgresOutcomeRepository struct {
@@ -178,4 +179,32 @@ func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *
 	}
 
 	return sums, nil
+}
+
+func (r *PostgresOutcomeRepository) GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error) {
+	query := `SELECT SUM(amount) as total FROM outcomes WHERE 1 = 1`
+	args := []interface{}{}
+	argCount := 0
+
+	if from != nil {
+		argCount++
+		query += ` AND created_at >= $` + strconv.Itoa(argCount)
+		args = append(args, *from)
+	}
+
+	if to != nil {
+		argCount++
+		query += ` AND created_at <= $` + strconv.Itoa(argCount)
+		args = append(args, *to)
+	} else {
+		query += ` AND created_at <= NOW()`
+	}
+
+	var total int
+	err := r.db.QueryRow(ctx, query, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }

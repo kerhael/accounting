@@ -59,3 +59,14 @@ func (m *OutcomeRepository) GetSumByCategory(ctx context.Context, from *time.Tim
 
 	return sums, args.Error(1)
 }
+
+func (m *OutcomeRepository) GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error) {
+	args := m.Called(ctx, from, to)
+
+	var total int
+	if args.Get(0) != nil {
+		total = args.Get(0).(int)
+	}
+
+	return total, args.Error(1)
+}

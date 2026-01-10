@@ -310,7 +310,7 @@
         },
         "/api/v1/outcomes/sums-by-category": {
             "get": {
-                "description": "Get the total amount of outcomes between dates (defaults to current month if not provided), optionally filtered by category",
+                "description": "Get the total amount of outcomes by category between dates (defaults to current month if not provided), optionally filtered by category",
                 "consumes": [
                     "application/json"
                 ],
@@ -320,7 +320,7 @@
                 "tags": [
                     "outcomes"
                 ],
-                "summary": "Get sum of outcomes",
+                "summary": "Get sum of outcomes by category",
                 "parameters": [
                     {
                         "type": "string",
@@ -359,6 +359,55 @@
                     },
                     "404": {
                         "description": "Not found error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/outcomes/total": {
+            "get": {
+                "description": "Get the total amount of outcomes between dates (defaults to current month if not provided)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Get total of outcomes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date filter (ISO 8601 format, defaults to first day of current month)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (ISO 8601 format, defaults to now)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.TotalOutcomeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
                         "schema": {
                             "$ref": "#/definitions/domain.ErrorResponse"
                         }
@@ -624,6 +673,15 @@
                 "name": {
                     "description": "Name of the expense (optional)",
                     "type": "string"
+                }
+            }
+        },
+        "v1.TotalOutcomeResponse": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "description": "Total amount in cents",
+                    "type": "integer"
                 }
             }
         }

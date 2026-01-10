@@ -290,9 +290,9 @@ func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Reques
 	w.WriteHeader(http.StatusNoContent)
 }
 
-// Get sum of outcomes
-// @Summary      Get sum of outcomes
-// @Description Get the total amount of outcomes between dates (defaults to current month if not provided), optionally filtered by category
+// Get sum of outcomes by category
+// @Summary      Get sum of outcomes by category
+// @Description Get the total amount of outcomes by category between dates (defaults to current month if not provided), optionally filtered by category
 // @Tags         outcomes
 // @Accept       json
 // @Produce      json
@@ -363,4 +363,63 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(categorySums)
+}
+
+// Get total of outcomes
+// @Summary      Get total of outcomes
+// @Description Get the total amount of outcomes between dates (defaults to current month if not provided)
+// @Tags         outcomes
+// @Accept       json
+// @Produce      json
+// @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
+// @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
+// @Success      200   {object}   TotalOutcomeResponse
+// @Failure      400   {object}   domain.ErrorResponse  "Bad request error"
+// @Failure      500   {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/outcomes/total [get]
+func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request) {
+	var from, to *time.Time
+
+	fromStr := r.URL.Query().Get("from")
+	if fromStr != "" {
+		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
+		if err != nil {
+			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			return
+		}
+		from = &parsedFrom
+	}
+
+	toStr := r.URL.Query().Get("to")
+	if toStr != "" {
+		parsedTo, err := time.Parse(time.RFC3339, toStr)
+		if err != nil {
+			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			return
+		}
+		to = &parsedTo
+	}
+
+	// If no dates provided, default to current month
+	if from == nil && to == nil {
+		now := time.Now()
+		firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+		from = &firstDayOfMonth
+		to = &now
+	}
+
+	total, err := h.service.GetTotal(r.Context(), from, to)
+	if err != nil {
+		if _, ok := err.(*domain.InvalidDateError); ok {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	response := TotalOutcomeResponse{Total: total}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
 }

@@ -179,6 +179,15 @@ curl http://localhost:8080/api/v1/outcomes/sums-by-category?from=2025-01-01T00:0
 curl http://localhost:8080/api/v1/outcomes/sums-by-category?categoryId=1
 ```
 
+**GET** `/api/v1/outcomes/total`
+
+Get total amount of outcomes.
+
+```bash
+curl http://localhost:8080/api/v1/outcomes/total
+curl http://localhost:8080/api/v1/outcomes/total?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+```
+
 **GET** `/api/v1/outcomes/{id}`
 
 Retrieve a specific outcome by ID.
