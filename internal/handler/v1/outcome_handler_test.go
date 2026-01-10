@@ -1314,7 +1314,7 @@ func TestOutcomeHandler_GetOutcomesSeries_Success_WithFilters(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-func TestOutcomeHandler_GetOutcomesSeries_DefaultLast6Months(t *testing.T) {
+func TestOutcomeHandler_GetOutcomesSeries_DefaultLast12Months(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
@@ -1322,7 +1322,7 @@ func TestOutcomeHandler_GetOutcomesSeries_DefaultLast6Months(t *testing.T) {
 	expectedSeries := []domain.MonthlySeries{}
 	mockService.On("GetSeries", ctx, mock.MatchedBy(func(t *time.Time) bool {
 		now := time.Now()
-		expected := now.AddDate(0, -6, 0)
+		expected := now.AddDate(0, -12, 0)
 		diff := expected.Sub(*t)
 		return diff >= 0 && diff < time.Second
 	}), mock.MatchedBy(func(t *time.Time) bool {
