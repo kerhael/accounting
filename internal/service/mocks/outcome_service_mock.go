@@ -73,3 +73,14 @@ func (m *OutcomeService) GetTotal(ctx context.Context, from *time.Time, to *time
 
 	return total, args.Error(1)
 }
+
+func (m *OutcomeService) GetSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error) {
+	args := m.Called(ctx, from, to)
+
+	var series []domain.MonthlySeries
+	if args.Get(0) != nil {
+		series = args.Get(0).([]domain.MonthlySeries)
+	}
+
+	return series, args.Error(1)
+}

@@ -18,6 +18,7 @@ func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers) {
 	mux.HandleFunc("GET /api/v1/outcomes/", h.V1.Outcomes.GetAllOutcomes)
 	mux.HandleFunc("GET /api/v1/outcomes/sums-by-category", h.V1.Outcomes.GetOutcomesSum)
 	mux.HandleFunc("GET /api/v1/outcomes/total", h.V1.Outcomes.GetOutcomesTotal)
+	mux.HandleFunc("GET /api/v1/outcomes/series", h.V1.Outcomes.GetOutcomesSeries)
 	mux.HandleFunc("GET /api/v1/outcomes/{id}", h.V1.Outcomes.GetOutcomeById)
 	mux.HandleFunc("PATCH /api/v1/outcomes/{id}", h.V1.Outcomes.PatchOutcome)
 	mux.HandleFunc("DELETE /api/v1/outcomes/{id}", h.V1.Outcomes.DeleteOutcomeById)

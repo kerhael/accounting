@@ -423,3 +423,61 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(response)
 }
+
+// Get monthly series of outcomes
+// @Summary      Get monthly series of outcomes
+// @Description Get the sum of outcomes by category for each month between dates (defaults to last 12 months if not provided)
+// @Tags         outcomes
+// @Accept       json
+// @Produce      json
+// @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to 12 months ago)"
+// @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
+// @Success      200   {array}   SeriesOutcomeResponse
+// @Failure      400   {object}   domain.ErrorResponse  "Bad request error"
+// @Failure      500   {object}   domain.ErrorResponse  "Internal server error"
+// @Router       /api/v1/outcomes/series [get]
+func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Request) {
+	var from, to *time.Time
+
+	fromStr := r.URL.Query().Get("from")
+	if fromStr != "" {
+		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
+		if err != nil {
+			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			return
+		}
+		from = &parsedFrom
+	}
+
+	toStr := r.URL.Query().Get("to")
+	if toStr != "" {
+		parsedTo, err := time.Parse(time.RFC3339, toStr)
+		if err != nil {
+			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			return
+		}
+		to = &parsedTo
+	}
+
+	// If no dates provided, default to last 12 months
+	if from == nil && to == nil {
+		now := time.Now()
+		twelveMonthsAgo := now.AddDate(0, -12, 0)
+		from = &twelveMonthsAgo
+		to = &now
+	}
+
+	series, err := h.service.GetSeries(r.Context(), from, to)
+	if err != nil {
+		if _, ok := err.(*domain.InvalidDateError); ok {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(series)
+}

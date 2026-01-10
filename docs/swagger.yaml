@@ -5,6 +5,17 @@ definitions:
       message:
         type: string
     type: object
+  domain.MonthlySeries:
+    properties:
+      categories:
+        additionalProperties:
+          type: integer
+        description: Map of categoryId to total amount
+        type: object
+      month:
+        description: Month in YYYY-MM format
+        type: string
+    type: object
   v1.CategoryResponse:
     properties:
       id:
@@ -379,6 +390,43 @@ paths:
           schema:
             $ref: '#/definitions/domain.ErrorResponse'
       summary: Update an outcome
+      tags:
+      - outcomes
+  /api/v1/outcomes/series:
+    get:
+      consumes:
+      - application/json
+      description: Get the sum of outcomes by category for each month between dates
+        (defaults to last 12 months if not provided)
+      parameters:
+      - description: Start date filter (ISO 8601 format, defaults to 12 months ago)
+        in: query
+        name: from
+        type: string
+      - description: End date filter (ISO 8601 format, defaults to now)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              items:
+                $ref: '#/definitions/domain.MonthlySeries'
+              type: array
+            type: array
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get monthly series of outcomes
       tags:
       - outcomes
   /api/v1/outcomes/sums-by-category:

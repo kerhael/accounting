@@ -312,6 +312,61 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/outcomes/series": {
+            "get": {
+                "description": "Get the sum of outcomes by category for each month between dates (defaults to last 12 months if not provided)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "outcomes"
+                ],
+                "summary": "Get monthly series of outcomes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date filter (ISO 8601 format, defaults to 12 months ago)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (ISO 8601 format, defaults to now)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/definitions/domain.MonthlySeries"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/outcomes/sums-by-category": {
             "get": {
                 "description": "Get the total amount of outcomes by category between dates (defaults to current month if not provided), optionally filtered by category",
@@ -577,6 +632,22 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "domain.MonthlySeries": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "description": "Map of categoryId to total amount",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "month": {
+                    "description": "Month in YYYY-MM format",
                     "type": "string"
                 }
             }

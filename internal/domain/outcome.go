@@ -14,3 +14,8 @@ type CategorySum struct {
 	CategoryId int `json:"categoryId"` // Category ID
 	Total      int `json:"total"`      // Total amount in cents for this category
 }
+
+type MonthlySeries struct {
+	Month      string      `json:"month"`      // Month in YYYY-MM format
+	Categories map[int]int `json:"categories"` // Map of categoryId to total amount
+}

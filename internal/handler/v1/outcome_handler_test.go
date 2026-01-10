@@ -1228,6 +1228,214 @@ func TestOutcomeHandler_GetOutcomesSum_ServiceError(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetOutcomesSeries_Success_NoFilters(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	expectedSeries := []domain.MonthlySeries{
+		{
+			Month: "2025-07",
+			Categories: map[int]int{
+				1: 3000,
+				2: 1500,
+				3: 0, // All categories included even with 0
+			},
+		},
+		{
+			Month: "2025-08",
+			Categories: map[int]int{
+				1: 2500,
+				2: 0,
+				3: 500,
+			},
+		},
+	}
+	mockService.On("GetSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedSeries, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSeries(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data []domain.MonthlySeries
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 2)
+	assert.Equal(t, "2025-07", data[0].Month)
+	assert.Equal(t, map[int]int{1: 3000, 2: 1500, 3: 0}, data[0].Categories)
+	assert.Equal(t, "2025-08", data[1].Month)
+	assert.Equal(t, map[int]int{1: 2500, 2: 0, 3: 500}, data[1].Categories)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSeries_Success_WithFilters(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	expectedSeries := []domain.MonthlySeries{
+		{
+			Month: "2025-01",
+			Categories: map[int]int{
+				1: 3000,
+			},
+		},
+	}
+	mockService.On("GetSeries", ctx, &from, &to).Return(expectedSeries, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSeries(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data []domain.MonthlySeries
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 1)
+	assert.Equal(t, "2025-01", data[0].Month)
+	assert.Equal(t, map[int]int{1: 3000}, data[0].Categories)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSeries_DefaultLast6Months(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	expectedSeries := []domain.MonthlySeries{}
+	mockService.On("GetSeries", ctx, mock.MatchedBy(func(t *time.Time) bool {
+		now := time.Now()
+		expected := now.AddDate(0, -6, 0)
+		diff := expected.Sub(*t)
+		return diff >= 0 && diff < time.Second
+	}), mock.MatchedBy(func(t *time.Time) bool {
+		now := time.Now()
+		diff := now.Sub(*t)
+		return diff >= 0 && diff < time.Second
+	})).Return(expectedSeries, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSeries(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data []domain.MonthlySeries
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data, 0)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSeries_InvalidFromDate(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series?from=invalid-date", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSeries(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid 'from' date format")
+
+	mockService.AssertNotCalled(t, "GetSeries", mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestOutcomeHandler_GetOutcomesSeries_InvalidToDate(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series?to=invalid-date", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSeries(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "invalid 'to' date format")
+
+	mockService.AssertNotCalled(t, "GetSeries", mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestOutcomeHandler_GetOutcomesSeries_InvalidDateError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
+	mockService.On("GetSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, invalidDatesErr)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSeries(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	assert.Contains(t, string(bodyBytes), "start date must be before end date")
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetOutcomesSeries_ServiceError(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	ctx := context.Background()
+	mockService.On("GetSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, assert.AnError)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetOutcomesSeries(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, resp.StatusCode)
+
+	mockService.AssertExpectations(t)
+}
+
 func TestOutcomeHandler_GetOutcomesTotal_Success_NoFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)

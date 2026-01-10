@@ -35,3 +35,5 @@ type SumOutcomeResponse []CategorySumResponse
 type TotalOutcomeResponse struct {
 	Total int `json:"total"` // Total amount in cents
 }
+
+type SeriesOutcomeResponse []domain.MonthlySeries

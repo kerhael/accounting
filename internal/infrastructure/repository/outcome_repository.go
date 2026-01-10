@@ -17,6 +17,7 @@ type OutcomeRepository interface {
 	DeleteById(ctx context.Context, id int) error
 	GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error)
 	GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error)
+	GetMonthlySeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error)
 }
 
 type PostgresOutcomeRepository struct {
@@ -207,4 +208,80 @@ func (r *PostgresOutcomeRepository) GetTotalSum(ctx context.Context, from *time.
 	}
 
 	return total, nil
+}
+
+func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error) {
+	now := time.Now()
+
+	start := now.AddDate(0, -12, 0)
+	if from != nil {
+		start = *from
+	}
+
+	end := now
+	if to != nil {
+		end = *to
+	}
+
+	query := `
+		WITH months AS (
+			SELECT generate_series(
+				date_trunc('month', $1::date),
+				date_trunc('month', $2::date),
+				interval '1 month'
+			) AS month
+		)
+		SELECT
+			to_char(m.month, 'YYYY-MM')      AS month,
+			c.id                             AS category_id,
+			COALESCE(SUM(o.amount), 0)::int  AS total
+		FROM months m
+		CROSS JOIN categories c
+		LEFT JOIN outcomes o
+			ON o.category_id = c.id
+			AND o.month = m.month
+		GROUP BY m.month, c.id
+		ORDER BY m.month, c.id
+	`
+
+	rows, err := r.db.Query(ctx, query, start, end)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var (
+		series    []domain.MonthlySeries
+		current   *domain.MonthlySeries
+		lastMonth string
+	)
+
+	for rows.Next() {
+		var (
+			month      string
+			categoryID int
+			total      int
+		)
+
+		if err := rows.Scan(&month, &categoryID, &total); err != nil {
+			return nil, err
+		}
+
+		if current == nil || month != lastMonth {
+			current = &domain.MonthlySeries{
+				Month:      month,
+				Categories: make(map[int]int),
+			}
+			series = append(series, *current)
+			lastMonth = month
+		}
+
+		series[len(series)-1].Categories[categoryID] = total
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return series, nil
 }
