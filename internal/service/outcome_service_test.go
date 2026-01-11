@@ -967,3 +967,98 @@ func TestGetSeries_RepoError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 	mockCategoryRepo.AssertNotCalled(t, "FindById")
 }
+
+func TestGetTotalSeries_Success_NoFilters(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	expectedSeries := []domain.MonthlyTotalSeries{
+		{
+			Month: "2025-07",
+			Total: 3000,
+		},
+		{
+			Month: "2025-08",
+			Total: 2500,
+		},
+	}
+	mockRepo.On("GetMonthlyTotalSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedSeries, nil)
+
+	result, err := service.GetTotalSeries(ctx, nil, nil)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 2)
+	assert.Equal(t, "2025-07", result[0].Month)
+	assert.Equal(t, 3000, result[0].Total)
+	assert.Equal(t, "2025-08", result[1].Month)
+	assert.Equal(t, 2500, result[1].Total)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestGetTotalSeries_Success_WithFilters(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
+	expectedSeries := []domain.MonthlyTotalSeries{
+		{
+			Month: "2025-01",
+			Total: 3000,
+		},
+	}
+	mockRepo.On("GetMonthlyTotalSeries", ctx, &from, &to).Return(expectedSeries, nil)
+
+	result, err := service.GetTotalSeries(ctx, &from, &to)
+
+	assert.NoError(t, err)
+	assert.Len(t, result, 1)
+	assert.Equal(t, "2025-01", result[0].Month)
+	assert.Equal(t, 3000, result[0].Total)
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestGetTotalSeries_InvalidDates(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	to := time.Now()
+	from := to.Add(24 * time.Hour)
+
+	result, err := service.GetTotalSeries(ctx, &from, &to)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.IsType(t, &domain.InvalidDateError{}, err)
+
+	mockRepo.AssertNotCalled(t, "GetMonthlyTotalSeries")
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestGetTotalSeries_RepoError(t *testing.T) {
+	mockRepo := new(mocks.OutcomeRepository)
+	mockCategoryRepo := new(mocks.CategoryRepository)
+	service := NewOutcomeService(mockRepo, mockCategoryRepo)
+	ctx := context.Background()
+
+	mockRepo.On("GetMonthlyTotalSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, errors.New("repo error"))
+
+	result, err := service.GetTotalSeries(ctx, nil, nil)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "repo error", err.Error())
+
+	mockRepo.AssertExpectations(t)
+	mockCategoryRepo.AssertNotCalled(t, "FindById")
+}

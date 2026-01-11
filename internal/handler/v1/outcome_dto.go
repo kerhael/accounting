@@ -37,3 +37,5 @@ type TotalOutcomeResponse struct {
 }
 
 type SeriesOutcomeResponse []domain.MonthlySeries
+
+type TotalSeriesOutcomeResponse []domain.MonthlyTotalSeries

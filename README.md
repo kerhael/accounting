@@ -197,6 +197,15 @@ curl http://localhost:8080/api/v1/outcomes/series-by-category
 curl http://localhost:8080/api/v1/outcomes/series-by-category?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
 ```
 
+**GET** `/api/v1/outcomes/series-total`
+
+Get monthly series of outcomes' total amount. Returns total for each month. If no dates are provided, returns the last 12 months.
+
+```bash
+curl http://localhost:8080/api/v1/outcomes/series-total
+curl http://localhost:8080/api/v1/outcomes/series-total?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+```
+
 **GET** `/api/v1/outcomes/{id}`
 
 Retrieve a specific outcome by ID.

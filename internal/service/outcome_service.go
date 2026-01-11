@@ -20,6 +20,7 @@ type OutcomeServiceInterface interface {
 	GetSum(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error)
 	GetTotal(ctx context.Context, from *time.Time, to *time.Time) (int, error)
 	GetSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error)
+	GetTotalSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlyTotalSeries, error)
 }
 
 type OutcomeService struct {
@@ -221,4 +222,14 @@ func (s *OutcomeService) GetSeries(ctx context.Context, from *time.Time, to *tim
 	}
 
 	return s.repo.GetMonthlySeries(ctx, from, to)
+}
+
+func (s *OutcomeService) GetTotalSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlyTotalSeries, error) {
+	if from != nil && to != nil && from.After(*to) {
+		return nil, &domain.InvalidDateError{
+			UnderlyingCause: errors.New("start date must be before end date"),
+		}
+	}
+
+	return s.repo.GetMonthlyTotalSeries(ctx, from, to)
 }

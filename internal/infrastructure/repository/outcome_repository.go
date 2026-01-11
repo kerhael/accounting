@@ -18,6 +18,7 @@ type OutcomeRepository interface {
 	GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error)
 	GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error)
 	GetMonthlySeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error)
+	GetMonthlyTotalSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlyTotalSeries, error)
 }
 
 type PostgresOutcomeRepository struct {
@@ -211,18 +212,6 @@ func (r *PostgresOutcomeRepository) GetTotalSum(ctx context.Context, from *time.
 }
 
 func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error) {
-	now := time.Now()
-
-	start := now.AddDate(0, -12, 0)
-	if from != nil {
-		start = *from
-	}
-
-	end := now
-	if to != nil {
-		end = *to
-	}
-
 	query := `
 		WITH months AS (
 			SELECT generate_series(
@@ -244,7 +233,7 @@ func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *
 		ORDER BY m.month, c.id
 	`
 
-	rows, err := r.db.Query(ctx, query, start, end)
+	rows, err := r.db.Query(ctx, query, *from, *to)
 	if err != nil {
 		return nil, err
 	}
@@ -277,6 +266,64 @@ func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *
 		}
 
 		series[len(series)-1].Categories[categoryID] = total
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return series, nil
+}
+
+func (r *PostgresOutcomeRepository) GetMonthlyTotalSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlyTotalSeries, error) {
+	query := `
+		WITH months AS (
+			SELECT generate_series(
+				date_trunc('month', $1::date),
+				date_trunc('month', $2::date),
+				interval '1 month'
+			) AS month
+		)
+		SELECT
+			to_char(m.month, 'YYYY-MM')      AS month,
+			COALESCE(SUM(o.amount), 0) AS total
+		FROM months m
+		LEFT JOIN outcomes o
+			ON o.month = m.month
+		GROUP BY m.month
+		ORDER BY m.month
+	`
+
+	rows, err := r.db.Query(ctx, query, *from, *to)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var (
+		series    []domain.MonthlyTotalSeries
+		current   *domain.MonthlyTotalSeries
+		lastMonth string
+	)
+
+	for rows.Next() {
+		var (
+			month string
+			total int
+		)
+
+		if err := rows.Scan(&month, &total); err != nil {
+			return nil, err
+		}
+
+		if current == nil || month != lastMonth {
+			current = &domain.MonthlyTotalSeries{
+				Month: month,
+				Total: total,
+			}
+			series = append(series, *current)
+			lastMonth = month
+		}
 	}
 
 	if err := rows.Err(); err != nil {
