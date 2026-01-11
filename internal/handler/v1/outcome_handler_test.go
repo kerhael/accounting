@@ -1253,7 +1253,7 @@ func TestOutcomeHandler_GetOutcomesSeries_Success_NoFilters(t *testing.T) {
 	}
 	mockService.On("GetSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedSeries, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/outcomes/series", nil)
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category", nil)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -1293,7 +1293,7 @@ func TestOutcomeHandler_GetOutcomesSeries_Success_WithFilters(t *testing.T) {
 	}
 	mockService.On("GetSeries", ctx, &from, &to).Return(expectedSeries, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/outcomes/series?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z", nil)
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -1331,7 +1331,7 @@ func TestOutcomeHandler_GetOutcomesSeries_DefaultLast12Months(t *testing.T) {
 		return diff >= 0 && diff < time.Second
 	})).Return(expectedSeries, nil)
 
-	req := httptest.NewRequest(http.MethodGet, "/outcomes/series", nil)
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category", nil)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -1354,7 +1354,7 @@ func TestOutcomeHandler_GetOutcomesSeries_InvalidFromDate(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	req := httptest.NewRequest(http.MethodGet, "/outcomes/series?from=invalid-date", nil)
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category?from=invalid-date", nil)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesSeries(w, req)
@@ -1374,7 +1374,7 @@ func TestOutcomeHandler_GetOutcomesSeries_InvalidToDate(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	req := httptest.NewRequest(http.MethodGet, "/outcomes/series?to=invalid-date", nil)
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category?to=invalid-date", nil)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesSeries(w, req)
@@ -1398,7 +1398,7 @@ func TestOutcomeHandler_GetOutcomesSeries_InvalidDateError(t *testing.T) {
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
 	mockService.On("GetSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, invalidDatesErr)
 
-	req := httptest.NewRequest(http.MethodGet, "/outcomes/series?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
@@ -1422,7 +1422,7 @@ func TestOutcomeHandler_GetOutcomesSeries_ServiceError(t *testing.T) {
 	ctx := context.Background()
 	mockService.On("GetSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, assert.AnError)
 
-	req := httptest.NewRequest(http.MethodGet, "/outcomes/series", nil)
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category", nil)
 	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 

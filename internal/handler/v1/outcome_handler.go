@@ -435,7 +435,7 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 // @Success      200   {array}   SeriesOutcomeResponse
 // @Failure      400   {object}   domain.ErrorResponse  "Bad request error"
 // @Failure      500   {object}   domain.ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/series [get]
+// @Router       /api/v1/outcomes/series-by-category [get]
 func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Request) {
 	var from, to *time.Time
 

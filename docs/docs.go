@@ -312,7 +312,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/outcomes/series": {
+        "/api/v1/outcomes/series-by-category": {
             "get": {
                 "description": "Get the sum of outcomes by category for each month between dates (defaults to last 12 months if not provided)",
                 "consumes": [

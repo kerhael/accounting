@@ -392,7 +392,7 @@ paths:
       summary: Update an outcome
       tags:
       - outcomes
-  /api/v1/outcomes/series:
+  /api/v1/outcomes/series-by-category:
     get:
       consumes:
       - application/json
