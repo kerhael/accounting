@@ -206,6 +206,254 @@
                 }
             }
         },
+        "/api/v1/incomes/": {
+            "get": {
+                "description": "Retrieve all incomes with optional date filtering (defaults to current month if not provided)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incomes"
+                ],
+                "summary": "Get all incomes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start date filter (ISO 8601 format, defaults to first day of current month)",
+                        "name": "from",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "End date filter (ISO 8601 format, defaults to now)",
+                        "name": "to",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/v1.IncomeResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new income",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incomes"
+                ],
+                "summary": "Create an income",
+                "parameters": [
+                    {
+                        "description": "Income payload",
+                        "name": "income",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.CreateIncomeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.IncomeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/incomes/{id}": {
+            "get": {
+                "description": "Retrieve an income by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incomes"
+                ],
+                "summary": "Get an income",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Income ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.IncomeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an income by id",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incomes"
+                ],
+                "summary": "Delete an income",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Income ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update an income",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "incomes"
+                ],
+                "summary": "Update an income",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Income ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Income payload",
+                        "name": "income",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.PatchIncomeRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.IncomeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not found error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/domain.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/outcomes/": {
             "get": {
                 "description": "Retrieve all outcomes with optional date filtering (defaults to current month if not provided)",
@@ -748,6 +996,23 @@
                 }
             }
         },
+        "v1.CreateIncomeRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Amount in cents (ex: 1999 for 19.99€)",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "Date of the income (ex: \"2026-01-01T00:00:00Z\")",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name of the income",
+                    "type": "string"
+                }
+            }
+        },
         "v1.CreateOutcomeRequest": {
             "type": "object",
             "properties": {
@@ -765,6 +1030,27 @@
                 },
                 "name": {
                     "description": "Name of the expense",
+                    "type": "string"
+                }
+            }
+        },
+        "v1.IncomeResponse": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Amount in cents (ex: 1999 for 19.99€)",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "Date of the income (ex: \"2026-01-01T00:00:00Z\")",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "ID of the income",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "Name of the income",
                     "type": "string"
                 }
             }
@@ -790,6 +1076,23 @@
                 },
                 "name": {
                     "description": "Name of the expense",
+                    "type": "string"
+                }
+            }
+        },
+        "v1.PatchIncomeRequest": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "description": "Amount in cents (optional, ex: 1999 for 19.99€)",
+                    "type": "integer"
+                },
+                "createdAt": {
+                    "description": "Date of the income (optional, ex: \"2026-01-01T00:00:00Z\")",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Name of the income (optional)",
                     "type": "string"
                 }
             }

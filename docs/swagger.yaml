@@ -46,6 +46,18 @@ definitions:
       label:
         type: string
     type: object
+  v1.CreateIncomeRequest:
+    properties:
+      amount:
+        description: 'Amount in cents (ex: 1999 for 19.99€)'
+        type: integer
+      createdAt:
+        description: 'Date of the income (ex: "2026-01-01T00:00:00Z")'
+        type: string
+      name:
+        description: Name of the income
+        type: string
+    type: object
   v1.CreateOutcomeRequest:
     properties:
       amount:
@@ -59,6 +71,21 @@ definitions:
         type: string
       name:
         description: Name of the expense
+        type: string
+    type: object
+  v1.IncomeResponse:
+    properties:
+      amount:
+        description: 'Amount in cents (ex: 1999 for 19.99€)'
+        type: integer
+      createdAt:
+        description: 'Date of the income (ex: "2026-01-01T00:00:00Z")'
+        type: string
+      id:
+        description: ID of the income
+        type: integer
+      name:
+        description: Name of the income
         type: string
     type: object
   v1.OutcomeResponse:
@@ -77,6 +104,18 @@ definitions:
         type: integer
       name:
         description: Name of the expense
+        type: string
+    type: object
+  v1.PatchIncomeRequest:
+    properties:
+      amount:
+        description: 'Amount in cents (optional, ex: 1999 for 19.99€)'
+        type: integer
+      createdAt:
+        description: 'Date of the income (optional, ex: "2026-01-01T00:00:00Z")'
+        type: string
+      name:
+        description: Name of the income (optional)
         type: string
     type: object
   v1.PatchOutcomeRequest:
@@ -235,6 +274,172 @@ paths:
       summary: Health check
       tags:
       - health
+  /api/v1/incomes/:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve all incomes with optional date filtering (defaults to
+        current month if not provided)
+      parameters:
+      - description: Start date filter (ISO 8601 format, defaults to first day of
+          current month)
+        in: query
+        name: from
+        type: string
+      - description: End date filter (ISO 8601 format, defaults to now)
+        in: query
+        name: to
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/v1.IncomeResponse'
+            type: array
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not found error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get all incomes
+      tags:
+      - incomes
+    post:
+      consumes:
+      - application/json
+      description: Create a new income
+      parameters:
+      - description: Income payload
+        in: body
+        name: income
+        required: true
+        schema:
+          $ref: '#/definitions/v1.CreateIncomeRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.IncomeResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Create an income
+      tags:
+      - incomes
+  /api/v1/incomes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an income by id
+      parameters:
+      - description: Income ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Delete an income
+      tags:
+      - incomes
+    get:
+      consumes:
+      - application/json
+      description: Retrieve an income by id
+      parameters:
+      - description: Income ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.IncomeResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not found error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Get an income
+      tags:
+      - incomes
+    patch:
+      consumes:
+      - application/json
+      description: Update an income
+      parameters:
+      - description: Income ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Income payload
+        in: body
+        name: income
+        required: true
+        schema:
+          $ref: '#/definitions/v1.PatchIncomeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.IncomeResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "404":
+          description: Not found error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/domain.ErrorResponse'
+      summary: Update an income
+      tags:
+      - incomes
   /api/v1/outcomes/:
     get:
       consumes:

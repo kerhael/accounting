@@ -235,6 +235,60 @@ Delete an outcome by ID.
 curl -X DELETE http://localhost:8080/api/v1/outcomes/1
 ```
 
+#### Incomes
+
+**POST** `/api/v1/incomes/`
+
+Create a new income.
+
+```bash
+curl -X POST http://localhost:8080/api/v1/incomes/ \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Restaurant",
+    "amount": 1999,
+    "createdAt": "2026-01-01T00:00:00Z"
+  }'
+```
+
+**GET** `/api/v1/incomes/`
+
+Retrieve all incomes.
+
+```bash
+curl http://localhost:8080/api/v1/incomes/
+curl http://localhost:8080/api/v1/incomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+```
+
+**GET** `/api/v1/incomes/{id}`
+
+Retrieve a specific income by ID.
+
+```bash
+curl http://localhost:8080/api/v1/incomes/1
+```
+
+**PATCH** `/api/v1/incomes/{id}`
+
+Update a specific income (partial update).
+
+```bash
+curl -X PATCH http://localhost:8080/api/v1/incomes/1 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Updated Salary",
+    "amount": 2500000
+  }'
+```
+
+**DELETE** `/api/v1/incomes/{id}`
+
+Delete an income by ID.
+
+```bash
+curl -X DELETE http://localhost:8080/api/v1/incomes/1
+```
+
 ## Database Management
 
 ### Access PostgreSQL

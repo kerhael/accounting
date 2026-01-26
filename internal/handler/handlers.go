@@ -11,6 +11,7 @@ type HandlersV1 struct {
 	Health   *v1.HealthHandler
 	Category *v1.CategoryHandler
 	Outcomes *v1.OutcomeHandler
+	Incomes  *v1.IncomeHandler
 }
 
 type Handlers struct {
@@ -27,11 +28,15 @@ func NewHandlers(db *pgxpool.Pool) *Handlers {
 	outcomeRepo := repository.NewOutcomeRepository(db)
 	outcomeService := service.NewOutcomeService(outcomeRepo, categoryRepo)
 
+	incomeRepo := repository.NewIncomeRepository(db)
+	incomeService := service.NewIncomeService(incomeRepo)
+
 	return &Handlers{
 		V1: &HandlersV1{
 			Health:   v1.NewHealthHandler(healthService),
 			Category: v1.NewCategoryHandler(categoryService),
 			Outcomes: v1.NewOutcomeHandler(outcomeService),
+			Incomes:  v1.NewIncomeHandler(incomeService),
 		},
 	}
 }
