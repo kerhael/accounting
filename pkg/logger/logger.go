@@ -12,20 +12,20 @@ func New() *Logger {
 	return &Logger{}
 }
 
-func (l *Logger) Debug(v ...interface{}) {
-	log.Println(append([]interface{}{"[DEBUG]"}, v...)...)
+func (l *Logger) Debug(v ...any) {
+	log.Println(append([]any{"[DEBUG]"}, v...)...)
 }
 
-func (l *Logger) Info(v ...interface{}) {
-	log.Println(append([]interface{}{"[INFO]"}, v...)...)
+func (l *Logger) Info(v ...any) {
+	log.Println(append([]any{"[INFO]"}, v...)...)
 }
 
-func (l *Logger) Warn(v ...interface{}) {
-	log.Println(append([]interface{}{"[WARN]"}, v...)...)
+func (l *Logger) Warn(v ...any) {
+	log.Println(append([]any{"[WARN]"}, v...)...)
 }
 
-func (l *Logger) Error(v ...interface{}) {
-	log.Println(append([]interface{}{"[ERROR]"}, v...)...)
+func (l *Logger) Error(v ...any) {
+	log.Println(append([]any{"[ERROR]"}, v...)...)
 }
 
 type statusRecorder struct {

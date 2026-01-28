@@ -31,12 +31,14 @@ func main() {
 	cfg, err := config.Load()
 	if err != nil {
 		logr.Error("config error", err)
+		return
 	}
 
 	// database
 	dbPool, err := db.NewPostgresPool(cfg.Database)
 	if err != nil {
 		logr.Error("db error", err)
+		return
 	}
 	defer dbPool.Close()
 

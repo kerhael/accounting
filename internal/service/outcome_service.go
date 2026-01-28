@@ -149,7 +149,7 @@ func (s *OutcomeService) Patch(ctx context.Context, id int, name string, amount 
 		o.Amount = outcome.Amount
 	}
 
-	if categoryId != 0 && categoryId != outcome.CategoryId {
+	if categoryId != 0 {
 		_, err := s.categoryRepo.FindById(ctx, categoryId)
 		if err != nil {
 			return nil, &domain.InvalidEntityError{

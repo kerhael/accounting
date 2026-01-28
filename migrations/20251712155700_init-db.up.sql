@@ -16,6 +16,7 @@ CREATE TABLE outcomes (
 );
 
 CREATE INDEX idx_outcomes_category_id ON outcomes(category_id);
+CREATE INDEX idx_outcomes_created_at ON outcomes(created_at);
 
 CREATE TABLE incomes (
     id SERIAL PRIMARY KEY,
@@ -23,3 +24,5 @@ CREATE TABLE incomes (
     amount INTEGER NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE INDEX idx_incomes_created_at ON incomes(created_at);

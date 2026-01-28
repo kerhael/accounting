@@ -40,7 +40,7 @@ func (r *PostgresOutcomeRepository) Create(ctx context.Context, o *domain.Outcom
 
 func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error) {
 	query := `SELECT id, name, amount, category_id, created_at FROM outcomes WHERE 1=1`
-	args := []interface{}{}
+	args := []any{}
 	argCount := 0
 
 	if from != nil {
@@ -88,19 +88,19 @@ func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time
 }
 
 func (r *PostgresOutcomeRepository) FindById(ctx context.Context, id int) (*domain.Outcome, error) {
-	var c domain.Outcome
+	var o domain.Outcome
 
 	query := `
 		SELECT id, name, amount, category_id, created_at FROM outcomes
 		WHERE id = $1
 	`
 
-	err := r.db.QueryRow(ctx, query, id).Scan(&c.ID, &c.Name, &c.Amount, &c.CategoryId, &c.CreatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&o.ID, &o.Name, &o.Amount, &o.CategoryId, &o.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
 
-	return &c, nil
+	return &o, nil
 }
 
 func (r *PostgresOutcomeRepository) Update(ctx context.Context, o *domain.Outcome) error {
@@ -125,7 +125,7 @@ func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *
 		SELECT c.id as category_id, COALESCE(SUM(o.amount), 0) as total
 		FROM categories c
 		LEFT JOIN outcomes o ON c.id = o.category_id`
-	args := []interface{}{}
+	args := []any{}
 	argCount := 0
 
 	if from != nil || to != nil {
@@ -185,7 +185,7 @@ func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *
 
 func (r *PostgresOutcomeRepository) GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error) {
 	query := `SELECT SUM(amount) as total FROM outcomes WHERE 1 = 1`
-	args := []interface{}{}
+	args := []any{}
 	argCount := 0
 
 	if from != nil {

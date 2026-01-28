@@ -1,30 +1,5 @@
 basePath: /api/v1/
 definitions:
-  domain.ErrorResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  domain.MonthlySeries:
-    properties:
-      categories:
-        additionalProperties:
-          type: integer
-        description: Map of categoryId to total amount
-        type: object
-      month:
-        description: Month in YYYY-MM format
-        type: string
-    type: object
-  domain.MonthlyTotalSeries:
-    properties:
-      month:
-        description: Month in YYYY-MM format
-        type: string
-      total:
-        description: Total amount
-        type: integer
-    type: object
   v1.CategoryResponse:
     properties:
       id:
@@ -73,6 +48,11 @@ definitions:
         description: Name of the expense
         type: string
     type: object
+  v1.ErrorResponse:
+    properties:
+      message:
+        type: string
+    type: object
   v1.IncomeResponse:
     properties:
       amount:
@@ -87,6 +67,26 @@ definitions:
       name:
         description: Name of the income
         type: string
+    type: object
+  v1.MonthlySeries:
+    properties:
+      categories:
+        additionalProperties:
+          type: integer
+        description: Map of categoryId to total amount
+        type: object
+      month:
+        description: Month in YYYY-MM format
+        type: string
+    type: object
+  v1.MonthlyTotalSeries:
+    properties:
+      month:
+        description: Month in YYYY-MM format
+        type: string
+      total:
+        description: Total amount
+        type: integer
     type: object
   v1.OutcomeResponse:
     properties:
@@ -165,7 +165,7 @@ paths:
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get all categories
       tags:
       - categories
@@ -190,11 +190,11 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Create a category
       tags:
       - categories
@@ -217,11 +217,11 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Delete a category
       tags:
       - categories
@@ -245,15 +245,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "404":
           description: Not found error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get a category
       tags:
       - categories
@@ -302,15 +302,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "404":
           description: Not found error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get all incomes
       tags:
       - incomes
@@ -335,11 +335,11 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Create an income
       tags:
       - incomes
@@ -362,11 +362,11 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Delete an income
       tags:
       - incomes
@@ -390,15 +390,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "404":
           description: Not found error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get an income
       tags:
       - incomes
@@ -428,15 +428,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "404":
           description: Not found error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Update an income
       tags:
       - incomes
@@ -468,15 +468,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "404":
           description: Not found error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get all outcomes
       tags:
       - outcomes
@@ -501,11 +501,11 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Create an outcome
       tags:
       - outcomes
@@ -528,11 +528,11 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Delete an outcome
       tags:
       - outcomes
@@ -556,15 +556,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "404":
           description: Not found error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get an outcome
       tags:
       - outcomes
@@ -594,15 +594,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "404":
           description: Not found error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Update an outcome
       tags:
       - outcomes
@@ -629,17 +629,17 @@ paths:
           schema:
             items:
               items:
-                $ref: '#/definitions/domain.MonthlySeries'
+                $ref: '#/definitions/v1.MonthlySeries'
               type: array
             type: array
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get monthly series of outcomes
       tags:
       - outcomes
@@ -666,17 +666,17 @@ paths:
           schema:
             items:
               items:
-                $ref: '#/definitions/domain.MonthlyTotalSeries'
+                $ref: '#/definitions/v1.MonthlyTotalSeries'
               type: array
             type: array
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get monthly series of outcomes' total amount
       tags:
       - outcomes
@@ -712,15 +712,15 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "404":
           description: Not found error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get sum of outcomes by category
       tags:
       - outcomes
@@ -750,11 +750,11 @@ paths:
         "400":
           description: Bad request error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
-            $ref: '#/definitions/domain.ErrorResponse'
+            $ref: '#/definitions/v1.ErrorResponse'
       summary: Get total of outcomes
       tags:
       - outcomes

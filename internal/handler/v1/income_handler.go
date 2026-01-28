@@ -27,8 +27,8 @@ func NewIncomeHandler(service service.IncomeServiceInterface) *IncomeHandler {
 // @Produce      json
 // @Param        income  body      CreateIncomeRequest  true  "Income payload"
 // @Success      201       {object}   IncomeResponse
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/incomes/ [post]
 func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 	var req CreateIncomeRequest
@@ -75,9 +75,9 @@ func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 // @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   IncomeResponse
-// @Failure      400   {object}  domain.ErrorResponse  "Bad request error"
-// @Failure      404   {object}  domain.ErrorResponse  "Not found error"
-// @Failure      500   {object}  domain.ErrorResponse  "Internal server error"
+// @Failure      400   {object}  ErrorResponse  "Bad request error"
+// @Failure      404   {object}  ErrorResponse  "Not found error"
+// @Failure      500   {object}  ErrorResponse  "Internal server error"
 // @Router       /api/v1/incomes/ [get]
 func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 	var from, to *time.Time
@@ -133,9 +133,9 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param 		id path int true "Income ID"
 // @Success      200       {object}   IncomeResponse
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      404       {object}   domain.ErrorResponse  "Not found error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      404       {object}   ErrorResponse  "Not found error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/incomes/{id} [get]
 func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
@@ -174,9 +174,9 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 // @Param 		 id path int true "Income ID"
 // @Param        income  body      PatchIncomeRequest  true  "Income payload"
 // @Success      200       {object}   IncomeResponse
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      404       {object}   domain.ErrorResponse  "Not found error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      404       {object}   ErrorResponse  "Not found error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/incomes/{id} [patch]
 func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
@@ -201,7 +201,7 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 	amount := 0
 	if req.Amount != nil {
 		reqAmount := *req.Amount
-		if reqAmount < 0 {
+		if reqAmount <= 0 {
 			http.Error(w, "amount must be positive", http.StatusBadRequest)
 			return
 		}
@@ -232,8 +232,8 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param 		id path int true "Income ID"
 // @Success      204       "No Content"
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/incomes/{id} [delete]
 func (h *IncomeHandler) DeleteIncomeById(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")

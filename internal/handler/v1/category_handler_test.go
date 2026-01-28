@@ -70,7 +70,7 @@ func TestCategoryHandler_PostCategory_MissingLabelField(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	input := map[string]interface{}{}
+	input := map[string]any{}
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))

@@ -45,7 +45,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -83,13 +83,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -127,19 +127,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not found error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -172,13 +172,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -250,19 +250,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not found error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -300,13 +300,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -344,19 +344,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not found error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -389,13 +389,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -440,19 +440,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not found error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -498,19 +498,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not found error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -548,13 +548,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -595,7 +595,7 @@ const docTemplate = `{
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/definitions/domain.MonthlySeries"
+                                    "$ref": "#/definitions/v1.MonthlySeries"
                                 }
                             }
                         }
@@ -603,13 +603,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -650,7 +650,7 @@ const docTemplate = `{
                             "items": {
                                 "type": "array",
                                 "items": {
-                                    "$ref": "#/definitions/domain.MonthlyTotalSeries"
+                                    "$ref": "#/definitions/v1.MonthlyTotalSeries"
                                 }
                             }
                         }
@@ -658,13 +658,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -716,19 +716,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not found error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -771,13 +771,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -815,19 +815,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not found error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -860,13 +860,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -911,19 +911,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad request error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not found error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
-                            "$ref": "#/definitions/domain.ErrorResponse"
+                            "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     }
                 }
@@ -931,43 +931,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "domain.ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "domain.MonthlySeries": {
-            "type": "object",
-            "properties": {
-                "categories": {
-                    "description": "Map of categoryId to total amount",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "month": {
-                    "description": "Month in YYYY-MM format",
-                    "type": "string"
-                }
-            }
-        },
-        "domain.MonthlyTotalSeries": {
-            "type": "object",
-            "properties": {
-                "month": {
-                    "description": "Month in YYYY-MM format",
-                    "type": "string"
-                },
-                "total": {
-                    "description": "Total amount",
-                    "type": "integer"
-                }
-            }
-        },
         "v1.CategoryResponse": {
             "type": "object",
             "properties": {
@@ -1038,6 +1001,14 @@ const docTemplate = `{
                 }
             }
         },
+        "v1.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "v1.IncomeResponse": {
             "type": "object",
             "properties": {
@@ -1056,6 +1027,35 @@ const docTemplate = `{
                 "name": {
                     "description": "Name of the income",
                     "type": "string"
+                }
+            }
+        },
+        "v1.MonthlySeries": {
+            "type": "object",
+            "properties": {
+                "categories": {
+                    "description": "Map of categoryId to total amount",
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "month": {
+                    "description": "Month in YYYY-MM format",
+                    "type": "string"
+                }
+            }
+        },
+        "v1.MonthlyTotalSeries": {
+            "type": "object",
+            "properties": {
+                "month": {
+                    "description": "Month in YYYY-MM format",
+                    "type": "string"
+                },
+                "total": {
+                    "description": "Total amount",
+                    "type": "integer"
                 }
             }
         },

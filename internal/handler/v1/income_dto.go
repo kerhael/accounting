@@ -2,8 +2,6 @@ package v1
 
 import (
 	"time"
-
-	"github.com/kerhael/accounting/internal/domain"
 )
 
 type CreateIncomeRequest struct {
@@ -17,7 +15,12 @@ type GetAllIncomeRequest struct {
 	To   time.Time `json:"to"`   // End date (optional)
 }
 
-type IncomeResponse domain.Income
+type IncomeResponse struct {
+	Name      string     `json:"name"`      // Name of the income
+	CreatedAt *time.Time `json:"createdAt"` // Date of the income (ex: "2026-01-01T00:00:00Z")
+	Amount    int        `json:"amount"`    // Amount in cents (ex: 1999 for 19.99€)
+	ID        int        `json:"id"`        // ID of the income
+}
 
 type PatchIncomeRequest struct {
 	Name      *string    `json:"name"`      // Name of the income (optional)

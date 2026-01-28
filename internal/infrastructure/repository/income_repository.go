@@ -36,7 +36,7 @@ func (r *PostgresIncomeRepository) Create(ctx context.Context, o *domain.Income)
 
 func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Income, error) {
 	query := `SELECT id, name, amount, created_at FROM incomes WHERE 1=1`
-	args := []interface{}{}
+	args := []any{}
 	argCount := 0
 
 	if from != nil {

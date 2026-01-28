@@ -2,16 +2,12 @@ package domain
 
 import "fmt"
 
-type ErrorResponse struct {
-	Message string `json:"message"`
-}
-
 type InvalidDateError struct {
 	UnderlyingCause error
 }
 
 func (e *InvalidDateError) Error() string {
-	return fmt.Sprintf("invalid date: %v", e.UnderlyingCause)
+	return fmt.Sprintf("invalid date range: %v", e.UnderlyingCause)
 }
 
 func (e *InvalidDateError) Unwrap() error {
@@ -23,7 +19,7 @@ type InvalidEntityError struct {
 }
 
 func (e *InvalidEntityError) Error() string {
-	return fmt.Sprintf("invalid entity: %v", e.UnderlyingCause)
+	return fmt.Sprintf("invalid entity data: %v", e.UnderlyingCause)
 }
 
 func (e *InvalidEntityError) Unwrap() error {

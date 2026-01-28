@@ -27,8 +27,8 @@ func NewOutcomeHandler(service service.OutcomeServiceInterface) *OutcomeHandler 
 // @Produce      json
 // @Param        outcome  body      CreateOutcomeRequest  true  "Outcome payload"
 // @Success      201       {object}   OutcomeResponse
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/ [post]
 func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 	var req CreateOutcomeRequest
@@ -67,7 +67,10 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(outcome)
+	if err := json.NewEncoder(w).Encode(outcome); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Get all outcomes
@@ -79,9 +82,9 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 // @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   OutcomeResponse
-// @Failure      400   {object}  domain.ErrorResponse  "Bad request error"
-// @Failure      404   {object}  domain.ErrorResponse  "Not found error"
-// @Failure      500   {object}  domain.ErrorResponse  "Internal server error"
+// @Failure      400   {object}  ErrorResponse  "Bad request error"
+// @Failure      404   {object}  ErrorResponse  "Not found error"
+// @Failure      500   {object}  ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/ [get]
 func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) {
 	var from, to *time.Time
@@ -141,7 +144,10 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(outcomes)
+	if err := json.NewEncoder(w).Encode(outcomes); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Get an outcome
@@ -152,9 +158,9 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 // @Produce      json
 // @Param 		id path int true "Outcome ID"
 // @Success      200       {object}   OutcomeResponse
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      404       {object}   domain.ErrorResponse  "Not found error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      404       {object}   ErrorResponse  "Not found error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/{id} [get]
 func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
@@ -181,7 +187,10 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(outcome)
+	if err := json.NewEncoder(w).Encode(outcome); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Update an outcome
@@ -193,9 +202,9 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 // @Param 		 id path int true "Outcome ID"
 // @Param        outcome  body      PatchOutcomeRequest  true  "Outcome payload"
 // @Success      200       {object}   OutcomeResponse
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      404       {object}   domain.ErrorResponse  "Not found error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      404       {object}   ErrorResponse  "Not found error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/{id} [patch]
 func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
@@ -254,7 +263,10 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(outcome)
+	if err := json.NewEncoder(w).Encode(outcome); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Delete an outcome
@@ -265,8 +277,8 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param 		id path int true "Outcome ID"
 // @Success      204       "No Content"
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/{id} [delete]
 func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
@@ -300,9 +312,9 @@ func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Reques
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Param        categoryId query int false "Category ID filter"
 // @Success      200   {object}   SumOutcomeResponse
-// @Failure      400   {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      404   {object}   domain.ErrorResponse  "Not found error"
-// @Failure      500   {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400   {object}   ErrorResponse  "Bad request error"
+// @Failure      404   {object}   ErrorResponse  "Not found error"
+// @Failure      500   {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/sums-by-category [get]
 func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) {
 	var from, to *time.Time
@@ -362,7 +374,10 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(categorySums)
+	if err := json.NewEncoder(w).Encode(categorySums); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Get total of outcomes
@@ -374,8 +389,8 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 // @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {object}   TotalOutcomeResponse
-// @Failure      400   {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500   {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400   {object}   ErrorResponse  "Bad request error"
+// @Failure      500   {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/total [get]
 func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request) {
 	var from, to *time.Time
@@ -421,7 +436,10 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 	response := TotalOutcomeResponse{Total: total}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Get monthly series of outcomes
@@ -433,8 +451,8 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 // @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to 12 months ago)"
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   SeriesOutcomeResponse
-// @Failure      400   {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500   {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400   {object}   ErrorResponse  "Bad request error"
+// @Failure      500   {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/series-by-category [get]
 func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Request) {
 	var from, to *time.Time
@@ -487,7 +505,10 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(series)
+	if err := json.NewEncoder(w).Encode(series); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }
 
 // Get monthly series of outcomes' total amount
@@ -499,8 +520,8 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 // @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to 12 months ago)"
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   TotalSeriesOutcomeResponse
-// @Failure      400   {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500   {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400   {object}   ErrorResponse  "Bad request error"
+// @Failure      500   {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/outcomes/series-total [get]
 func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.Request) {
 	var from, to *time.Time
@@ -553,5 +574,8 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(series)
+	if err := json.NewEncoder(w).Encode(series); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }

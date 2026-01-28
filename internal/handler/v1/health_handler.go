@@ -32,13 +32,20 @@ func (h *HealthHandler) Check(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.service.Check(r.Context()); err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
-		_ = json.NewEncoder(w).Encode(map[string]string{
+		err := json.NewEncoder(w).Encode(map[string]string{
 			"db": "ko",
 		})
+		if err != nil {
+			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			return
+		}
 		return
 	}
 	res["db"] = "ok"
 
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(res)
+	if err := json.NewEncoder(w).Encode(res); err != nil {
+		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		return
+	}
 }

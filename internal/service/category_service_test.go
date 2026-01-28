@@ -150,7 +150,7 @@ func TestGetCategoryById_InvalidId(t *testing.T) {
 	assert.Nil(t, category)
 	assert.Error(t, err)
 
-	assert.Equal(t, "invalid entity: invalid id", err.Error())
+	assert.Equal(t, "invalid entity data: invalid id", err.Error())
 
 	mockRepo.AssertExpectations(t)
 }

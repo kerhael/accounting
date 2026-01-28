@@ -25,8 +25,8 @@ func NewCategoryHandler(service service.CategoryServiceInterface) *CategoryHandl
 // @Produce      json
 // @Param        category  body      CreateCategoryRequest  true  "Category payload"
 // @Success      201       {object}   CategoryResponse
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/categories/ [post]
 func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 	var req CreateCategoryRequest
@@ -63,7 +63,7 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Success      200       {array}   CategoryResponse
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/categories/ [get]
 func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.service.GetAll(r.Context())
@@ -85,9 +85,9 @@ func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Reques
 // @Produce      json
 // @Param 		id path int true "Category ID"
 // @Success      200       {object}   CategoryResponse
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      404       {object}   domain.ErrorResponse  "Not found error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      404       {object}   ErrorResponse  "Not found error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/categories/{id} [get]
 func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
@@ -125,8 +125,8 @@ func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request
 // @Produce      json
 // @Param 		id path int true "Category ID"
 // @Success      204       "No Content"
-// @Failure      400       {object}   domain.ErrorResponse  "Bad request error"
-// @Failure      500       {object}   domain.ErrorResponse  "Internal server error"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategoryById(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")

@@ -31,19 +31,19 @@ func (s *IncomeService) Create(ctx context.Context, name string, amount int, cre
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, &domain.InvalidEntityError{
-			UnderlyingCause: errors.New("invalid name"),
+			UnderlyingCause: errors.New("name cannot be empty"),
 		}
 	}
 
 	if amount <= 0 {
 		return nil, &domain.InvalidEntityError{
-			UnderlyingCause: errors.New("invalid amount"),
+			UnderlyingCause: errors.New("amount must be greater than zero"),
 		}
 	}
 
 	if createdAt == nil {
 		return nil, &domain.InvalidEntityError{
-			UnderlyingCause: errors.New("invalid creation date"),
+			UnderlyingCause: errors.New("creation date is required"),
 		}
 	}
 
