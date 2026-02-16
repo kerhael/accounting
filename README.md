@@ -13,7 +13,7 @@ A REST API for managing personal accounting data including categories and outcom
 
 ## Tech Stack
 
-- **Go 1.25.1** - Programming language
+- **Go 1.26.0** - Programming language
 - **PostgreSQL 18** - Database
 - **Docker & Docker Compose** - Containerization
 - **Swagger/OpenAPI** - API documentation
@@ -40,7 +40,7 @@ A REST API for managing personal accounting data including categories and outcom
 ## Prerequisites
 
 - Docker and Docker Compose
-- Go 1.25.1+ (for local development)
+- Go 1.26.0+ (for local development)
 
 ## Quick Start
 
@@ -317,7 +317,7 @@ docker compose run --rm migrate version
 
 ### Local Development Setup
 
-1. Install Go 1.25.1+
+1. Install Go 1.26.0+
 2. Set up PostgreSQL (or use Docker)
 3. Copy and configure `.env`
 4. Run migrations
