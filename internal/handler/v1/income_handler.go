@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -53,8 +54,8 @@ func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 
 	income, err := h.service.Create(r.Context(), req.Name, req.Amount, &req.CreatedAt)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -112,8 +113,8 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 
 	incomes, err := h.service.GetAll(r.Context(), from, to)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidDateError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -148,12 +149,12 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 
 	income, err := h.service.GetById(r.Context(), id)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
-		if _, ok := err.(*domain.EntityNotFoundError); ok {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
+			http.Error(w, error.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -211,8 +212,8 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 
 	income, err := h.service.Patch(r.Context(), id, name, amount, req.CreatedAt)
 	if err != nil {
-		if _, ok := err.(*domain.EntityNotFoundError); ok {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
+			http.Error(w, error.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -246,8 +247,8 @@ func (h *IncomeHandler) DeleteIncomeById(w http.ResponseWriter, r *http.Request)
 
 	err = h.service.DeleteById(r.Context(), id)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)

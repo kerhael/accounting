@@ -2,6 +2,7 @@ package v1
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -57,8 +58,8 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 
 	outcome, err := h.service.Create(r.Context(), req.Name, req.Amount, req.CategoryId, &req.CreatedAt)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -130,12 +131,12 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 
 	outcomes, err := h.service.GetAll(r.Context(), from, to, categoryId)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidDateError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -173,12 +174,12 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 
 	outcome, err := h.service.GetById(r.Context(), id)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
-		if _, ok := err.(*domain.EntityNotFoundError); ok {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
+			http.Error(w, error.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -249,12 +250,12 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 
 	outcome, err := h.service.Patch(r.Context(), id, name, amount, categoryId, req.CreatedAt)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
-		if _, ok := err.(*domain.EntityNotFoundError); ok {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
+			http.Error(w, error.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -291,8 +292,8 @@ func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Reques
 
 	err = h.service.DeleteById(r.Context(), id)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -360,12 +361,12 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 
 	categorySums, err := h.service.GetSum(r.Context(), from, to, categoryId)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidDateError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
-		if _, ok := err.(*domain.InvalidEntityError); ok {
-			http.Error(w, err.Error(), http.StatusNotFound)
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			http.Error(w, error.Error(), http.StatusNotFound)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -425,8 +426,8 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 
 	total, err := h.service.GetTotal(r.Context(), from, to)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidDateError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -495,8 +496,8 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 
 	series, err := h.service.GetSeries(r.Context(), from, to)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidDateError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -564,8 +565,8 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 
 	series, err := h.service.GetTotalSeries(r.Context(), from, to)
 	if err != nil {
-		if _, ok := err.(*domain.InvalidDateError); ok {
-			http.Error(w, err.Error(), http.StatusBadRequest)
+		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
+			http.Error(w, error.Error(), http.StatusBadRequest)
 			return
 		}
 		http.Error(w, err.Error(), http.StatusInternalServerError)
