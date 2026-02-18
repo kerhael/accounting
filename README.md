@@ -318,13 +318,18 @@ docker compose run --rm migrate version
 ### Local Development Setup
 
 1. Install Go 1.26.0+
-2. Set up PostgreSQL (or use Docker)
+2. Set up PostgreSQL
 3. Copy and configure `.env`
 4. Run migrations
 5. Start the API:
 
 ```bash
 go run cmd/api/main.go
+```
+
+Or use Docker: 
+```bash
+docker compose up --build
 ```
 
 ### Generate Swagger Documentation
