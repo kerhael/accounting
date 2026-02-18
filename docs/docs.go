@@ -928,6 +928,52 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/api/v1/users/": {
+            "post": {
+                "description": "Create a new user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Create a user",
+                "parameters": [
+                    {
+                        "description": "User payload",
+                        "name": "user",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.CreateUserRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/v1.UserResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -997,6 +1043,27 @@ const docTemplate = `{
                 },
                 "name": {
                     "description": "Name of the expense",
+                    "type": "string"
+                }
+            }
+        },
+        "v1.CreateUserRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "User email",
+                    "type": "string"
+                },
+                "firstName": {
+                    "description": "User first name",
+                    "type": "string"
+                },
+                "lastName": {
+                    "description": "User last name",
+                    "type": "string"
+                },
+                "password": {
+                    "description": "User password (minimum 8 characters)",
                     "type": "string"
                 }
             }
@@ -1128,6 +1195,27 @@ const docTemplate = `{
                 "total": {
                     "description": "Total amount in cents",
                     "type": "integer"
+                }
+            }
+        },
+        "v1.UserResponse": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "User email",
+                    "type": "string"
+                },
+                "firstName": {
+                    "description": "User first name",
+                    "type": "string"
+                },
+                "id": {
+                    "description": "User identifier",
+                    "type": "integer"
+                },
+                "lastName": {
+                    "description": "User last name",
+                    "type": "string"
                 }
             }
         }

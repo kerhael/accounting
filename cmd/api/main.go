@@ -10,6 +10,7 @@ import (
 	"github.com/kerhael/accounting/internal/handler"
 	"github.com/kerhael/accounting/internal/router"
 	"github.com/kerhael/accounting/pkg/logger"
+	"github.com/kerhael/accounting/pkg/security"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -33,6 +34,9 @@ func main() {
 		logr.Error("config error", err)
 		return
 	}
+
+	// security
+	security.InitJWT(cfg.JWTSecret)
 
 	// database
 	dbPool, err := db.NewPostgresPool(cfg.Database)

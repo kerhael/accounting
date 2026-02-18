@@ -48,6 +48,21 @@ definitions:
         description: Name of the expense
         type: string
     type: object
+  v1.CreateUserRequest:
+    properties:
+      email:
+        description: User email
+        type: string
+      firstName:
+        description: User first name
+        type: string
+      lastName:
+        description: User last name
+        type: string
+      password:
+        description: User password (minimum 8 characters)
+        type: string
+    type: object
   v1.ErrorResponse:
     properties:
       message:
@@ -138,6 +153,21 @@ definitions:
       total:
         description: Total amount in cents
         type: integer
+    type: object
+  v1.UserResponse:
+    properties:
+      email:
+        description: User email
+        type: string
+      firstName:
+        description: User first name
+        type: string
+      id:
+        description: User identifier
+        type: integer
+      lastName:
+        description: User last name
+        type: string
     type: object
 info:
   contact:
@@ -758,6 +788,36 @@ paths:
       summary: Get total of outcomes
       tags:
       - outcomes
+  /api/v1/users/:
+    post:
+      consumes:
+      - application/json
+      description: Create a new user
+      parameters:
+      - description: User payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/v1.CreateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1.UserResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      summary: Create a user
+      tags:
+      - users
 schemes:
 - http
 swagger: "2.0"

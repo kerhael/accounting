@@ -29,4 +29,6 @@ func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers) {
 	mux.HandleFunc("GET    /api/v1/incomes/{id}", h.V1.Incomes.GetIncomeById)
 	mux.HandleFunc("PATCH  /api/v1/incomes/{id}", h.V1.Incomes.PatchIncome)
 	mux.HandleFunc("DELETE /api/v1/incomes/{id}", h.V1.Incomes.DeleteIncomeById)
+
+	mux.HandleFunc("POST   /api/v1/users/", h.V1.Users.PostUser)
 }

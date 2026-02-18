@@ -16,7 +16,8 @@ type DatabaseConfig struct {
 }
 
 type Config struct {
-	Database DatabaseConfig
+	Database  DatabaseConfig
+	JWTSecret string
 }
 
 func Load() (*Config, error) {
@@ -39,6 +40,9 @@ func Load() (*Config, error) {
 	if os.Getenv("DB_SSLMODE") == "" {
 		cfgErr = append(cfgErr, "DB_SSLMODE")
 	}
+	if os.Getenv("JWT_SECRET") == "" {
+		cfgErr = append(cfgErr, "JWT_SECRET")
+	}
 	if len(cfgErr) > 0 {
 		return nil, fmt.Errorf("missing %s", strings.Join(cfgErr, ","))
 	}
@@ -52,6 +56,7 @@ func Load() (*Config, error) {
 			Name:     os.Getenv("DB_NAME"),
 			SSLMode:  os.Getenv("DB_SSLMODE"),
 		},
+		JWTSecret: os.Getenv("JWT_SECRET"),
 	}
 
 	return cfg, nil

@@ -4,6 +4,7 @@ A REST API for managing personal accounting data including categories and outcom
 
 ## Features
 
+- **Users Management**: Create users
 - **Categories Management**: Create, read, and delete expense categories
 - **Outcomes Tracking**: Record financial outcomes with amounts, categories, and timestamps
 - **Health Check**: API health monitoring endpoint
@@ -104,6 +105,18 @@ Check API health status.
 
 ```bash
 curl http://localhost:8080/api/v1/health
+```
+
+#### Users
+
+**POST** `/api/v1/users/`
+
+Create a new user.
+
+```bash
+curl -X POST http://localhost:8080/api/v1/users/ \
+  -H "Content-Type: application/json" \
+  -d '{"firstName":"John", "lastName":"Smith", "email":"john.smith@gmail.com", "password":"plainPassword"}'
 ```
 
 #### Categories
@@ -354,3 +367,14 @@ Error response format:
   "error": "error message description"
 }
 ```
+
+
+TODO: 
+- rate limiting user creation
+- login route
+- update user route
+- delete user route
+- refresh jwt token
+- userID for categories, incomes and outcomes
+- frontend
+- CI/CD
