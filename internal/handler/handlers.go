@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/kerhael/accounting/internal/auth"
 	v1 "github.com/kerhael/accounting/internal/handler/v1"
 	"github.com/kerhael/accounting/internal/infrastructure/repository"
 	"github.com/kerhael/accounting/internal/service"
@@ -16,10 +17,11 @@ type HandlersV1 struct {
 }
 
 type Handlers struct {
-	V1 *HandlersV1
+	V1  *HandlersV1
+	JWT *auth.JWTService
 }
 
-func NewHandlers(db *pgxpool.Pool) *Handlers {
+func NewHandlers(db *pgxpool.Pool, jwtService *auth.JWTService) *Handlers {
 	healthRepo := repository.NewHealthRepository(db)
 	healthService := service.NewHealthService(healthRepo)
 
@@ -36,6 +38,7 @@ func NewHandlers(db *pgxpool.Pool) *Handlers {
 	userService := service.NewUserService(userRepo)
 
 	return &Handlers{
+		JWT: jwtService,
 		V1: &HandlersV1{
 			Health:   v1.NewHealthHandler(healthService),
 			Category: v1.NewCategoryHandler(categoryService),

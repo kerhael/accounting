@@ -5,12 +5,12 @@ import (
 
 	_ "github.com/kerhael/accounting/docs"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/config"
 	"github.com/kerhael/accounting/internal/db"
 	"github.com/kerhael/accounting/internal/handler"
 	"github.com/kerhael/accounting/internal/router"
 	"github.com/kerhael/accounting/pkg/logger"
-	"github.com/kerhael/accounting/pkg/security"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -35,8 +35,8 @@ func main() {
 		return
 	}
 
-	// security
-	security.InitJWT(cfg.JWTSecret)
+	// auth
+	jwtService := auth.NewJWTService(cfg.JWTSecret)
 
 	// database
 	dbPool, err := db.NewPostgresPool(cfg.Database)
@@ -47,7 +47,7 @@ func main() {
 	defer dbPool.Close()
 
 	// register handlers
-	handlers := handler.NewHandlers(dbPool)
+	handlers := handler.NewHandlers(dbPool, jwtService)
 
 	// mux server
 	mux := http.NewServeMux()
