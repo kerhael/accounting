@@ -54,7 +54,7 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(category)
+	json.NewEncoder(w).Encode(toCategoryResponse(category))
 }
 
 // Get all categories
@@ -75,7 +75,7 @@ func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Reques
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(categories)
+	json.NewEncoder(w).Encode(toCategoriesResponse(categories))
 }
 
 // Get a category
@@ -115,7 +115,7 @@ func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(category)
+	json.NewEncoder(w).Encode(toCategoryResponse(category))
 }
 
 // Delete a category
@@ -149,4 +149,22 @@ func (h *CategoryHandler) DeleteCategoryById(w http.ResponseWriter, r *http.Requ
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func toCategoryResponse(category *domain.Category) CategoryResponse {
+	return CategoryResponse{
+		ID:    category.ID,
+		Label: category.Label,
+	}
+}
+
+func toCategoriesResponse(categories []domain.Category) []CategoryResponse {
+	var categoriesResp []CategoryResponse
+	if len(categories) == 0 {
+		return []CategoryResponse{}
+	}
+	for _, c := range categories {
+		categoriesResp = append(categoriesResp, toCategoryResponse(&c))
+	}
+	return categoriesResp
 }

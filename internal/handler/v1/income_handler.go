@@ -64,7 +64,7 @@ func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(income)
+	json.NewEncoder(w).Encode(toIncomeResponse(income))
 }
 
 // Get all incomes
@@ -123,7 +123,7 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(incomes)
+	json.NewEncoder(w).Encode(toIncomesResponse(incomes))
 }
 
 // Get an income
@@ -163,7 +163,7 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(income)
+	json.NewEncoder(w).Encode(toIncomeResponse(income))
 }
 
 // Update an income
@@ -222,7 +222,7 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(income)
+	json.NewEncoder(w).Encode(toIncomeResponse(income))
 }
 
 // Delete an income
@@ -256,4 +256,24 @@ func (h *IncomeHandler) DeleteIncomeById(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func toIncomeResponse(income *domain.Income) IncomeResponse {
+	return IncomeResponse{
+		Name:      income.Name,
+		Amount:    income.Amount,
+		CreatedAt: income.CreatedAt,
+		ID:        income.ID,
+	}
+}
+
+func toIncomesResponse(incomes []domain.Income) []IncomeResponse {
+	var incomesResp []IncomeResponse
+	if len(incomes) == 0 {
+		return []IncomeResponse{}
+	}
+	for _, i := range incomes {
+		incomesResp = append(incomesResp, toIncomeResponse(&i))
+	}
+	return incomesResp
 }

@@ -68,7 +68,7 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(outcome); err != nil {
+	if err := json.NewEncoder(w).Encode(toOutcomeResponse(outcome)); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
@@ -145,7 +145,7 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(outcomes); err != nil {
+	if err := json.NewEncoder(w).Encode(toOutcomesResponse(outcomes)); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
@@ -188,7 +188,7 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(outcome); err != nil {
+	if err := json.NewEncoder(w).Encode(toOutcomeResponse(outcome)); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
@@ -264,7 +264,7 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(outcome); err != nil {
+	if err := json.NewEncoder(w).Encode(toOutcomeResponse(outcome)); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
@@ -579,4 +579,25 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
+}
+
+func toOutcomeResponse(outcome *domain.Outcome) OutcomeResponse {
+	return OutcomeResponse{
+		Name:       outcome.Name,
+		CreatedAt:  outcome.CreatedAt,
+		Amount:     outcome.Amount,
+		CategoryId: outcome.CategoryId,
+		ID:         outcome.ID,
+	}
+}
+
+func toOutcomesResponse(outcomes []domain.Outcome) []OutcomeResponse {
+	var outcomesResp []OutcomeResponse
+	if len(outcomes) == 0 {
+		return []OutcomeResponse{}
+	}
+	for _, i := range outcomes {
+		outcomesResp = append(outcomesResp, toOutcomeResponse(&i))
+	}
+	return outcomesResp
 }
