@@ -11,6 +11,7 @@ import (
 	"github.com/kerhael/accounting/internal/handler"
 	"github.com/kerhael/accounting/internal/router"
 	"github.com/kerhael/accounting/pkg/logger"
+	"github.com/kerhael/accounting/pkg/middleware"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
 
@@ -46,6 +47,9 @@ func main() {
 	}
 	defer dbPool.Close()
 
+	// rate limiter
+	rateLimiter := middleware.NewRateLimiter(1, 5)
+
 	// register handlers
 	handlers := handler.NewHandlers(dbPool, jwtService)
 
@@ -53,7 +57,7 @@ func main() {
 	mux := http.NewServeMux()
 
 	// register routes
-	router.RegisterRoutes(mux, handlers)
+	router.RegisterRoutes(mux, handlers, rateLimiter)
 
 	// swagger UI
 	mux.Handle("/swagger/", httpSwagger.WrapHandler)

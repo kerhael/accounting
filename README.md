@@ -370,11 +370,11 @@ Error response format:
 
 
 TODO: 
-- rate limiting user creation
 - login route
 - update user route
 - delete user route
 - refresh jwt token
 - userID for categories, incomes and outcomes
+- authenticated routes
 - frontend
 - CI/CD

@@ -4,9 +4,10 @@ import (
 	"net/http"
 
 	"github.com/kerhael/accounting/internal/handler"
+	"github.com/kerhael/accounting/pkg/middleware"
 )
 
-func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers) {
+func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers, rl *middleware.RateLimiter) {
 	mux.HandleFunc("GET    /api/v1/health", h.V1.Health.Check)
 
 	mux.HandleFunc("GET    /api/v1/categories/", h.V1.Category.GetAllCategories)
@@ -30,5 +31,5 @@ func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers) {
 	mux.HandleFunc("PATCH  /api/v1/incomes/{id}", h.V1.Incomes.PatchIncome)
 	mux.HandleFunc("DELETE /api/v1/incomes/{id}", h.V1.Incomes.DeleteIncomeById)
 
-	mux.HandleFunc("POST   /api/v1/users/", h.V1.Users.PostUser)
+	mux.Handle("POST   /api/v1/users/", rl.Middleware(http.HandlerFunc(h.V1.Users.PostUser)))
 }

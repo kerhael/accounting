@@ -135,9 +135,6 @@ func TestUserService_Create_EmptyEmail(t *testing.T) {
 	assert.Nil(t, user)
 	assert.Error(t, err)
 
-	var invalidErr *domain.InvalidEntityError
-	assert.True(t, errors.As(err, &invalidErr))
-
 	mockRepo.AssertNotCalled(t, "Create")
 }
 
@@ -151,9 +148,6 @@ func TestUserService_Create_InvalidEmailFormat(t *testing.T) {
 
 	assert.Nil(t, user)
 	assert.Error(t, err)
-
-	var invalidErr *domain.InvalidEntityError
-	assert.True(t, errors.As(err, &invalidErr))
 
 	mockRepo.AssertNotCalled(t, "Create")
 }

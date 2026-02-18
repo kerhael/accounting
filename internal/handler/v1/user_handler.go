@@ -20,13 +20,14 @@ func NewUserHandler(service service.UserServiceInterface) *UserHandler {
 
 // Create a user
 // @Summary      Create a user
-// @Description Create a new user
+// @Description Create a new user. A rate limiter prevents from brute force attacks (speed 1s, burst 5)
 // @Tags         users
 // @Accept       json
 // @Produce      json
 // @Param        user  body      CreateUserRequest  true  "User payload"
 // @Success      201       {object}   UserResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      429       {object}   ErrorResponse  "Too many requests error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Router       /api/v1/users/ [post]
 func (h *UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
