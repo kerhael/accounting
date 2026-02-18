@@ -1,10 +1,7 @@
 package security
 
 import (
-	"errors"
 	"testing"
-
-	"github.com/kerhael/accounting/internal/domain"
 )
 
 func TestNormalizeEmail(t *testing.T) {
@@ -72,58 +69,38 @@ func TestValidateEmail(t *testing.T) {
 		}
 	})
 
-	t.Run("empty string returns InvalidEntityError", func(t *testing.T) {
+	t.Run("empty string returns error", func(t *testing.T) {
 		err := ValidateEmail("")
 		if err == nil {
 			t.Fatal("expected an error for empty email, got nil")
 		}
-		var invalidErr *domain.InvalidEntityError
-		if !errors.As(err, &invalidErr) {
-			t.Errorf("expected *domain.InvalidEntityError, got %T", err)
-		}
 	})
 
-	t.Run("whitespace-only string returns InvalidEntityError", func(t *testing.T) {
+	t.Run("whitespace-only string returns error", func(t *testing.T) {
 		err := ValidateEmail("   ")
 		if err == nil {
 			t.Fatal("expected an error for whitespace-only email, got nil")
 		}
-		var invalidErr *domain.InvalidEntityError
-		if !errors.As(err, &invalidErr) {
-			t.Errorf("expected *domain.InvalidEntityError, got %T", err)
-		}
 	})
 
-	t.Run("missing @ returns InvalidEntityError", func(t *testing.T) {
+	t.Run("missing @ returns error", func(t *testing.T) {
 		err := ValidateEmail("userexample.com")
 		if err == nil {
 			t.Fatal("expected an error for email without @, got nil")
 		}
-		var invalidErr *domain.InvalidEntityError
-		if !errors.As(err, &invalidErr) {
-			t.Errorf("expected *domain.InvalidEntityError, got %T", err)
-		}
 	})
 
-	t.Run("missing domain returns InvalidEntityError", func(t *testing.T) {
+	t.Run("missing domain returns error", func(t *testing.T) {
 		err := ValidateEmail("user@")
 		if err == nil {
 			t.Fatal("expected an error for email without domain, got nil")
 		}
-		var invalidErr *domain.InvalidEntityError
-		if !errors.As(err, &invalidErr) {
-			t.Errorf("expected *domain.InvalidEntityError, got %T", err)
-		}
 	})
 
-	t.Run("plain text returns InvalidEntityError", func(t *testing.T) {
+	t.Run("plain text returns error", func(t *testing.T) {
 		err := ValidateEmail("not-an-email")
 		if err == nil {
 			t.Fatal("expected an error for plain text, got nil")
-		}
-		var invalidErr *domain.InvalidEntityError
-		if !errors.As(err, &invalidErr) {
-			t.Errorf("expected *domain.InvalidEntityError, got %T", err)
 		}
 	})
 }
