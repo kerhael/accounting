@@ -12,6 +12,7 @@ import (
 
 type UserServiceInterface interface {
 	Create(ctx context.Context, firstName string, lastName string, email string, password string) (*domain.User, error)
+	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 }
 
 type UserService struct {
@@ -38,7 +39,9 @@ func (s *UserService) Create(ctx context.Context, firstName string, lastName str
 	email = security.NormalizeEmail(email)
 	err := security.ValidateEmail(email)
 	if err != nil {
-		return nil, err
+		return nil, &domain.InvalidEntityError{
+			UnderlyingCause: err,
+		}
 	}
 	passwordHash, err := security.HashPassword(password)
 	if err != nil {
@@ -53,6 +56,23 @@ func (s *UserService) Create(ctx context.Context, firstName string, lastName str
 	}
 
 	if err := s.repo.Create(ctx, user); err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *UserService) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	email = security.NormalizeEmail(email)
+	err := security.ValidateEmail(email)
+	if err != nil {
+		return nil, &domain.InvalidEntityError{
+			UnderlyingCause: err,
+		}
+	}
+
+	user, err := s.repo.FindByEmail(ctx, email)
+	if err != nil {
 		return nil, err
 	}
 

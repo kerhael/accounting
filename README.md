@@ -4,8 +4,10 @@ A REST API for managing personal accounting data including categories and outcom
 
 ## Features
 
+- **Authentication**: Login
 - **Users Management**: Create users
 - **Categories Management**: Create, read, and delete expense categories
+- **Incomes Tracking**: Record financial incomes with amounts, categories, and timestamps
 - **Outcomes Tracking**: Record financial outcomes with amounts, categories, and timestamps
 - **Health Check**: API health monitoring endpoint
 - **Swagger Documentation**: Interactive API documentation
@@ -69,6 +71,9 @@ DB_SSLMODE=disable
 
 # Application
 LOG_LEVEL=info
+
+# JWT
+JWT_SECRET=super_secret_jwt_key
 ```
 
 ### 2. Build and Run with Docker
@@ -105,6 +110,18 @@ Check API health status.
 
 ```bash
 curl http://localhost:8080/api/v1/health
+```
+
+#### Auth
+
+**POST** `/api/v1/login`
+
+Login.
+
+```bash
+curl http://localhost:8080/api/v1/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"john.smith@gmail.com", "password":"plainPassword"}'
 ```
 
 #### Users
@@ -358,7 +375,9 @@ The API returns standard HTTP status codes:
 - `200` - Success
 - `201` - Created
 - `400` - Bad Request (validation errors)
+- `401` - Unauthorized
 - `404` - Not Found
+- `429` - Too Many Requests
 - `500` - Internal Server Error
 
 Error response format:
@@ -370,11 +389,11 @@ Error response format:
 
 
 TODO: 
-- login route
+- better responses for sums-by-category, total, series-by-category, series-total
+- authenticated routes
+- userID for categories, incomes and outcomes
 - update user route
 - delete user route
 - refresh jwt token
-- userID for categories, incomes and outcomes
-- authenticated routes
 - frontend
 - CI/CD

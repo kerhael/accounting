@@ -31,5 +31,7 @@ func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers, rl *middleware.Ra
 	mux.HandleFunc("PATCH  /api/v1/incomes/{id}", h.V1.Incomes.PatchIncome)
 	mux.HandleFunc("DELETE /api/v1/incomes/{id}", h.V1.Incomes.DeleteIncomeById)
 
-	mux.Handle("POST   /api/v1/users/", rl.Middleware(http.HandlerFunc(h.V1.Users.PostUser)))
+	mux.Handle("POST       /api/v1/users/", rl.Middleware(http.HandlerFunc(h.V1.Users.PostUser)))
+
+	mux.Handle("POST       /api/v1/login/", rl.Middleware(http.HandlerFunc(h.V1.Auth.Login)))
 }

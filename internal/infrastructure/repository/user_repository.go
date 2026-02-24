@@ -34,10 +34,10 @@ func (r *PostgresUserRepository) Create(ctx context.Context, u *domain.User) err
 func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
 	var user domain.User
 
-	query := `SELECT id, first_name, last_name, email, created_at FROM users WHERE email = $1 AND deleted_at IS NULL`
+	query := `SELECT id, first_name, last_name, email, password_hash, created_at FROM users WHERE email = $1 AND deleted_at IS NULL`
 
 	row := r.db.QueryRow(ctx, query, email)
-	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.CreatedAt)
+	err := row.Scan(&user.ID, &user.FirstName, &user.LastName, &user.Email, &user.PasswordHash, &user.CreatedAt)
 	if err != nil {
 		return nil, err
 	}

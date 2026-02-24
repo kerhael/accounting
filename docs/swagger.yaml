@@ -83,6 +83,23 @@ definitions:
         description: Name of the income
         type: string
     type: object
+  v1.LoginRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  v1.LoginResponse:
+    properties:
+      token:
+        description: bearer token
+        type: string
+      user:
+        allOf:
+        - $ref: '#/definitions/v1.UserResponse'
+        description: user object
+    type: object
   v1.MonthlySeries:
     properties:
       categories:
@@ -792,7 +809,8 @@ paths:
     post:
       consumes:
       - application/json
-      description: Create a new user
+      description: Create a new user. A rate limiter prevents from brute force attacks
+        (speed 1s, burst 5)
       parameters:
       - description: User payload
         in: body
@@ -811,6 +829,10 @@ paths:
           description: Bad request error
           schema:
             $ref: '#/definitions/v1.ErrorResponse'
+        "429":
+          description: Too many requests error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
         "500":
           description: Internal server error
           schema:
@@ -818,6 +840,45 @@ paths:
       summary: Create a user
       tags:
       - users
+  /api/v1/users/login:
+    post:
+      consumes:
+      - application/json
+      description: User login. A rate limiter prevents from brute force attacks (speed
+        1s, burst 5)
+      parameters:
+      - description: Login payload
+        in: body
+        name: login
+        required: true
+        schema:
+          $ref: '#/definitions/v1.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.LoginResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "429":
+          description: Too many requests error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      summary: Login
+      tags:
+      - auth
 schemes:
 - http
 swagger: "2.0"

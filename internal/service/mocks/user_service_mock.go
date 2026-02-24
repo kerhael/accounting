@@ -18,3 +18,11 @@ func (m *UserService) Create(ctx context.Context, firstName string, lastName str
 	}
 	return nil, args.Error(1)
 }
+
+func (m *UserService) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	args := m.Called(ctx, email)
+	if user, ok := args.Get(0).(*domain.User); ok {
+		return user, args.Error(1)
+	}
+	return nil, args.Error(1)
+}

@@ -14,6 +14,7 @@ type HandlersV1 struct {
 	Outcomes *v1.OutcomeHandler
 	Incomes  *v1.IncomeHandler
 	Users    *v1.UserHandler
+	Auth     *v1.AuthHandler
 }
 
 type Handlers struct {
@@ -45,6 +46,7 @@ func NewHandlers(db *pgxpool.Pool, jwtService *auth.JWTService) *Handlers {
 			Outcomes: v1.NewOutcomeHandler(outcomeService),
 			Incomes:  v1.NewIncomeHandler(incomeService),
 			Users:    v1.NewUserHandler(userService),
+			Auth:     v1.NewAuthHandler(userService, jwtService),
 		},
 	}
 }

@@ -169,3 +169,118 @@ func TestUserService_Create_RepoError(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestUserService_FindByEmail_Success(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	expectedUser := &domain.User{
+		ID:        1,
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "john@example.com",
+	}
+
+	mockRepo.On("FindByEmail", ctx, "john@example.com").Return(expectedUser, nil)
+
+	user, err := svc.FindByEmail(ctx, "john@example.com")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, expectedUser.ID, user.ID)
+	assert.Equal(t, expectedUser.FirstName, user.FirstName)
+	assert.Equal(t, expectedUser.LastName, user.LastName)
+	assert.Equal(t, expectedUser.Email, user.Email)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_FindByEmail_NormalizesEmail(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	expectedUser := &domain.User{
+		ID:        1,
+		FirstName: "Jane",
+		LastName:  "Doe",
+		Email:     "jane@example.com",
+	}
+
+	mockRepo.On("FindByEmail", ctx, "jane@example.com").Return(expectedUser, nil)
+
+	user, err := svc.FindByEmail(ctx, "  JANE@EXAMPLE.COM  ")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, "jane@example.com", user.Email)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_FindByEmail_EmptyEmail(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	user, err := svc.FindByEmail(ctx, "")
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+
+	mockRepo.AssertNotCalled(t, "FindByEmail")
+}
+
+func TestUserService_FindByEmail_WhitespaceEmail(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	user, err := svc.FindByEmail(ctx, "   ")
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+
+	mockRepo.AssertNotCalled(t, "FindByEmail")
+}
+
+func TestUserService_FindByEmail_InvalidEmailFormat(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	user, err := svc.FindByEmail(ctx, "not-an-email")
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+
+	mockRepo.AssertNotCalled(t, "FindByEmail")
+}
+
+func TestUserService_FindByEmail_UserNotFound(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	repoErr := errors.New("user not found")
+
+	mockRepo.On("FindByEmail", ctx, "nonexistent@example.com").Return((*domain.User)(nil), repoErr)
+
+	user, err := svc.FindByEmail(ctx, "nonexistent@example.com")
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+	assert.Equal(t, "user not found", err.Error())
+
+	mockRepo.AssertExpectations(t)
+}

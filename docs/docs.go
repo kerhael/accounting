@@ -931,7 +931,7 @@ const docTemplate = `{
         },
         "/api/v1/users/": {
             "post": {
-                "description": "Create a new user",
+                "description": "Create a new user. A rate limiter prevents from brute force attacks (speed 1s, burst 5)",
                 "consumes": [
                     "application/json"
                 ],
@@ -962,6 +962,70 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/users/login": {
+            "post": {
+                "description": "User login. A rate limiter prevents from brute force attacks (speed 1s, burst 5)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Login",
+                "parameters": [
+                    {
+                        "description": "Login payload",
+                        "name": "login",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1.LoginRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1.LoginResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Too many requests error",
                         "schema": {
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
@@ -1094,6 +1158,34 @@ const docTemplate = `{
                 "name": {
                     "description": "Name of the income",
                     "type": "string"
+                }
+            }
+        },
+        "v1.LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1.LoginResponse": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "description": "bearer token",
+                    "type": "string"
+                },
+                "user": {
+                    "description": "user object",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/v1.UserResponse"
+                        }
+                    ]
                 }
             }
         },
