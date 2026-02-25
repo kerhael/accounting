@@ -9,10 +9,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/service/mocks"
 	"github.com/kerhael/accounting/pkg/middleware"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"golang.org/x/time/rate"
 )
 
@@ -240,7 +242,7 @@ func TestUserHandler_PostUsersRoute_RateLimiter_BurstOf5(t *testing.T) {
 
 	// Same parameters as main.go: NewRateLimiter(1, 5)
 	rl := middleware.NewRateLimiter(1, burst)
-	handler := rl.Middleware(userHandler)
+	handler := rl.RateLimitMiddleware(userHandler)
 
 	// All burst requests should reach the user handler
 	for i := 1; i <= burst; i++ {
@@ -278,7 +280,7 @@ func TestUserHandler_PostUsersRoute_RateLimiter_BurstOf5(t *testing.T) {
 // Two clients hitting POST /api/v1/users/ each get their own rate-limit bucket.
 func TestUserHandler_PostUsersRoute_RateLimiter_DifferentClientsAreIndependent(t *testing.T) {
 	rl := middleware.NewRateLimiter(rate.Limit(0.001), 1) // burst of 1
-	handler := rl.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := rl.RateLimitMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusCreated)
 	}))
 
@@ -305,4 +307,128 @@ func TestUserHandler_PostUsersRoute_RateLimiter_DifferentClientsAreIndependent(t
 	if wB.Code != http.StatusCreated {
 		t.Errorf("client B first request: expected 201, got %d", wB.Code)
 	}
+}
+
+func TestUserHandler_GetMe_Success(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	user := &domain.User{
+		ID:        123,
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "john@example.com",
+	}
+
+	mockService.On("FindById", mock.Anything, 123).Return(user, nil)
+
+	req := httptest.NewRequest("GET", "/api/v1/users/me", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.GetMe(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response UserResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, user.ID, response.ID)
+	assert.Equal(t, user.FirstName, response.FirstName)
+	assert.Equal(t, user.LastName, response.LastName)
+	assert.Equal(t, user.Email, response.Email)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_GetMe_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	req := httptest.NewRequest("GET", "/api/v1/users/me", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetMe(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "FindById")
+}
+
+func TestUserHandler_GetMe_ServiceError(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	serviceErr := errors.New("database error")
+	mockService.On("FindById", mock.Anything, 123).Return((*domain.User)(nil), serviceErr)
+
+	req := httptest.NewRequest("GET", "/api/v1/users/me", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.GetMe(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "internal server error", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_GetMe_InvalidEntityError(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	serviceErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid user ID")}
+	mockService.On("FindById", mock.Anything, 123).Return((*domain.User)(nil), serviceErr)
+
+	req := httptest.NewRequest("GET", "/api/v1/users/me", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.GetMe(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "invalid entity data: invalid user ID", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_GetMe_EntityNotFoundError(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	serviceErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("user not found")}
+	mockService.On("FindById", mock.Anything, 123).Return((*domain.User)(nil), serviceErr)
+
+	req := httptest.NewRequest("GET", "/api/v1/users/me", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.GetMe(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "entity not found: user not found", response.Message)
+
+	mockService.AssertExpectations(t)
 }

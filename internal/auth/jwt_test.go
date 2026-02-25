@@ -50,12 +50,8 @@ func TestJWTService_GenerateJWT(t *testing.T) {
 			t.Fatalf("expected valid token, got error: %v", err)
 		}
 
-		gotUserID, ok := claims["user_id"]
-		if !ok {
-			t.Fatal("expected 'user_id' claim to be present")
-		}
-		// JWT numbers are float64 when decoded via MapClaims
-		if int(gotUserID.(float64)) != userID {
+		gotUserID := claims.UserID
+		if gotUserID != userID {
 			t.Fatalf("expected user_id %d, got %v", userID, gotUserID)
 		}
 	})
@@ -71,12 +67,8 @@ func TestJWTService_GenerateJWT(t *testing.T) {
 			t.Fatalf("expected valid token, got error: %v", err)
 		}
 
-		exp, ok := claims["exp"]
-		if !ok {
-			t.Fatal("expected 'exp' claim to be present")
-		}
-		expTime := time.Unix(int64(exp.(float64)), 0)
-		if !expTime.After(time.Now()) {
+		exp := claims.ExpiresAt
+		if !exp.After(time.Now()) {
 			t.Fatal("expected expiration to be in the future")
 		}
 	})

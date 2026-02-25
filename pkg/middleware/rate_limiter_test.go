@@ -15,7 +15,7 @@ func okHandler(w http.ResponseWriter, r *http.Request) {
 
 func TestRateLimiter_AllowsRequestsWithinBurst(t *testing.T) {
 	rl := NewRateLimiter(rate.Limit(10), 3) // burst of 3
-	handler := rl.Middleware(http.HandlerFunc(okHandler))
+	handler := rl.RateLimitMiddleware(http.HandlerFunc(okHandler))
 
 	for i := 1; i <= 3; i++ {
 		req := httptest.NewRequest(http.MethodGet, "/", nil)
@@ -33,7 +33,7 @@ func TestRateLimiter_AllowsRequestsWithinBurst(t *testing.T) {
 func TestRateLimiter_BlocksRequestsOverBurst(t *testing.T) {
 	// Very slow refill (0.001 req/s) ensures the bucket won't refill during the test.
 	rl := NewRateLimiter(rate.Limit(0.001), 2)
-	handler := rl.Middleware(http.HandlerFunc(okHandler))
+	handler := rl.RateLimitMiddleware(http.HandlerFunc(okHandler))
 
 	ip := "10.0.0.1:5000"
 
@@ -63,7 +63,7 @@ func TestRateLimiter_BlocksRequestsOverBurst(t *testing.T) {
 func TestRateLimiter_DifferentIPsHaveSeparateLimits(t *testing.T) {
 	// burst of 1 — first request from each IP passes, second is blocked
 	rl := NewRateLimiter(rate.Limit(0.001), 1)
-	handler := rl.Middleware(http.HandlerFunc(okHandler))
+	handler := rl.RateLimitMiddleware(http.HandlerFunc(okHandler))
 
 	// Exhaust the limit for IP1
 	req1 := httptest.NewRequest(http.MethodPost, "/", nil)
@@ -99,7 +99,7 @@ func TestRateLimiter_CallsNextHandlerWhenAllowed(t *testing.T) {
 	})
 
 	rl := NewRateLimiter(rate.Limit(10), 5)
-	handler := rl.Middleware(next)
+	handler := rl.RateLimitMiddleware(next)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/v1/users/", nil)
 	req.RemoteAddr = "127.0.0.1:8080"
@@ -121,7 +121,7 @@ func TestRateLimiter_DoesNotCallNextHandlerWhenBlocked(t *testing.T) {
 	})
 
 	rl := NewRateLimiter(rate.Limit(0.001), 1)
-	handler := rl.Middleware(next)
+	handler := rl.RateLimitMiddleware(next)
 
 	ip := "192.168.0.1:4567"
 

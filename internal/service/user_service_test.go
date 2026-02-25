@@ -284,3 +284,82 @@ func TestUserService_FindByEmail_UserNotFound(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestUserService_FindById_Success(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	expectedUser := &domain.User{
+		ID:        1,
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "john@example.com",
+	}
+
+	mockRepo.On("FindById", ctx, 1).Return(expectedUser, nil)
+
+	user, err := svc.FindById(ctx, 1)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, expectedUser.ID, user.ID)
+	assert.Equal(t, expectedUser.FirstName, user.FirstName)
+	assert.Equal(t, expectedUser.LastName, user.LastName)
+	assert.Equal(t, expectedUser.Email, user.Email)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_FindById_InvalidID(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	user, err := svc.FindById(ctx, 0)
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+	assert.Equal(t, "invalid id", invalidErr.UnderlyingCause.Error())
+
+	mockRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestUserService_FindById_NegativeID(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	user, err := svc.FindById(ctx, -1)
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+
+	mockRepo.AssertNotCalled(t, "FindById")
+}
+
+func TestUserService_FindById_UserNotFound(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	repoErr := errors.New("user not found")
+
+	mockRepo.On("FindById", ctx, 999).Return((*domain.User)(nil), repoErr)
+
+	user, err := svc.FindById(ctx, 999)
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+	assert.Equal(t, "user not found", err.Error())
+
+	mockRepo.AssertExpectations(t)
+}

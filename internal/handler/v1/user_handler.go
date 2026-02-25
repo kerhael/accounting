@@ -6,7 +6,9 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/domain"
+	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
 )
 
@@ -72,6 +74,42 @@ func (h *UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(toUserResponse(user))
+}
+
+// Retrieve authenticated user
+// @Summary      Retrieve the authenticated user
+// @Description Retrieve the authenticated user.
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Success      200       {object}   UserResponse
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
+// @Failure      404       {object}   ErrorResponse  "User not found error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
+// @Router       /api/v1/users/me [get]
+func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
+	userID, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
+	user, err := h.service.FindById(r.Context(), userID)
+	if err != nil {
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
+			return
+		}
+		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
+			return
+		}
+		utils.WriteJSONError(w, http.StatusInternalServerError, "internal server error")
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, toUserResponse(user))
 }
 
 func toUserResponse(user *domain.User) UserResponse {

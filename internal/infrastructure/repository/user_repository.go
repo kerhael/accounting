@@ -48,12 +48,9 @@ func (r *PostgresUserRepository) FindByEmail(ctx context.Context, email string) 
 func (r *PostgresUserRepository) FindById(ctx context.Context, id int) (*domain.User, error) {
 	var u domain.User
 
-	query := `
-		SELECT id, first_name, last_name, email, created_at FROM users
-		WHERE id = $1
-	`
+	query := `SELECT id, first_name, last_name, email, password_hash, created_at FROM users WHERE id = $1  AND deleted_at IS NULL`
 
-	err := r.db.QueryRow(ctx, query, id).Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email, &u.CreatedAt)
+	err := r.db.QueryRow(ctx, query, id).Scan(&u.ID, &u.FirstName, &u.LastName, &u.Email, &u.PasswordHash, &u.CreatedAt)
 	if err != nil {
 		return nil, err
 	}

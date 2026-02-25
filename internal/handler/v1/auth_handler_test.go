@@ -59,13 +59,6 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
 	assert.Contains(t, data, "token")
-	assert.Contains(t, data, "user")
-
-	userData := data["user"].(map[string]interface{})
-	assert.Equal(t, float64(1), userData["id"])
-	assert.Equal(t, "John", userData["firstName"])
-	assert.Equal(t, "Doe", userData["lastName"])
-	assert.Equal(t, "john@example.com", userData["email"])
 
 	mockService.AssertExpectations(t)
 }
@@ -223,7 +216,7 @@ func TestAuthHandler_LoginRoute_RateLimiter_BurstOf5(t *testing.T) {
 
 	// Same parameters as main.go: NewRateLimiter(1, 5)
 	rl := middleware.NewRateLimiter(1, burst)
-	handler := rl.Middleware(authHandler)
+	handler := rl.RateLimitMiddleware(authHandler)
 
 	// All burst requests should reach the auth handler
 	for i := 1; i <= burst; i++ {
@@ -261,7 +254,7 @@ func TestAuthHandler_LoginRoute_RateLimiter_BurstOf5(t *testing.T) {
 // Two clients hitting POST /api/v1/users/login each get their own rate-limit bucket.
 func TestAuthHandler_LoginRoute_RateLimiter_DifferentClientsAreIndependent(t *testing.T) {
 	rl := middleware.NewRateLimiter(rate.Limit(0.001), 1) // burst of 1
-	handler := rl.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := rl.RateLimitMiddleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 

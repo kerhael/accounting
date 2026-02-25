@@ -875,6 +875,37 @@ paths:
       summary: Login
       tags:
       - auth
+  /api/v1/users/me:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.UserResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "404":
+          description: User not found error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      summary: Retrieve the authenticated user
+      tags:
+      - users
 schemes:
 - http
 swagger: "2.0"

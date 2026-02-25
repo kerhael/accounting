@@ -3,6 +3,7 @@ package router
 import (
 	"net/http"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/handler"
 	"github.com/kerhael/accounting/pkg/middleware"
 )
@@ -31,7 +32,8 @@ func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers, rl *middleware.Ra
 	mux.HandleFunc("PATCH  /api/v1/incomes/{id}", h.V1.Incomes.PatchIncome)
 	mux.HandleFunc("DELETE /api/v1/incomes/{id}", h.V1.Incomes.DeleteIncomeById)
 
-	mux.Handle("POST       /api/v1/users/", rl.Middleware(http.HandlerFunc(h.V1.Users.PostUser)))
+	mux.Handle("POST       /api/v1/users/", rl.RateLimitMiddleware(http.HandlerFunc(h.V1.Users.PostUser)))
+	mux.Handle("GET        /api/v1/users/me", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Users.GetMe)))
 
-	mux.Handle("POST       /api/v1/login/", rl.Middleware(http.HandlerFunc(h.V1.Auth.Login)))
+	mux.Handle("POST       /api/v1/login/", rl.RateLimitMiddleware(http.HandlerFunc(h.V1.Auth.Login)))
 }

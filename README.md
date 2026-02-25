@@ -136,6 +136,16 @@ curl -X POST http://localhost:8080/api/v1/users/ \
   -d '{"firstName":"John", "lastName":"Smith", "email":"john.smith@gmail.com", "password":"plainPassword"}'
 ```
 
+**GET** `/api/v1/users/me/`
+
+Get the authenticated user.
+
+```bash
+curl http://localhost:8080/api/v1/users/me \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+```
+
 #### Categories
 
 **POST** `/api/v1/categories/`
@@ -390,7 +400,6 @@ Error response format:
 
 TODO: 
 - authenticated routes
-- GET /me
 - userID for categories, incomes and outcomes
 - update user route
 - delete user route

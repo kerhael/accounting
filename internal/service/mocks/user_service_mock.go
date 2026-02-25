@@ -26,3 +26,11 @@ func (m *UserService) FindByEmail(ctx context.Context, email string) (*domain.Us
 	}
 	return nil, args.Error(1)
 }
+
+func (m *UserService) FindById(ctx context.Context, id int) (*domain.User, error) {
+	args := m.Called(ctx, id)
+	if user, ok := args.Get(0).(*domain.User); ok {
+		return user, args.Error(1)
+	}
+	return nil, args.Error(1)
+}

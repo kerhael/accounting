@@ -5,6 +5,7 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/infrastructure/repository"
 	"github.com/kerhael/accounting/pkg/security"
@@ -13,6 +14,7 @@ import (
 type UserServiceInterface interface {
 	Create(ctx context.Context, firstName string, lastName string, email string, password string) (*domain.User, error)
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
+	FindById(ctx context.Context, id int) (*domain.User, error)
 }
 
 type UserService struct {
@@ -73,6 +75,31 @@ func (s *UserService) FindByEmail(ctx context.Context, email string) (*domain.Us
 
 	user, err := s.repo.FindByEmail(ctx, email)
 	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &domain.EntityNotFoundError{
+				UnderlyingCause: err,
+			}
+		}
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (s *UserService) FindById(ctx context.Context, id int) (*domain.User, error) {
+	if id <= 0 {
+		return nil, &domain.InvalidEntityError{
+			UnderlyingCause: errors.New("invalid id"),
+		}
+	}
+
+	user, err := s.repo.FindById(ctx, id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &domain.EntityNotFoundError{
+				UnderlyingCause: err,
+			}
+		}
 		return nil, err
 	}
 
