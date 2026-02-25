@@ -1178,14 +1178,6 @@ const docTemplate = `{
                 "token": {
                     "description": "bearer token",
                     "type": "string"
-                },
-                "user": {
-                    "description": "user object",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/v1.UserResponse"
-                        }
-                    ]
                 }
             }
         },

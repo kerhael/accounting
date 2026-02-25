@@ -389,8 +389,8 @@ Error response format:
 
 
 TODO: 
-- better responses for sums-by-category, total, series-by-category, series-total
 - authenticated routes
+- GET /me
 - userID for categories, incomes and outcomes
 - update user route
 - delete user route

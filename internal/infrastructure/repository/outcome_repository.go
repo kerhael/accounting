@@ -184,7 +184,7 @@ func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *
 }
 
 func (r *PostgresOutcomeRepository) GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error) {
-	query := `SELECT SUM(amount) as total FROM outcomes WHERE 1 = 1`
+	query := `SELECT COALESCE(SUM(amount), 0) as total FROM outcomes WHERE 1 = 1`
 	args := []any{}
 	argCount := 0
 

@@ -95,10 +95,6 @@ definitions:
       token:
         description: bearer token
         type: string
-      user:
-        allOf:
-        - $ref: '#/definitions/v1.UserResponse'
-        description: user object
     type: object
   v1.MonthlySeries:
     properties:

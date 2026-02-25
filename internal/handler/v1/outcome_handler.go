@@ -373,9 +373,17 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	var categorySumsResp []CategorySumResponse
+	for _, i := range categorySums {
+		categorySumsResp = append(categorySumsResp, CategorySumResponse{
+			CategoryId: i.CategoryId,
+			Total:      i.Total,
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(categorySums); err != nil {
+	if err := json.NewEncoder(w).Encode(categorySumsResp); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
@@ -504,9 +512,17 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	var seriesResp []MonthlySeries
+	for _, i := range series {
+		seriesResp = append(seriesResp, MonthlySeries{
+			Month:      i.Month,
+			Categories: i.Categories,
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(series); err != nil {
+	if err := json.NewEncoder(w).Encode(seriesResp); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
@@ -573,9 +589,17 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 		return
 	}
 
+	var seriesResp []MonthlyTotalSeries
+	for _, i := range series {
+		seriesResp = append(seriesResp, MonthlyTotalSeries{
+			Month: i.Month,
+			Total: i.Total,
+		})
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(series); err != nil {
+	if err := json.NewEncoder(w).Encode(seriesResp); err != nil {
 		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
 		return
 	}
