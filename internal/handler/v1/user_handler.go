@@ -36,44 +36,42 @@ func (h *UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
 	var req CreateUserRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if req.FirstName == "" {
-		http.Error(w, "firstName is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "firstName is required")
 		return
 	}
 	if req.LastName == "" {
-		http.Error(w, "lastName is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "lastName is required")
 		return
 	}
 	if req.Email == "" {
-		http.Error(w, "email is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "email is required")
 		return
 	}
 	if strings.TrimSpace(req.Password) == "" {
-		http.Error(w, "password is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "password is required")
 		return
 	}
 	if len(req.Password) < 8 {
-		http.Error(w, "password must be at least 8 characters", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "password must be at least 8 characters")
 		return
 	}
 
 	user, err := h.service.Create(r.Context(), req.FirstName, req.LastName, req.Email, req.Password)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(toUserResponse(user))
+	utils.WriteJSON(w, http.StatusCreated, toUserResponse(user))
 }
 
 // Retrieve authenticated user
@@ -105,7 +103,7 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
 			return
 		}
-		utils.WriteJSONError(w, http.StatusInternalServerError, "internal server error")
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/kerhael/accounting/internal/handler/utils"
 )
 
 type contextKey struct{}
@@ -23,12 +24,12 @@ func AuthMiddleware(jwtService *JWTService) func(http.Handler) http.Handler {
 
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				http.Error(w, "missing token", http.StatusUnauthorized)
+				utils.WriteJSONError(w, http.StatusUnauthorized, "missing token")
 				return
 			}
 
 			if !strings.HasPrefix(authHeader, "Bearer ") {
-				http.Error(w, "invalid token format", http.StatusUnauthorized)
+				utils.WriteJSONError(w, http.StatusUnauthorized, "invalid token format")
 				return
 			}
 
@@ -36,7 +37,7 @@ func AuthMiddleware(jwtService *JWTService) func(http.Handler) http.Handler {
 
 			claims, err := jwtService.ValidateJWT(tokenStr)
 			if err != nil {
-				http.Error(w, "invalid token", http.StatusUnauthorized)
+				utils.WriteJSONError(w, http.StatusUnauthorized, "invalid token")
 				return
 			}
 

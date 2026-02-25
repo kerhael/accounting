@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/kerhael/accounting/internal/domain"
+	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
 )
 
@@ -35,43 +36,38 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 	var req CreateOutcomeRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if req.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "name is required")
 		return
 	}
 	if req.Amount <= 0 {
-		http.Error(w, "amount is required and must be positive", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "amount is required and must be positive")
 		return
 	}
 	if req.CategoryId == 0 {
-		http.Error(w, "category is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "category is required")
 		return
 	}
 	if req.CreatedAt.IsZero() {
-		http.Error(w, "creation date is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "creation date is required")
 		return
 	}
 
 	outcome, err := h.service.Create(r.Context(), req.Name, req.Amount, req.CategoryId, &req.CreatedAt)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	if err := json.NewEncoder(w).Encode(toOutcomeResponse(outcome)); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	utils.WriteJSON(w, http.StatusCreated, toOutcomeResponse(outcome))
 }
 
 // Get all outcomes
@@ -95,7 +91,7 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 	if fromStr != "" {
 		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
 		if err != nil {
-			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'from' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		from = &parsedFrom
@@ -105,7 +101,7 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 	if toStr != "" {
 		parsedTo, err := time.Parse(time.RFC3339, toStr)
 		if err != nil {
-			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'to' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		to = &parsedTo
@@ -115,7 +111,7 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 	if categoryIdStr != "" {
 		categoryIdInt, err := strconv.Atoi(categoryIdStr)
 		if err != nil {
-			http.Error(w, "invalid category", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid category")
 			return
 		}
 		categoryId = categoryIdInt
@@ -132,23 +128,18 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 	outcomes, err := h.service.GetAll(r.Context(), from, to, categoryId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusNotFound)
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(toOutcomesResponse(outcomes)); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	utils.WriteJSON(w, http.StatusOK, toOutcomesResponse(outcomes))
 }
 
 // Get an outcome
@@ -168,30 +159,25 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	outcome, err := h.service.GetById(r.Context(), id)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
 		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
-			http.Error(w, error.Error(), http.StatusNotFound)
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(toOutcomeResponse(outcome)); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	utils.WriteJSON(w, http.StatusOK, toOutcomeResponse(outcome))
 }
 
 // Update an outcome
@@ -211,13 +197,13 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	var req PatchOutcomeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -231,7 +217,7 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 	if req.Amount != nil {
 		reqAmount := *req.Amount
 		if reqAmount < 0 {
-			http.Error(w, "amount must be positive", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "amount must be positive")
 			return
 		}
 		amount = reqAmount
@@ -242,7 +228,7 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 	if req.CategoryId != nil {
 		reqCategoryId := *req.CategoryId
 		if reqCategoryId < 0 {
-			http.Error(w, "invalid category ID", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid category ID")
 			return
 		}
 		categoryId = reqCategoryId
@@ -251,23 +237,18 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 	outcome, err := h.service.Patch(r.Context(), id, name, amount, categoryId, req.CreatedAt)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
 		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
-			http.Error(w, error.Error(), http.StatusNotFound)
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(toOutcomeResponse(outcome)); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	utils.WriteJSON(w, http.StatusOK, toOutcomeResponse(outcome))
 }
 
 // Delete an outcome
@@ -286,17 +267,17 @@ func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Reques
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	err = h.service.DeleteById(r.Context(), id)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -325,7 +306,7 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 	if fromStr != "" {
 		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
 		if err != nil {
-			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'from' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		from = &parsedFrom
@@ -335,7 +316,7 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 	if toStr != "" {
 		parsedTo, err := time.Parse(time.RFC3339, toStr)
 		if err != nil {
-			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'to' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		to = &parsedTo
@@ -353,7 +334,7 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 	if categoryIdStr != "" {
 		categoryIdInt, err := strconv.Atoi(categoryIdStr)
 		if err != nil {
-			http.Error(w, "invalid category", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid category")
 			return
 		}
 		categoryId = categoryIdInt
@@ -362,14 +343,14 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 	categorySums, err := h.service.GetSum(r.Context(), from, to, categoryId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusNotFound)
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -381,12 +362,7 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(categorySumsResp); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	utils.WriteJSON(w, http.StatusOK, categorySumsResp)
 }
 
 // Get total of outcomes
@@ -408,7 +384,7 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 	if fromStr != "" {
 		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
 		if err != nil {
-			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'from' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		from = &parsedFrom
@@ -418,7 +394,7 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 	if toStr != "" {
 		parsedTo, err := time.Parse(time.RFC3339, toStr)
 		if err != nil {
-			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'to' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		to = &parsedTo
@@ -435,20 +411,14 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 	total, err := h.service.GetTotal(r.Context(), from, to)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	response := TotalOutcomeResponse{Total: total}
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	utils.WriteJSON(w, http.StatusOK, TotalOutcomeResponse{Total: total})
 }
 
 // Get monthly series of outcomes
@@ -470,7 +440,7 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 	if fromStr != "" {
 		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
 		if err != nil {
-			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'from' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		from = &parsedFrom
@@ -480,7 +450,7 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 	if toStr != "" {
 		parsedTo, err := time.Parse(time.RFC3339, toStr)
 		if err != nil {
-			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'to' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		to = &parsedTo
@@ -505,10 +475,10 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 	series, err := h.service.GetSeries(r.Context(), from, to)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -520,12 +490,7 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(seriesResp); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	utils.WriteJSON(w, http.StatusOK, seriesResp)
 }
 
 // Get monthly series of outcomes' total amount
@@ -547,7 +512,7 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 	if fromStr != "" {
 		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
 		if err != nil {
-			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'from' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		from = &parsedFrom
@@ -557,7 +522,7 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 	if toStr != "" {
 		parsedTo, err := time.Parse(time.RFC3339, toStr)
 		if err != nil {
-			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'to' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		to = &parsedTo
@@ -582,10 +547,10 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 	series, err := h.service.GetTotalSeries(r.Context(), from, to)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
@@ -597,12 +562,7 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 		})
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	if err := json.NewEncoder(w).Encode(seriesResp); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-		return
-	}
+	utils.WriteJSON(w, http.StatusOK, seriesResp)
 }
 
 func toOutcomeResponse(outcome *domain.Outcome) OutcomeResponse {

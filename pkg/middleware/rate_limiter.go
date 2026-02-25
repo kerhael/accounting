@@ -6,6 +6,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/kerhael/accounting/internal/handler/utils"
 	"golang.org/x/time/rate"
 )
 
@@ -72,7 +73,7 @@ func (rl *RateLimiter) RateLimitMiddleware(next http.Handler) http.Handler {
 		limiter := rl.getLimiter(ip)
 
 		if !limiter.Allow() {
-			http.Error(w, "too many requests", http.StatusTooManyRequests)
+			utils.WriteJSONError(w, http.StatusTooManyRequests, "too many requests")
 			return
 		}
 

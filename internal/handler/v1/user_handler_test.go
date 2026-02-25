@@ -380,7 +380,7 @@ func TestUserHandler_GetMe_ServiceError(t *testing.T) {
 	var response ErrorResponse
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, "internal server error", response.Message)
+	assert.Equal(t, "database error", response.Message)
 
 	mockService.AssertExpectations(t)
 }

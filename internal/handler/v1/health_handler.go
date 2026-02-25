@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
 )
 
@@ -36,7 +37,7 @@ func (h *HealthHandler) Check(w http.ResponseWriter, r *http.Request) {
 			"db": "ko",
 		})
 		if err != nil {
-			http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+			utils.WriteJSONError(w, http.StatusInternalServerError, "Failed to encode response")
 			return
 		}
 		return
@@ -45,7 +46,7 @@ func (h *HealthHandler) Check(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	if err := json.NewEncoder(w).Encode(res); err != nil {
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, "Failed to encode response")
 		return
 	}
 }

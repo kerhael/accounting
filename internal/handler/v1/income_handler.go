@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/kerhael/accounting/internal/domain"
+	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
 )
 
@@ -35,36 +36,34 @@ func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 	var req CreateIncomeRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if req.Name == "" {
-		http.Error(w, "name is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "name is required")
 		return
 	}
 	if req.Amount <= 0 {
-		http.Error(w, "amount is required and must be positive", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "amount is required and must be positive")
 		return
 	}
 	if req.CreatedAt.IsZero() {
-		http.Error(w, "creation date is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "creation date is required")
 		return
 	}
 
 	income, err := h.service.Create(r.Context(), req.Name, req.Amount, &req.CreatedAt)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(toIncomeResponse(income))
+	utils.WriteJSON(w, http.StatusCreated, toIncomeResponse(income))
 }
 
 // Get all incomes
@@ -87,7 +86,7 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 	if fromStr != "" {
 		parsedFrom, err := time.Parse(time.RFC3339, fromStr)
 		if err != nil {
-			http.Error(w, "invalid 'from' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'from' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		from = &parsedFrom
@@ -97,7 +96,7 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 	if toStr != "" {
 		parsedTo, err := time.Parse(time.RFC3339, toStr)
 		if err != nil {
-			http.Error(w, "invalid 'to' date format, use ISO 8601 (RFC3339)", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid 'to' date format, use ISO 8601 (RFC3339)")
 			return
 		}
 		to = &parsedTo
@@ -114,16 +113,14 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 	incomes, err := h.service.GetAll(r.Context(), from, to)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(toIncomesResponse(incomes))
+	utils.WriteJSON(w, http.StatusOK, toIncomesResponse(incomes))
 }
 
 // Get an income
@@ -143,27 +140,25 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	income, err := h.service.GetById(r.Context(), id)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
 		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
-			http.Error(w, error.Error(), http.StatusNotFound)
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(toIncomeResponse(income))
+	utils.WriteJSON(w, http.StatusOK, toIncomeResponse(income))
 }
 
 // Update an income
@@ -183,13 +178,13 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	var req PatchIncomeRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
@@ -203,7 +198,7 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 	if req.Amount != nil {
 		reqAmount := *req.Amount
 		if reqAmount <= 0 {
-			http.Error(w, "amount must be positive", http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, "amount must be positive")
 			return
 		}
 		amount = reqAmount
@@ -213,16 +208,14 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 	income, err := h.service.Patch(r.Context(), id, name, amount, req.CreatedAt)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
-			http.Error(w, error.Error(), http.StatusNotFound)
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(toIncomeResponse(income))
+	utils.WriteJSON(w, http.StatusOK, toIncomeResponse(income))
 }
 
 // Delete an income
@@ -241,17 +234,17 @@ func (h *IncomeHandler) DeleteIncomeById(w http.ResponseWriter, r *http.Request)
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	err = h.service.DeleteById(r.Context(), id)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

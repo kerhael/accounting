@@ -7,6 +7,7 @@ import (
 	"strconv"
 
 	"github.com/kerhael/accounting/internal/domain"
+	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
 )
 
@@ -33,28 +34,26 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 	var req CreateCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	if req.Label == "" {
-		http.Error(w, "label is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "label is required")
 		return
 	}
 
 	category, err := h.service.Create(r.Context(), req.Label)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(toCategoryResponse(category))
+	utils.WriteJSON(w, http.StatusCreated, toCategoryResponse(category))
 }
 
 // Get all categories
@@ -69,13 +68,11 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.service.GetAll(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(toCategoriesResponse(categories))
+	utils.WriteJSON(w, http.StatusOK, toCategoriesResponse(categories))
 }
 
 // Get a category
@@ -95,27 +92,25 @@ func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	category, err := h.service.GetById(r.Context(), id)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
 		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
-			http.Error(w, error.Error(), http.StatusNotFound)
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(toCategoryResponse(category))
+	utils.WriteJSON(w, http.StatusOK, toCategoryResponse(category))
 }
 
 // Delete a category
@@ -134,17 +129,17 @@ func (h *CategoryHandler) DeleteCategoryById(w http.ResponseWriter, r *http.Requ
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "invalid id", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
 		return
 	}
 
 	err = h.service.DeleteById(r.Context(), id)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
-			http.Error(w, error.Error(), http.StatusBadRequest)
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
 			return
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

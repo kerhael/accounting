@@ -93,7 +93,7 @@ func TestAuthHandler_Login_MissingEmail(t *testing.T) {
 	handler.Login(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
-	assert.Equal(t, "email is required\n", w.Body.String())
+	assert.Equal(t, "{\"message\":\"email is required\"}\n", w.Body.String())
 	mockService.AssertNotCalled(t, "FindByEmail")
 }
 
@@ -113,7 +113,7 @@ func TestAuthHandler_Login_MissingPassword(t *testing.T) {
 	handler.Login(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
-	assert.Equal(t, "password is required\n", w.Body.String())
+	assert.Equal(t, "{\"message\":\"password is required\"}\n", w.Body.String())
 	mockService.AssertNotCalled(t, "FindByEmail")
 }
 

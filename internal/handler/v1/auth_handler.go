@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/kerhael/accounting/internal/auth"
+	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
 	"github.com/kerhael/accounting/pkg/security"
 )
@@ -38,42 +39,40 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
 	// Validate required fields
 	if req.Email == "" {
-		http.Error(w, "email is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "email is required")
 		return
 	}
 
 	if req.Password == "" {
-		http.Error(w, "password is required", http.StatusBadRequest)
+		utils.WriteJSONError(w, http.StatusBadRequest, "password is required")
 		return
 	}
 
 	user, err := h.userService.FindByEmail(r.Context(), req.Email)
 	if err != nil {
-		http.Error(w, "invalid credentials", http.StatusUnauthorized)
+		utils.WriteJSONError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
 
 	err = security.CheckPassword(req.Password, user.PasswordHash)
 	if err != nil {
-		http.Error(w, "invalid credentials", 401)
+		utils.WriteJSONError(w, http.StatusUnauthorized, "invalid credentials")
 		return
 	}
 
 	token, err := h.jwtService.GenerateJWT(user.ID)
 	if err != nil {
-		http.Error(w, "could not generate token", 500)
+		utils.WriteJSONError(w, http.StatusInternalServerError, "could not generate token")
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(LoginResponse{
+	utils.WriteJSON(w, http.StatusOK, LoginResponse{
 		Token: token,
 	})
 }
