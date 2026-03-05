@@ -311,7 +311,7 @@ func TestGetIncomeById_RepoError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestPatchIncome_Success_NameOnly(t *testing.T) {
+func TestPatchIncomeById_Success_NameOnly(t *testing.T) {
 	mockRepo := new(mocks.IncomeRepository)
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
@@ -332,7 +332,7 @@ func TestPatchIncome_Success_NameOnly(t *testing.T) {
 		assert.Equal(t, existingIncome.CreatedAt, updated.CreatedAt)
 	})
 
-	income, err := service.Patch(ctx, 1, "New Name", 0, nil)
+	income, err := service.PatchById(ctx, 1, "New Name", 0, nil)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, income)
@@ -344,7 +344,7 @@ func TestPatchIncome_Success_NameOnly(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestPatchIncome_Success_AllFields(t *testing.T) {
+func TestPatchIncomeById_Success_AllFields(t *testing.T) {
 	mockRepo := new(mocks.IncomeRepository)
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
@@ -366,7 +366,7 @@ func TestPatchIncome_Success_AllFields(t *testing.T) {
 		assert.Equal(t, &newCreatedAt, updated.CreatedAt)
 	})
 
-	income, err := service.Patch(ctx, 1, "New Name", 2000, &newCreatedAt)
+	income, err := service.PatchById(ctx, 1, "New Name", 2000, &newCreatedAt)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, income)
@@ -377,14 +377,14 @@ func TestPatchIncome_Success_AllFields(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestPatchIncome_NotFound(t *testing.T) {
+func TestPatchIncomeById_NotFound(t *testing.T) {
 	mockRepo := new(mocks.IncomeRepository)
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
 	mockRepo.On("FindById", ctx, 999).Return((*domain.Income)(nil), pgx.ErrNoRows)
 
-	income, err := service.Patch(ctx, 999, "New Name", 0, nil)
+	income, err := service.PatchById(ctx, 999, "New Name", 0, nil)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -393,7 +393,7 @@ func TestPatchIncome_NotFound(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestPatchIncome_UpdateError(t *testing.T) {
+func TestPatchIncomeById_UpdateError(t *testing.T) {
 	mockRepo := new(mocks.IncomeRepository)
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
@@ -408,7 +408,7 @@ func TestPatchIncome_UpdateError(t *testing.T) {
 
 	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Income")).Return(errors.New("update error"))
 
-	income, err := service.Patch(ctx, 1, "New Name", 0, nil)
+	income, err := service.PatchById(ctx, 1, "New Name", 0, nil)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)

@@ -15,7 +15,7 @@ type IncomeServiceInterface interface {
 	Create(ctx context.Context, name string, amount int, createdAt *time.Time) (*domain.Income, error)
 	GetAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Income, error)
 	GetById(ctx context.Context, id int) (*domain.Income, error)
-	Patch(ctx context.Context, id int, name string, amount int, createdAt *time.Time) (*domain.Income, error)
+	PatchById(ctx context.Context, id int, name string, amount int, createdAt *time.Time) (*domain.Income, error)
 	DeleteById(ctx context.Context, id int) error
 }
 
@@ -95,7 +95,7 @@ func (s *IncomeService) GetById(ctx context.Context, id int) (*domain.Income, er
 	return income, nil
 }
 
-func (s *IncomeService) Patch(ctx context.Context, id int, name string, amount int, createdAt *time.Time) (*domain.Income, error) {
+func (s *IncomeService) PatchById(ctx context.Context, id int, name string, amount int, createdAt *time.Time) (*domain.Income, error) {
 	income, err := s.repo.FindById(ctx, id)
 	if err != nil {
 		if err == pgx.ErrNoRows {

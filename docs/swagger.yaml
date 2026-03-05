@@ -134,7 +134,7 @@ definitions:
         description: Name of the expense
         type: string
     type: object
-  v1.PatchIncomeRequest:
+  v1.PatchIncomeByIdRequest:
     properties:
       amount:
         description: 'Amount in cents (optional, ex: 1999 for 19.99€)'
@@ -146,7 +146,7 @@ definitions:
         description: Name of the income (optional)
         type: string
     type: object
-  v1.PatchOutcomeRequest:
+  v1.PatchOutcomeByIdRequest:
     properties:
       amount:
         description: 'Amount in cents (optional, ex: 1999 for 19.99€)'
@@ -508,7 +508,7 @@ paths:
         name: income
         required: true
         schema:
-          $ref: '#/definitions/v1.PatchIncomeRequest'
+          $ref: '#/definitions/v1.PatchIncomeByIdRequest'
       produces:
       - application/json
       responses:
@@ -704,7 +704,7 @@ paths:
         name: outcome
         required: true
         schema:
-          $ref: '#/definitions/v1.PatchOutcomeRequest'
+          $ref: '#/definitions/v1.PatchOutcomeByIdRequest'
       produces:
       - application/json
       responses:

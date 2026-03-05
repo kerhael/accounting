@@ -444,7 +444,7 @@ func TestGetById_RepoError(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
-func TestPatchOutcome_Success_NameOnly(t *testing.T) {
+func TestPatchById_Success_NameOnly(t *testing.T) {
 	mockRepo := new(mocks.OutcomeRepository)
 	mockCategoryRepo := new(mocks.CategoryRepository)
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
@@ -468,7 +468,7 @@ func TestPatchOutcome_Success_NameOnly(t *testing.T) {
 		assert.Equal(t, existingOutcome.CreatedAt, updated.CreatedAt)
 	})
 
-	outcome, err := service.Patch(ctx, 1, "New Name", 0, 0, nil)
+	outcome, err := service.PatchById(ctx, 1, "New Name", 0, 0, nil)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcome)
@@ -482,7 +482,7 @@ func TestPatchOutcome_Success_NameOnly(t *testing.T) {
 	mockCategoryRepo.AssertNotCalled(t, "FindById")
 }
 
-func TestPatchOutcome_Success_AllFields(t *testing.T) {
+func TestPatchById_Success_AllFields(t *testing.T) {
 	mockRepo := new(mocks.OutcomeRepository)
 	mockCategoryRepo := new(mocks.CategoryRepository)
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
@@ -513,7 +513,7 @@ func TestPatchOutcome_Success_AllFields(t *testing.T) {
 		assert.Equal(t, &newCreatedAt, updated.CreatedAt)
 	})
 
-	outcome, err := service.Patch(ctx, 1, "New Name", 2000, 2, &newCreatedAt)
+	outcome, err := service.PatchById(ctx, 1, "New Name", 2000, 2, &newCreatedAt)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcome)
@@ -526,7 +526,7 @@ func TestPatchOutcome_Success_AllFields(t *testing.T) {
 	mockCategoryRepo.AssertExpectations(t)
 }
 
-func TestPatchOutcome_InvalidCategory(t *testing.T) {
+func TestPatchById_InvalidCategory(t *testing.T) {
 	mockRepo := new(mocks.OutcomeRepository)
 	mockCategoryRepo := new(mocks.CategoryRepository)
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
@@ -543,7 +543,7 @@ func TestPatchOutcome_InvalidCategory(t *testing.T) {
 
 	mockCategoryRepo.On("FindById", ctx, 999).Return((*domain.Category)(nil), errors.New("not found"))
 
-	outcome, err := service.Patch(ctx, 1, "", 0, 999, nil)
+	outcome, err := service.PatchById(ctx, 1, "", 0, 999, nil)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -553,7 +553,7 @@ func TestPatchOutcome_InvalidCategory(t *testing.T) {
 	mockCategoryRepo.AssertExpectations(t)
 }
 
-func TestPatchOutcome_NotFound(t *testing.T) {
+func TestPatchById_NotFound(t *testing.T) {
 	mockRepo := new(mocks.OutcomeRepository)
 	mockCategoryRepo := new(mocks.CategoryRepository)
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
@@ -561,7 +561,7 @@ func TestPatchOutcome_NotFound(t *testing.T) {
 
 	mockRepo.On("FindById", ctx, 999).Return((*domain.Outcome)(nil), pgx.ErrNoRows)
 
-	outcome, err := service.Patch(ctx, 999, "New Name", 0, 0, nil)
+	outcome, err := service.PatchById(ctx, 999, "New Name", 0, 0, nil)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -571,7 +571,7 @@ func TestPatchOutcome_NotFound(t *testing.T) {
 	mockCategoryRepo.AssertNotCalled(t, "FindById")
 }
 
-func TestPatchOutcome_UpdateError(t *testing.T) {
+func TestPatchById_UpdateError(t *testing.T) {
 	mockRepo := new(mocks.OutcomeRepository)
 	mockCategoryRepo := new(mocks.CategoryRepository)
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
@@ -588,7 +588,7 @@ func TestPatchOutcome_UpdateError(t *testing.T) {
 
 	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Outcome")).Return(errors.New("update error"))
 
-	outcome, err := service.Patch(ctx, 1, "New Name", 0, 0, nil)
+	outcome, err := service.PatchById(ctx, 1, "New Name", 0, 0, nil)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)

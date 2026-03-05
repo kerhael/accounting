@@ -519,7 +519,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.PatchIncomeRequest"
+                            "$ref": "#/definitions/v1.PatchIncomeByIdRequest"
                         }
                     }
                 ],
@@ -1089,7 +1089,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1.PatchOutcomeRequest"
+                            "$ref": "#/definitions/v1.PatchOutcomeByIdRequest"
                         }
                     }
                 ],
@@ -1485,7 +1485,7 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.PatchIncomeRequest": {
+        "v1.PatchIncomeByIdRequest": {
             "type": "object",
             "properties": {
                 "amount": {
@@ -1502,7 +1502,7 @@ const docTemplate = `{
                 }
             }
         },
-        "v1.PatchOutcomeRequest": {
+        "v1.PatchOutcomeByIdRequest": {
             "type": "object",
             "properties": {
                 "amount": {

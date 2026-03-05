@@ -212,7 +212,7 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 // @Accept       json
 // @Produce      json
 // @Param 		 id path int true "Outcome ID"
-// @Param        outcome  body      PatchOutcomeRequest  true  "Outcome payload"
+// @Param        outcome  body      PatchOutcomeByIdRequest  true  "Outcome payload"
 // @Success      200       {object}   OutcomeResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
 // @Failure      401       {object}   ErrorResponse  "Unauthorized error"
@@ -220,7 +220,7 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Security BearerAuth
 // @Router       /outcomes/{id} [patch]
-func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
+func (h *OutcomeHandler) PatchOutcomeById(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
@@ -234,7 +234,7 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req PatchOutcomeRequest
+	var req PatchOutcomeByIdRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
@@ -267,7 +267,7 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 		categoryId = reqCategoryId
 	}
 
-	outcome, err := h.service.Patch(r.Context(), id, name, amount, categoryId, req.CreatedAt)
+	outcome, err := h.service.PatchById(r.Context(), id, name, amount, categoryId, req.CreatedAt)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())

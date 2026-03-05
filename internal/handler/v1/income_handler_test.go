@@ -627,12 +627,12 @@ func TestIncomeHandler_GetIncomeById_ServiceError(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-func TestIncomeHandler_PatchIncome_Success_NameOnly(t *testing.T) {
+func TestIncomeHandler_PatchIncomeById_Success_NameOnly(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	name := "Updated Salary"
-	input := PatchIncomeRequest{
+	input := PatchIncomeByIdRequest{
 		Name: &name,
 	}
 	body, _ := json.Marshal(input)
@@ -644,14 +644,14 @@ func TestIncomeHandler_PatchIncome_Success_NameOnly(t *testing.T) {
 		Amount:    300000,
 		CreatedAt: &time.Time{},
 	}
-	mockService.On("Patch", ctx, 1, name, 0, (*time.Time)(nil)).Return(expectedIncome, nil)
+	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil)).Return(expectedIncome, nil)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
 	req = req.WithContext(ctx)
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
-	handler.PatchIncome(w, req)
+	handler.PatchIncomeById(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -669,14 +669,14 @@ func TestIncomeHandler_PatchIncome_Success_NameOnly(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-func TestIncomeHandler_PatchIncome_Success_AllFields(t *testing.T) {
+func TestIncomeHandler_PatchIncomeById_Success_AllFields(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	name := "Updated Salary"
 	amount := 350000
 	newCreatedAt := time.Now()
-	input := PatchIncomeRequest{
+	input := PatchIncomeByIdRequest{
 		Name:      &name,
 		Amount:    &amount,
 		CreatedAt: &newCreatedAt,
@@ -690,7 +690,7 @@ func TestIncomeHandler_PatchIncome_Success_AllFields(t *testing.T) {
 		Amount:    amount,
 		CreatedAt: &newCreatedAt,
 	}
-	mockService.On("Patch", ctx, 1, name, amount, mock.MatchedBy(func(t *time.Time) bool {
+	mockService.On("PatchById", ctx, 1, name, amount, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(newCreatedAt)
 	})).Return(expectedIncome, nil)
 
@@ -699,7 +699,7 @@ func TestIncomeHandler_PatchIncome_Success_AllFields(t *testing.T) {
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
-	handler.PatchIncome(w, req)
+	handler.PatchIncomeById(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -717,14 +717,14 @@ func TestIncomeHandler_PatchIncome_Success_AllFields(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-func TestOutcomeHandler_PatchIncome_NoAuthContext(t *testing.T) {
+func TestOutcomeHandler_PatchIncomeById_NoAuthContext(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", nil)
 
 	w := httptest.NewRecorder()
-	handler.PatchIncome(w, req)
+	handler.PatchIncomeById(w, req)
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 
@@ -733,10 +733,10 @@ func TestOutcomeHandler_PatchIncome_NoAuthContext(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "user not authenticated", response.Message)
 
-	mockService.AssertNotCalled(t, "PatchIncome")
+	mockService.AssertNotCalled(t, "PatchIncomeById")
 }
 
-func TestIncomeHandler_PatchIncome_InvalidJSON(t *testing.T) {
+func TestIncomeHandler_PatchIncomeById_InvalidJSON(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
@@ -746,7 +746,7 @@ func TestIncomeHandler_PatchIncome_InvalidJSON(t *testing.T) {
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
-	handler.PatchIncome(w, req)
+	handler.PatchIncomeById(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -754,12 +754,12 @@ func TestIncomeHandler_PatchIncome_InvalidJSON(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
 
-func TestIncomeHandler_PatchIncome_InvalidId(t *testing.T) {
+func TestIncomeHandler_PatchIncomeById_InvalidId(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	name := "Updated Salary"
-	input := PatchIncomeRequest{
+	input := PatchIncomeByIdRequest{
 		Name: &name,
 	}
 	body, _ := json.Marshal(input)
@@ -770,7 +770,7 @@ func TestIncomeHandler_PatchIncome_InvalidId(t *testing.T) {
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
-	handler.PatchIncome(w, req)
+	handler.PatchIncomeById(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -781,12 +781,12 @@ func TestIncomeHandler_PatchIncome_InvalidId(t *testing.T) {
 	assert.Contains(t, string(bodyBytes), "invalid id")
 }
 
-func TestIncomeHandler_PatchIncome_NegativeAmount(t *testing.T) {
+func TestIncomeHandler_PatchIncomeById_NegativeAmount(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	amount := -100
-	input := PatchIncomeRequest{
+	input := PatchIncomeByIdRequest{
 		Amount: &amount,
 	}
 	body, _ := json.Marshal(input)
@@ -797,7 +797,7 @@ func TestIncomeHandler_PatchIncome_NegativeAmount(t *testing.T) {
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
-	handler.PatchIncome(w, req)
+	handler.PatchIncomeById(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -808,26 +808,26 @@ func TestIncomeHandler_PatchIncome_NegativeAmount(t *testing.T) {
 	assert.Contains(t, string(bodyBytes), "amount must be positive")
 }
 
-func TestIncomeHandler_PatchIncome_EntityNotFoundError(t *testing.T) {
+func TestIncomeHandler_PatchIncomeById_EntityNotFoundError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	name := "Updated Salary"
-	input := PatchIncomeRequest{
+	input := PatchIncomeByIdRequest{
 		Name: &name,
 	}
 	body, _ := json.Marshal(input)
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("income not found")}
-	mockService.On("Patch", ctx, 1, name, 0, (*time.Time)(nil)).Return(nil, entityNotFoundErr)
+	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil)).Return(nil, entityNotFoundErr)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
 	req = req.WithContext(ctx)
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
-	handler.PatchIncome(w, req)
+	handler.PatchIncomeById(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()
@@ -837,25 +837,25 @@ func TestIncomeHandler_PatchIncome_EntityNotFoundError(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-func TestIncomeHandler_PatchIncome_ServiceError(t *testing.T) {
+func TestIncomeHandler_PatchIncomeById_ServiceError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	name := "Updated Salary"
-	input := PatchIncomeRequest{
+	input := PatchIncomeByIdRequest{
 		Name: &name,
 	}
 	body, _ := json.Marshal(input)
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
-	mockService.On("Patch", ctx, 1, name, 0, (*time.Time)(nil)).Return(nil, assert.AnError)
+	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil)).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
 	req = req.WithContext(ctx)
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
-	handler.PatchIncome(w, req)
+	handler.PatchIncomeById(w, req)
 
 	resp := w.Result()
 	defer resp.Body.Close()

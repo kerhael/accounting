@@ -193,7 +193,7 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Param 		 id path int true "Income ID"
-// @Param        income  body      PatchIncomeRequest  true  "Income payload"
+// @Param        income  body      PatchIncomeByIdRequest  true  "Income payload"
 // @Success      200       {object}   IncomeResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
 // @Failure      401       {object}   ErrorResponse  "Unauthorized error"
@@ -201,7 +201,7 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
 // @Security BearerAuth
 // @Router       /incomes/{id} [patch]
-func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
+func (h *IncomeHandler) PatchIncomeById(w http.ResponseWriter, r *http.Request) {
 	_, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
@@ -215,7 +215,7 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var req PatchIncomeRequest
+	var req PatchIncomeByIdRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
 		return
@@ -238,7 +238,7 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 
 	}
 
-	income, err := h.service.Patch(r.Context(), id, name, amount, req.CreatedAt)
+	income, err := h.service.PatchById(r.Context(), id, name, amount, req.CreatedAt)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
 			utils.WriteJSONError(w, http.StatusNotFound, error.Error())

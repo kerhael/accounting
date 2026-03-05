@@ -22,7 +22,7 @@ type IncomeResponse struct {
 	ID        int        `json:"id"`        // ID of the income
 }
 
-type PatchIncomeRequest struct {
+type PatchIncomeByIdRequest struct {
 	Name      *string    `json:"name"`      // Name of the income (optional)
 	CreatedAt *time.Time `json:"createdAt"` // Date of the income (optional, ex: "2026-01-01T00:00:00Z")
 	Amount    *int       `json:"amount"`    // Amount in cents (optional, ex: 1999 for 19.99€)

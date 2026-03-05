@@ -39,7 +39,7 @@ func (m *IncomeService) GetById(ctx context.Context, id int) (*domain.Income, er
 	return nil, args.Error(1)
 }
 
-func (m *IncomeService) Patch(ctx context.Context, id int, name string, amount int, createdAt *time.Time) (*domain.Income, error) {
+func (m *IncomeService) PatchById(ctx context.Context, id int, name string, amount int, createdAt *time.Time) (*domain.Income, error) {
 	args := m.Called(ctx, id, name, amount, createdAt)
 	if income, ok := args.Get(0).(*domain.Income); ok {
 		return income, args.Error(1)

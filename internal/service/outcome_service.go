@@ -15,7 +15,7 @@ type OutcomeServiceInterface interface {
 	Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
 	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
 	GetById(ctx context.Context, id int) (*domain.Outcome, error)
-	Patch(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
+	PatchById(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
 	DeleteById(ctx context.Context, id int) error
 	GetSum(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error)
 	GetTotal(ctx context.Context, from *time.Time, to *time.Time) (int, error)
@@ -122,7 +122,7 @@ func (s *OutcomeService) GetById(ctx context.Context, id int) (*domain.Outcome, 
 	return outcome, nil
 }
 
-func (s *OutcomeService) Patch(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error) {
+func (s *OutcomeService) PatchById(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error) {
 	outcome, err := s.repo.FindById(ctx, id)
 	if err != nil {
 		if err == pgx.ErrNoRows {

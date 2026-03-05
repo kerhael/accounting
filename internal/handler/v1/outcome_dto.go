@@ -25,7 +25,7 @@ type OutcomeResponse struct {
 	ID         int        `json:"id"`         // ID of the expense
 }
 
-type PatchOutcomeRequest struct {
+type PatchOutcomeByIdRequest struct {
 	Name       *string    `json:"name"`       // Name of the expense (optional)
 	CreatedAt  *time.Time `json:"createdAt"`  // Date of the expense (optional, ex: "2026-01-01T00:00:00Z")
 	Amount     *int       `json:"amount"`     // Amount in cents (optional, ex: 1999 for 19.99€)

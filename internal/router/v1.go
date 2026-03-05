@@ -23,13 +23,13 @@ func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers, rl *middleware.Ra
 	mux.Handle("GET    /api/v1/outcomes/series-by-category", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Outcomes.GetOutcomesSeries)))
 	mux.Handle("GET    /api/v1/outcomes/series-total", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Outcomes.GetOutcomesTotalSeries)))
 	mux.Handle("GET    /api/v1/outcomes/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Outcomes.GetOutcomeById)))
-	mux.Handle("PATCH  /api/v1/outcomes/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Outcomes.PatchOutcome)))
+	mux.Handle("PATCH  /api/v1/outcomes/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Outcomes.PatchOutcomeById)))
 	mux.Handle("DELETE /api/v1/outcomes/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Outcomes.DeleteOutcomeById)))
 
 	mux.Handle("POST   /api/v1/incomes/", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Incomes.PostIncome)))
 	mux.Handle("GET    /api/v1/incomes/", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Incomes.GetAllIncomes)))
 	mux.Handle("GET    /api/v1/incomes/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Incomes.GetIncomeById)))
-	mux.Handle("PATCH  /api/v1/incomes/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Incomes.PatchIncome)))
+	mux.Handle("PATCH  /api/v1/incomes/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Incomes.PatchIncomeById)))
 	mux.Handle("DELETE /api/v1/incomes/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Incomes.DeleteIncomeById)))
 
 	mux.Handle("POST   /api/v1/users/", rl.RateLimitMiddleware(http.HandlerFunc(h.V1.Users.PostUser)))
