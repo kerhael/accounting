@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/service/mocks"
 
@@ -22,7 +23,7 @@ func TestCategoryHandler_PostCategory_Success(t *testing.T) {
 	input := map[string]string{"label": "Food"}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Create", ctx, "Food").Return(&domain.Category{
 		ID:    1,
 		Label: "Food",
@@ -48,6 +49,25 @@ func TestCategoryHandler_PostCategory_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestCategoryHandler_PostCategory_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.CategoryService)
+	handler := NewCategoryHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodPost, "/categories/", nil)
+
+	w := httptest.NewRecorder()
+	handler.PostCategory(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "PostCategory")
+}
+
 func TestCategoryHandler_PostCategory_InvalidLabel(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
@@ -56,6 +76,8 @@ func TestCategoryHandler_PostCategory_InvalidLabel(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostCategory(w, req)
@@ -74,6 +96,8 @@ func TestCategoryHandler_PostCategory_MissingLabelField(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostCategory(w, req)
@@ -90,6 +114,8 @@ func TestCategoryHandler_PostCategory_InvalidJSON(t *testing.T) {
 
 	body := []byte(`{invalid json}`)
 	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostCategory(w, req)
@@ -107,7 +133,7 @@ func TestCategoryHandler_PostCategory_ServiceError(t *testing.T) {
 	input := map[string]string{"label": "Travel"}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Create", ctx, "Travel").Return(nil, errors.New("db failure"))
 
 	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
@@ -129,7 +155,7 @@ func TestCategoryHandler_PostCategory_InvalidEntityError(t *testing.T) {
 	input := map[string]string{"label": "InvalidCategory"}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("category already exists")}
 	mockService.On("Create", ctx, "InvalidCategory").Return(nil, invalidEntityErr)
 
@@ -149,7 +175,7 @@ func TestCategoryHandler_GetCategoryById_Success(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedCategory := &domain.Category{
 		ID:    1,
 		Label: "Food",
@@ -177,11 +203,33 @@ func TestCategoryHandler_GetCategoryById_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestCategoryHandler_GetCategoryById_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.CategoryService)
+	handler := NewCategoryHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/categories/1", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetCategoryById(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetCategoryById")
+}
+
 func TestCategoryHandler_GetCategoryById_InvalidId(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/invalid", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
@@ -197,7 +245,7 @@ func TestCategoryHandler_GetCategoryById_InvalidEntityError(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category id")}
 	mockService.On("GetById", ctx, -1).Return(nil, invalidEntityErr)
 
@@ -220,7 +268,7 @@ func TestCategoryHandler_GetCategoryById_EntityNotFoundError(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("category not found")}
 	mockService.On("GetById", ctx, 999).Return(nil, entityNotFoundErr)
 
@@ -243,7 +291,7 @@ func TestCategoryHandler_GetCategoryById_ServiceError(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	serviceErr := errors.New("database connection failed")
 	mockService.On("GetById", ctx, 1).Return(nil, serviceErr)
 
@@ -266,7 +314,7 @@ func TestCategoryHandler_DeleteCategoryById_Success(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("DeleteById", ctx, 1).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/categories/1", nil)
@@ -284,11 +332,32 @@ func TestCategoryHandler_DeleteCategoryById_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestCategoryHandler_DeleteCategoryById_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.CategoryService)
+	handler := NewCategoryHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodDelete, "/categories/1", nil)
+
+	w := httptest.NewRecorder()
+	handler.DeleteCategoryById(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "DeleteCategoryById")
+}
+
 func TestCategoryHandler_DeleteCategoryById_InvalidId(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodDelete, "/categories/invalid", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
@@ -304,7 +373,7 @@ func TestCategoryHandler_DeleteCategoryById_InvalidEntityError(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("cannot delete category with existing transactions")}
 	mockService.On("DeleteById", ctx, 1).Return(invalidEntityErr)
 
@@ -327,7 +396,7 @@ func TestCategoryHandler_DeleteCategoryById_ServiceError(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	serviceErr := errors.New("database connection failed")
 	mockService.On("DeleteById", ctx, 1).Return(serviceErr)
 
@@ -350,7 +419,7 @@ func TestCategoryHandler_GetAllCategories_Success(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedCategories := []domain.Category{
 		{ID: 1, Label: "Food"},
 		{ID: 2, Label: "Travel"},
@@ -379,11 +448,30 @@ func TestCategoryHandler_GetAllCategories_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestCategoryHandler_GetAllCategories_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.CategoryService)
+	handler := NewCategoryHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/categories/", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetAllCategories(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetAllCategories")
+}
+
 func TestCategoryHandler_GetAllCategories_ServiceError(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	serviceErr := errors.New("database connection failed")
 	mockService.On("GetAll", ctx).Return(nil, serviceErr)
 
@@ -405,7 +493,7 @@ func TestCategoryHandler_GetAllCategories_EmptyList(t *testing.T) {
 	mockService := new(mocks.CategoryService)
 	handler := NewCategoryHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedCategories := []domain.Category{}
 	mockService.On("GetAll", ctx).Return(expectedCategories, nil)
 

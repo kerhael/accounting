@@ -18,13 +18,18 @@ type CustomClaims struct {
 	jwt.RegisteredClaims
 }
 
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description "Bearer" then space character then token
+// @description Example: "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 func AuthMiddleware(jwtService *JWTService) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
 			authHeader := r.Header.Get("Authorization")
 			if authHeader == "" {
-				utils.WriteJSONError(w, http.StatusUnauthorized, "missing token")
+				utils.WriteJSONError(w, http.StatusUnauthorized, "missing authorization token")
 				return
 			}
 

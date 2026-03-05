@@ -23,7 +23,7 @@ func NewHealthHandler(service *service.HealthService) *HealthHandler {
 // @Produce      plain
 // @Success      200 {string} string '{"db":"ok","server":"ok"}'
 // @Failure      503 {string} string '{"db":"ko","server":"ok"}'
-// @Router       /api/v1/health [get]
+// @Router       /health [get]
 func (h *HealthHandler) Check(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
@@ -30,9 +31,17 @@ func NewOutcomeHandler(service service.OutcomeServiceInterface) *OutcomeHandler 
 // @Param        outcome  body      CreateOutcomeRequest  true  "Outcome payload"
 // @Success      201       {object}   OutcomeResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/ [post]
+// @Security BearerAuth
+// @Router       /outcomes/ [post]
 func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var req CreateOutcomeRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -80,10 +89,18 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   OutcomeResponse
 // @Failure      400   {object}  ErrorResponse  "Bad request error"
+// @Failure      401   {object}   ErrorResponse  "Unauthorized error"
 // @Failure      404   {object}  ErrorResponse  "Not found error"
 // @Failure      500   {object}  ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/ [get]
+// @Security BearerAuth
+// @Router       /outcomes/ [get]
 func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var from, to *time.Time
 	var categoryId int
 
@@ -151,10 +168,18 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 // @Param 		id path int true "Outcome ID"
 // @Success      200       {object}   OutcomeResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      404       {object}   ErrorResponse  "Not found error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/{id} [get]
+// @Security BearerAuth
+// @Router       /outcomes/{id} [get]
 func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	idStr := r.PathValue("id")
 
 	id, err := strconv.Atoi(idStr)
@@ -190,10 +215,18 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 // @Param        outcome  body      PatchOutcomeRequest  true  "Outcome payload"
 // @Success      200       {object}   OutcomeResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      404       {object}   ErrorResponse  "Not found error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/{id} [patch]
+// @Security BearerAuth
+// @Router       /outcomes/{id} [patch]
 func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -260,9 +293,17 @@ func (h *OutcomeHandler) PatchOutcome(w http.ResponseWriter, r *http.Request) {
 // @Param 		id path int true "Outcome ID"
 // @Success      204       "No Content"
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/{id} [delete]
+// @Security BearerAuth
+// @Router       /outcomes/{id} [delete]
 func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	idStr := r.PathValue("id")
 
 	id, err := strconv.Atoi(idStr)
@@ -295,10 +336,18 @@ func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Reques
 // @Param        categoryId query int false "Category ID filter"
 // @Success      200   {object}   SumOutcomeResponse
 // @Failure      400   {object}   ErrorResponse  "Bad request error"
+// @Failure      401   {object}   ErrorResponse  "Unauthorized error"
 // @Failure      404   {object}   ErrorResponse  "Not found error"
 // @Failure      500   {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/sums-by-category [get]
+// @Security BearerAuth
+// @Router       /outcomes/sums-by-category [get]
 func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var from, to *time.Time
 	var categoryId int
 
@@ -375,9 +424,17 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {object}   TotalOutcomeResponse
 // @Failure      400   {object}   ErrorResponse  "Bad request error"
+// @Failure      401   {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500   {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/total [get]
+// @Security BearerAuth
+// @Router       /outcomes/total [get]
 func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var from, to *time.Time
 
 	fromStr := r.URL.Query().Get("from")
@@ -431,9 +488,17 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   SeriesOutcomeResponse
 // @Failure      400   {object}   ErrorResponse  "Bad request error"
+// @Failure      401   {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500   {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/series-by-category [get]
+// @Security BearerAuth
+// @Router       /outcomes/series-by-category [get]
 func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var from, to *time.Time
 
 	fromStr := r.URL.Query().Get("from")
@@ -503,9 +568,17 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   TotalSeriesOutcomeResponse
 // @Failure      400   {object}   ErrorResponse  "Bad request error"
+// @Failure      401   {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500   {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/outcomes/series-total [get]
+// @Security BearerAuth
+// @Router       /outcomes/series-total [get]
 func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var from, to *time.Time
 
 	fromStr := r.URL.Query().Get("from")

@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
@@ -30,9 +31,17 @@ func NewIncomeHandler(service service.IncomeServiceInterface) *IncomeHandler {
 // @Param        income  body      CreateIncomeRequest  true  "Income payload"
 // @Success      201       {object}   IncomeResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401   {object}       ErrorResponse  "Unauthorized error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/incomes/ [post]
+// @Security BearerAuth
+// @Router       /incomes/ [post]
 func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var req CreateIncomeRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -76,10 +85,18 @@ func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
 // @Success      200   {array}   IncomeResponse
 // @Failure      400   {object}  ErrorResponse  "Bad request error"
+// @Failure      401   {object}  ErrorResponse  "Unauthorized error"
 // @Failure      404   {object}  ErrorResponse  "Not found error"
 // @Failure      500   {object}  ErrorResponse  "Internal server error"
-// @Router       /api/v1/incomes/ [get]
+// @Security BearerAuth
+// @Router       /incomes/ [get]
 func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var from, to *time.Time
 
 	fromStr := r.URL.Query().Get("from")
@@ -132,10 +149,18 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 // @Param 		id path int true "Income ID"
 // @Success      200       {object}   IncomeResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}  ErrorResponse  "Unauthorized error"
 // @Failure      404       {object}   ErrorResponse  "Not found error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/incomes/{id} [get]
+// @Security BearerAuth
+// @Router       /incomes/{id} [get]
 func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	idStr := r.PathValue("id")
 
 	id, err := strconv.Atoi(idStr)
@@ -171,10 +196,18 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 // @Param        income  body      PatchIncomeRequest  true  "Income payload"
 // @Success      200       {object}   IncomeResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      404       {object}   ErrorResponse  "Not found error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/incomes/{id} [patch]
+// @Security BearerAuth
+// @Router       /incomes/{id} [patch]
 func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	idStr := r.PathValue("id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -227,9 +260,17 @@ func (h *IncomeHandler) PatchIncome(w http.ResponseWriter, r *http.Request) {
 // @Param 		id path int true "Income ID"
 // @Success      204       "No Content"
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/incomes/{id} [delete]
+// @Security BearerAuth
+// @Router       /incomes/{id} [delete]
 func (h *IncomeHandler) DeleteIncomeById(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	idStr := r.PathValue("id")
 
 	id, err := strconv.Atoi(idStr)

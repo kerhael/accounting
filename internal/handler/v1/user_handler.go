@@ -31,7 +31,7 @@ func NewUserHandler(service service.UserServiceInterface) *UserHandler {
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
 // @Failure      429       {object}   ErrorResponse  "Too many requests error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/users/ [post]
+// @Router       /users/ [post]
 func (h *UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
 	var req CreateUserRequest
 
@@ -85,7 +85,8 @@ func (h *UserHandler) PostUser(w http.ResponseWriter, r *http.Request) {
 // @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      404       {object}   ErrorResponse  "User not found error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/users/me [get]
+// @Security BearerAuth
+// @Router       /users/me [get]
 func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	userID, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {

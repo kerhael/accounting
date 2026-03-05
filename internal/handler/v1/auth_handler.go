@@ -34,7 +34,7 @@ func NewAuthHandler(userService service.UserServiceInterface, jwtService *auth.J
 // @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      429       {object}   ErrorResponse  "Too many requests error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/users/login [post]
+// @Router       /users/login [post]
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginRequest
 

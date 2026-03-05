@@ -155,6 +155,7 @@ Create a new category.
 ```bash
 curl -X POST http://localhost:8080/api/v1/categories/ \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk" \
   -d '{"label":"Food"}'
 ```
 
@@ -163,7 +164,8 @@ curl -X POST http://localhost:8080/api/v1/categories/ \
 Retrieve all categories.
 
 ```bash
-curl http://localhost:8080/api/v1/categories/
+curl http://localhost:8080/api/v1/categories/ \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **GET** `/api/v1/categories/{id}`
@@ -171,7 +173,8 @@ curl http://localhost:8080/api/v1/categories/
 Retrieve a specific category by ID.
 
 ```bash
-curl http://localhost:8080/api/v1/categories/1
+curl http://localhost:8080/api/v1/categories/1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **DELETE** `/api/v1/categories/{id}`
@@ -179,7 +182,8 @@ curl http://localhost:8080/api/v1/categories/1
 Delete a category by ID.
 
 ```bash
-curl -X DELETE http://localhost:8080/api/v1/categories/1
+curl -X DELETE http://localhost:8080/api/v1/categories/1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 #### Outcomes
@@ -191,6 +195,7 @@ Create a new outcome.
 ```bash
 curl -X POST http://localhost:8080/api/v1/outcomes/ \
   -H "Content-Type: application/json" \
+    -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk" \
   -d '{
     "name": "Restaurant",
     "amount": 1999,
@@ -204,9 +209,14 @@ curl -X POST http://localhost:8080/api/v1/outcomes/ \
 Retrieve all outcomes.
 
 ```bash
-curl http://localhost:8080/api/v1/outcomes/
-curl http://localhost:8080/api/v1/outcomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
-curl http://localhost:8080/api/v1/outcomes/?categoryId=1
+curl http://localhost:8080/api/v1/outcomes/ \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/outcomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/outcomes/?categoryId=1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **GET** `/api/v1/outcomes/sums-by-category`
@@ -214,9 +224,14 @@ curl http://localhost:8080/api/v1/outcomes/?categoryId=1
 Retrieve the sum of outcomes' amounts grouped by category.
 
 ```bash
-curl http://localhost:8080/api/v1/outcomes/sums-by-category
-curl http://localhost:8080/api/v1/outcomes/sums-by-category?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
-curl http://localhost:8080/api/v1/outcomes/sums-by-category?categoryId=1
+curl http://localhost:8080/api/v1/outcomes/sums-by-category \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/outcomes/sums-by-category?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/outcomes/sums-by-category?categoryId=1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **GET** `/api/v1/outcomes/total`
@@ -224,8 +239,11 @@ curl http://localhost:8080/api/v1/outcomes/sums-by-category?categoryId=1
 Get total amount of outcomes.
 
 ```bash
-curl http://localhost:8080/api/v1/outcomes/total
-curl http://localhost:8080/api/v1/outcomes/total?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+curl http://localhost:8080/api/v1/outcomes/total \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/outcomes/total?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **GET** `/api/v1/outcomes/series-by-category`
@@ -233,8 +251,11 @@ curl http://localhost:8080/api/v1/outcomes/total?from=2025-01-01T00:00:00Z&to=20
 Get monthly series of outcomes (sum by category for each month). Returns all existing categories for each month, including categories with 0 amounts. If no dates are provided, returns the last 12 months.
 
 ```bash
-curl http://localhost:8080/api/v1/outcomes/series-by-category
-curl http://localhost:8080/api/v1/outcomes/series-by-category?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+curl http://localhost:8080/api/v1/outcomes/series-by-category \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/outcomes/series-by-category?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **GET** `/api/v1/outcomes/series-total`
@@ -242,8 +263,11 @@ curl http://localhost:8080/api/v1/outcomes/series-by-category?from=2025-01-01T00
 Get monthly series of outcomes' total amount. Returns total for each month. If no dates are provided, returns the last 12 months.
 
 ```bash
-curl http://localhost:8080/api/v1/outcomes/series-total
-curl http://localhost:8080/api/v1/outcomes/series-total?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+curl http://localhost:8080/api/v1/outcomes/series-total \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/outcomes/series-total?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **GET** `/api/v1/outcomes/{id}`
@@ -251,7 +275,8 @@ curl http://localhost:8080/api/v1/outcomes/series-total?from=2025-01-01T00:00:00
 Retrieve a specific outcome by ID.
 
 ```bash
-curl http://localhost:8080/api/v1/outcomes/1
+curl http://localhost:8080/api/v1/outcomes/1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **PATCH** `/api/v1/outcomes/{id}`
@@ -261,6 +286,7 @@ Update a specific outcome (partial update).
 ```bash
 curl -X PATCH http://localhost:8080/api/v1/outcomes/1 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk" \
   -d '{
     "name": "Updated Restaurant",
     "amount": 2500
@@ -272,7 +298,8 @@ curl -X PATCH http://localhost:8080/api/v1/outcomes/1 \
 Delete an outcome by ID.
 
 ```bash
-curl -X DELETE http://localhost:8080/api/v1/outcomes/1
+curl -X DELETE http://localhost:8080/api/v1/outcomes/1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 #### Incomes
@@ -284,6 +311,7 @@ Create a new income.
 ```bash
 curl -X POST http://localhost:8080/api/v1/incomes/ \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk" \
   -d '{
     "name": "Restaurant",
     "amount": 1999,
@@ -296,8 +324,11 @@ curl -X POST http://localhost:8080/api/v1/incomes/ \
 Retrieve all incomes.
 
 ```bash
-curl http://localhost:8080/api/v1/incomes/
-curl http://localhost:8080/api/v1/incomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z
+curl http://localhost:8080/api/v1/incomes/ \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/incomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **GET** `/api/v1/incomes/{id}`
@@ -305,7 +336,8 @@ curl http://localhost:8080/api/v1/incomes/?from=2025-01-01T00:00:00Z&to=2026-01-
 Retrieve a specific income by ID.
 
 ```bash
-curl http://localhost:8080/api/v1/incomes/1
+curl http://localhost:8080/api/v1/incomes/1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 **PATCH** `/api/v1/incomes/{id}`
@@ -315,6 +347,7 @@ Update a specific income (partial update).
 ```bash
 curl -X PATCH http://localhost:8080/api/v1/incomes/1 \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk" \
   -d '{
     "name": "Updated Salary",
     "amount": 2500000
@@ -326,7 +359,8 @@ curl -X PATCH http://localhost:8080/api/v1/incomes/1 \
 Delete an income by ID.
 
 ```bash
-curl -X DELETE http://localhost:8080/api/v1/incomes/1
+curl -X DELETE http://localhost:8080/api/v1/incomes/1 \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
 ## Database Management
@@ -399,7 +433,6 @@ Error response format:
 
 
 TODO: 
-- authenticated routes
 - userID for categories, incomes and outcomes
 - update user route
 - delete user route

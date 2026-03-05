@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
@@ -30,7 +31,7 @@ func TestOutcomeHandler_PostOutcome_Success(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       "Restaurant",
@@ -66,11 +67,32 @@ func TestOutcomeHandler_PostOutcome_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_PostOutcome_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodPost, "/outcomes/", nil)
+
+	w := httptest.NewRecorder()
+	handler.PostOutcome(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "PostOutcome")
+}
+
 func TestOutcomeHandler_PostOutcome_InvalidJSON(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodPost, "/outcomes/", bytes.NewReader([]byte("invalid json")))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostOutcome(w, req)
@@ -93,6 +115,8 @@ func TestOutcomeHandler_PostOutcome_MissingName(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/outcomes/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostOutcome(w, req)
@@ -119,6 +143,8 @@ func TestOutcomeHandler_PostOutcome_InvalidAmount(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/outcomes/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostOutcome(w, req)
@@ -144,6 +170,8 @@ func TestOutcomeHandler_PostOutcome_MissingCategoryId(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/outcomes/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostOutcome(w, req)
@@ -170,6 +198,8 @@ func TestOutcomeHandler_PostOutcome_ZeroCreatedAt(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/outcomes/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostOutcome(w, req)
@@ -196,7 +226,7 @@ func TestOutcomeHandler_PostOutcome_ServiceError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Create", ctx, "Restaurant", 1999, 1, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(createdAt)
 	})).Return(nil, &domain.InvalidEntityError{UnderlyingCause: assert.AnError})
@@ -228,7 +258,7 @@ func TestOutcomeHandler_PostOutcome_InternalError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Create", ctx, "Restaurant", 1999, 1, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(createdAt)
 	})).Return(nil, assert.AnError)
@@ -251,7 +281,7 @@ func TestOutcomeHandler_GetAllOutcomes_Success(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedOutcomes := []domain.Outcome{
 		{
 			ID:         1,
@@ -293,11 +323,30 @@ func TestOutcomeHandler_GetAllOutcomes_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetAllOutcomes_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetAllOutcomes(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetAllOutcomes")
+}
+
 func TestOutcomeHandler_GetAllOutcomes_EmptyList(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedOutcomes := []domain.Outcome{}
 	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(expectedOutcomes, nil)
 
@@ -325,7 +374,7 @@ func TestOutcomeHandler_GetAllOutcomes_WithDateFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -368,7 +417,7 @@ func TestOutcomeHandler_GetAllOutcomes_WithCategoryFilter(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	categoryId := 1
 
 	expectedOutcomes := []domain.Outcome{
@@ -410,11 +459,12 @@ func TestOutcomeHandler_GetAllOutcomes_BadFromAndToDates(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
 	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return([]domain.Outcome(nil), invalidDatesErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetAllOutcomes(w, req)
@@ -433,6 +483,8 @@ func TestOutcomeHandler_GetAllOutcomes_InvalidFromDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?from=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetAllOutcomes(w, req)
@@ -451,6 +503,8 @@ func TestOutcomeHandler_GetAllOutcomes_InvalidToDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?to=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetAllOutcomes(w, req)
@@ -468,11 +522,12 @@ func TestOutcomeHandler_GetAllOutcomes_CategoryNotFound(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category")}
 	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 1).Return([]domain.Outcome(nil), invalidEntityErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?categoryId=1", nil)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetAllOutcomes(w, req)
@@ -490,7 +545,7 @@ func TestOutcomeHandler_GetAllOutcomes_ServiceError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return([]domain.Outcome(nil), assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/", nil)
@@ -511,7 +566,7 @@ func TestOutcomeHandler_GetOutcomeById_Success(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       "Restaurant",
@@ -545,11 +600,32 @@ func TestOutcomeHandler_GetOutcomeById_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetOutcomeById_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/1", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetOutcomeById(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetOutcomeById")
+}
+
 func TestOutcomeHandler_GetOutcomeById_InvalidId(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/invalid", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
@@ -565,7 +641,7 @@ func TestOutcomeHandler_GetOutcomeById_InvalidEntityError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid outcome id")}
 	mockService.On("GetById", ctx, -1).Return(nil, invalidEntityErr)
 
@@ -588,7 +664,7 @@ func TestOutcomeHandler_GetOutcomeById_EntityNotFoundError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("outcome not found")}
 	mockService.On("GetById", ctx, 999).Return(nil, entityNotFoundErr)
 
@@ -611,7 +687,7 @@ func TestOutcomeHandler_GetOutcomeById_ServiceError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	serviceErr := errors.New("database connection failed")
 	mockService.On("GetById", ctx, 1).Return(nil, serviceErr)
 
@@ -640,7 +716,7 @@ func TestOutcomeHandler_PatchOutcome_Success_NameOnly(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       name,
@@ -690,7 +766,7 @@ func TestOutcomeHandler_PatchOutcome_Success_AllFields(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       name,
@@ -726,11 +802,32 @@ func TestOutcomeHandler_PatchOutcome_Success_AllFields(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_PatchOutcome_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", nil)
+
+	w := httptest.NewRecorder()
+	handler.PatchOutcome(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "PatchOutcome")
+}
+
 func TestOutcomeHandler_PatchOutcome_InvalidJSON(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader([]byte("invalid json")))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
@@ -753,6 +850,8 @@ func TestOutcomeHandler_PatchOutcome_InvalidId(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPatch, "/outcomes/invalid", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
@@ -778,6 +877,8 @@ func TestOutcomeHandler_PatchOutcome_NegativeAmount(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
@@ -803,6 +904,8 @@ func TestOutcomeHandler_PatchOutcome_NegativeCategoryId(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
@@ -827,7 +930,7 @@ func TestOutcomeHandler_PatchOutcome_InvalidEntityError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category")}
 	mockService.On("Patch", ctx, 1, name, 0, 0, (*time.Time)(nil)).Return(nil, invalidEntityErr)
 
@@ -856,7 +959,7 @@ func TestOutcomeHandler_PatchOutcome_EntityNotFoundError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("outcome not found")}
 	mockService.On("Patch", ctx, 1, name, 0, 0, (*time.Time)(nil)).Return(nil, entityNotFoundErr)
 
@@ -885,7 +988,7 @@ func TestOutcomeHandler_PatchOutcome_ServiceError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Patch", ctx, 1, name, 0, 0, (*time.Time)(nil)).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodPatch, "/outcomes/1", bytes.NewReader(body))
@@ -907,7 +1010,7 @@ func TestOutcomeHandler_DeleteOutcomeById_Success(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("DeleteById", ctx, 1).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/outcomes/1", nil)
@@ -925,11 +1028,32 @@ func TestOutcomeHandler_DeleteOutcomeById_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_DeleteOutcome_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodDelete, "/outcomes/1", nil)
+
+	w := httptest.NewRecorder()
+	handler.DeleteOutcomeById(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "DeleteOutcomeById")
+}
+
 func TestOutcomeHandler_DeleteOutcomeById_InvalidId(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodDelete, "/outcomes/invalid", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
@@ -950,7 +1074,7 @@ func TestOutcomeHandler_DeleteOutcomeById_InvalidEntityError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid outcome id")}
 	mockService.On("DeleteById", ctx, 0).Return(invalidEntityErr)
 
@@ -973,7 +1097,7 @@ func TestOutcomeHandler_DeleteOutcomeById_ServiceError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("DeleteById", ctx, 1).Return(assert.AnError)
 
 	req := httptest.NewRequest(http.MethodDelete, "/outcomes/1", nil)
@@ -995,7 +1119,7 @@ func TestOutcomeHandler_GetOutcomesSum_Success_NoFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	categorySums := []domain.CategorySum{
 		{CategoryId: 1, Total: 3000},
 		{CategoryId: 2, Total: 1500},
@@ -1029,7 +1153,7 @@ func TestOutcomeHandler_GetOutcomesSum_Success_WithFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	categorySums := []domain.CategorySum{
@@ -1058,11 +1182,30 @@ func TestOutcomeHandler_GetOutcomesSum_Success_WithFilters(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetOutcomesSum_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetOutcomesSum(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetOutcomesSum")
+}
+
 func TestOutcomeHandler_GetOutcomesSum_DefaultCurrentMonth(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	categorySums := []domain.CategorySum{
 		{CategoryId: 1, Total: 3000},
 	}
@@ -1102,6 +1245,8 @@ func TestOutcomeHandler_GetOutcomesSum_InvalidFromDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?from=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesSum(w, req)
@@ -1122,6 +1267,8 @@ func TestOutcomeHandler_GetOutcomesSum_InvalidToDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?to=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesSum(w, req)
@@ -1142,6 +1289,8 @@ func TestOutcomeHandler_GetOutcomesSum_InvalidCategory(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category?categoryId=invalid", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesSum(w, req)
@@ -1161,7 +1310,7 @@ func TestOutcomeHandler_GetOutcomesSum_InvalidDateError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
 	mockService.On("GetSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(nil, invalidDatesErr)
 
@@ -1186,7 +1335,7 @@ func TestOutcomeHandler_GetOutcomesSum_InvalidEntityError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category")}
 	mockService.On("GetSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 1).Return(nil, invalidEntityErr)
 
@@ -1211,7 +1360,7 @@ func TestOutcomeHandler_GetOutcomesSum_ServiceError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("GetSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/sums-by-category", nil)
@@ -1232,7 +1381,7 @@ func TestOutcomeHandler_GetOutcomesSeries_Success_NoFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedSeries := []domain.MonthlySeries{
 		{
 			Month: "2025-07",
@@ -1280,7 +1429,7 @@ func TestOutcomeHandler_GetOutcomesSeries_Success_WithFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	expectedSeries := []domain.MonthlySeries{
@@ -1314,11 +1463,30 @@ func TestOutcomeHandler_GetOutcomesSeries_Success_WithFilters(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetOutcomesSeries_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetOutcomesSeries(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetOutcomesSeries")
+}
+
 func TestOutcomeHandler_GetOutcomesSeries_DefaultLast12Months(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedSeries := []domain.MonthlySeries{}
 	mockService.On("GetSeries", ctx, mock.MatchedBy(func(t *time.Time) bool {
 		now := time.Now()
@@ -1355,6 +1523,8 @@ func TestOutcomeHandler_GetOutcomesSeries_InvalidFromDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category?from=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesSeries(w, req)
@@ -1375,6 +1545,8 @@ func TestOutcomeHandler_GetOutcomesSeries_InvalidToDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category?to=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesSeries(w, req)
@@ -1394,7 +1566,7 @@ func TestOutcomeHandler_GetOutcomesSeries_InvalidDateError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
 	mockService.On("GetSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, invalidDatesErr)
 
@@ -1419,7 +1591,7 @@ func TestOutcomeHandler_GetOutcomesSeries_ServiceError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("GetSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-by-category", nil)
@@ -1440,7 +1612,7 @@ func TestOutcomeHandler_GetOutcomesTotal_Success_NoFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedTotal := 4500
 	mockService.On("GetTotal", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedTotal, nil)
 
@@ -1467,7 +1639,7 @@ func TestOutcomeHandler_GetOutcomesTotal_Success_WithFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	expectedTotal := 3000
@@ -1492,11 +1664,30 @@ func TestOutcomeHandler_GetOutcomesTotal_Success_WithFilters(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetOutcomesTotal_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/total", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetOutcomesTotal(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetOutcomesTotal")
+}
+
 func TestOutcomeHandler_GetOutcomesTotal_DefaultCurrentMonth(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedTotal := 2500
 	mockService.On("GetTotal", ctx, mock.MatchedBy(func(t *time.Time) bool {
 		now := time.Now()
@@ -1532,6 +1723,8 @@ func TestOutcomeHandler_GetOutcomesTotal_InvalidFromDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/total?from=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesTotal(w, req)
@@ -1552,6 +1745,8 @@ func TestOutcomeHandler_GetOutcomesTotal_InvalidToDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/total?to=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesTotal(w, req)
@@ -1571,7 +1766,7 @@ func TestOutcomeHandler_GetOutcomesTotal_InvalidDateError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
 	mockService.On("GetTotal", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(0, invalidDatesErr)
 
@@ -1596,7 +1791,7 @@ func TestOutcomeHandler_GetOutcomesTotal_ServiceError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("GetTotal", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(0, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/total", nil)
@@ -1617,7 +1812,7 @@ func TestOutcomeHandler_GetOutcomesTotalSeries_Success_NoFilters(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedSeries := []domain.MonthlyTotalSeries{
 		{
 			Month: "2025-07",
@@ -1657,7 +1852,7 @@ func TestOutcomeHandler_GetOutcomesTotalSeries_Success_WithFilters(t *testing.T)
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	expectedSeries := []domain.MonthlyTotalSeries{
@@ -1689,11 +1884,30 @@ func TestOutcomeHandler_GetOutcomesTotalSeries_Success_WithFilters(t *testing.T)
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetOutcomesTotalSeries_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-total", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetOutcomesTotalSeries(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetOutcomesTotalSeries")
+}
+
 func TestOutcomeHandler_GetOutcomesTotalSeries_DefaultLast12Months(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedSeries := []domain.MonthlyTotalSeries{}
 	mockService.On("GetTotalSeries", ctx, mock.MatchedBy(func(t *time.Time) bool {
 		now := time.Now()
@@ -1730,6 +1944,8 @@ func TestOutcomeHandler_GetOutcomesTotalSeries_InvalidFromDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-total?from=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesTotalSeries(w, req)
@@ -1750,6 +1966,8 @@ func TestOutcomeHandler_GetOutcomesTotalSeries_InvalidToDate(t *testing.T) {
 	handler := NewOutcomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-total?to=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetOutcomesTotalSeries(w, req)
@@ -1769,7 +1987,7 @@ func TestOutcomeHandler_GetOutcomesTotalSeries_InvalidDateError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
 	mockService.On("GetTotalSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, invalidDatesErr)
 
@@ -1794,7 +2012,7 @@ func TestOutcomeHandler_GetOutcomesTotalSeries_ServiceError(t *testing.T) {
 	mockService := new(mocks.OutcomeService)
 	handler := NewOutcomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("GetTotalSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/series-total", nil)

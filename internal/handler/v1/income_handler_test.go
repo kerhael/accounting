@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/service/mocks"
 	"github.com/stretchr/testify/assert"
@@ -29,7 +30,7 @@ func TestIncomeHandler_PostIncome_Success(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedIncome := &domain.Income{
 		ID:        1,
 		Name:      "Salary",
@@ -63,11 +64,32 @@ func TestIncomeHandler_PostIncome_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_PostIncome_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.IncomeService)
+	handler := NewIncomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodPost, "/incomes/", nil)
+
+	w := httptest.NewRecorder()
+	handler.PostIncome(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "PostIncome")
+}
+
 func TestIncomeHandler_PostIncome_InvalidJSON(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodPost, "/incomes/", bytes.NewReader([]byte("invalid json")))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostIncome(w, req)
@@ -89,6 +111,8 @@ func TestIncomeHandler_PostIncome_MissingName(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/incomes/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostIncome(w, req)
@@ -114,6 +138,8 @@ func TestIncomeHandler_PostIncome_InvalidAmount(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/incomes/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostIncome(w, req)
@@ -139,6 +165,8 @@ func TestIncomeHandler_PostIncome_NegativeAmount(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/incomes/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostIncome(w, req)
@@ -164,6 +192,8 @@ func TestIncomeHandler_PostIncome_ZeroCreatedAt(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPost, "/incomes/", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.PostIncome(w, req)
@@ -189,7 +219,7 @@ func TestIncomeHandler_PostIncome_ServiceError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Create", ctx, "Salary", 300000, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(createdAt)
 	})).Return(nil, &domain.InvalidEntityError{UnderlyingCause: assert.AnError})
@@ -220,7 +250,7 @@ func TestIncomeHandler_PostIncome_InternalError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Create", ctx, "Salary", 300000, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(createdAt)
 	})).Return(nil, assert.AnError)
@@ -243,7 +273,7 @@ func TestIncomeHandler_GetAllIncomes_Success(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedIncomes := []domain.Income{
 		{
 			ID:        1,
@@ -283,11 +313,30 @@ func TestIncomeHandler_GetAllIncomes_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetAllIncomes_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.IncomeService)
+	handler := NewIncomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/incomes/", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetAllIncomes(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetAllIncomes")
+}
+
 func TestIncomeHandler_GetAllIncomes_EmptyList(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedIncomes := []domain.Income{}
 	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedIncomes, nil)
 
@@ -315,7 +364,7 @@ func TestIncomeHandler_GetAllIncomes_WithDateFilters(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -356,11 +405,12 @@ func TestIncomeHandler_GetAllIncomes_BadFromAndToDates(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
 	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Income(nil), invalidDatesErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetAllIncomes(w, req)
@@ -379,6 +429,8 @@ func TestIncomeHandler_GetAllIncomes_InvalidFromDate(t *testing.T) {
 	handler := NewIncomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/?from=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetAllIncomes(w, req)
@@ -397,6 +449,8 @@ func TestIncomeHandler_GetAllIncomes_InvalidToDate(t *testing.T) {
 	handler := NewIncomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/?to=invalid-date", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	w := httptest.NewRecorder()
 
 	handler.GetAllIncomes(w, req)
@@ -414,7 +468,7 @@ func TestIncomeHandler_GetAllIncomes_ServiceError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Income(nil), assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/", nil)
@@ -435,7 +489,7 @@ func TestIncomeHandler_GetIncomeById_Success(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedIncome := &domain.Income{
 		ID:        1,
 		Name:      "Salary",
@@ -467,11 +521,32 @@ func TestIncomeHandler_GetIncomeById_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_GetIncomeById_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.IncomeService)
+	handler := NewIncomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/incomes/1", nil)
+
+	w := httptest.NewRecorder()
+	handler.GetIncomeById(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "GetIncomeById")
+}
+
 func TestIncomeHandler_GetIncomeById_InvalidId(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/invalid", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
@@ -487,7 +562,7 @@ func TestIncomeHandler_GetIncomeById_InvalidEntityError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid income id")}
 	mockService.On("GetById", ctx, -1).Return(nil, invalidEntityErr)
 
@@ -510,7 +585,7 @@ func TestIncomeHandler_GetIncomeById_EntityNotFoundError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("income not found")}
 	mockService.On("GetById", ctx, 999).Return(nil, entityNotFoundErr)
 
@@ -533,7 +608,7 @@ func TestIncomeHandler_GetIncomeById_ServiceError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	serviceErr := errors.New("database connection failed")
 	mockService.On("GetById", ctx, 1).Return(nil, serviceErr)
 
@@ -562,7 +637,7 @@ func TestIncomeHandler_PatchIncome_Success_NameOnly(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedIncome := &domain.Income{
 		ID:        1,
 		Name:      name,
@@ -608,7 +683,7 @@ func TestIncomeHandler_PatchIncome_Success_AllFields(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedIncome := &domain.Income{
 		ID:        1,
 		Name:      name,
@@ -642,11 +717,32 @@ func TestIncomeHandler_PatchIncome_Success_AllFields(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_PatchIncome_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.IncomeService)
+	handler := NewIncomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", nil)
+
+	w := httptest.NewRecorder()
+	handler.PatchIncome(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "PatchIncome")
+}
+
 func TestIncomeHandler_PatchIncome_InvalidJSON(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader([]byte("invalid json")))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
@@ -669,6 +765,8 @@ func TestIncomeHandler_PatchIncome_InvalidId(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/invalid", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
@@ -694,6 +792,8 @@ func TestIncomeHandler_PatchIncome_NegativeAmount(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "1")
 	w := httptest.NewRecorder()
 
@@ -718,7 +818,7 @@ func TestIncomeHandler_PatchIncome_EntityNotFoundError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("income not found")}
 	mockService.On("Patch", ctx, 1, name, 0, (*time.Time)(nil)).Return(nil, entityNotFoundErr)
 
@@ -747,7 +847,7 @@ func TestIncomeHandler_PatchIncome_ServiceError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Patch", ctx, 1, name, 0, (*time.Time)(nil)).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
@@ -769,7 +869,7 @@ func TestIncomeHandler_DeleteIncomeById_Success(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("DeleteById", ctx, 1).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/incomes/1", nil)
@@ -787,11 +887,32 @@ func TestIncomeHandler_DeleteIncomeById_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestOutcomeHandler_DeleteIncomeById_NoAuthContext(t *testing.T) {
+	mockService := new(mocks.IncomeService)
+	handler := NewIncomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodDelete, "/incomes/1", nil)
+
+	w := httptest.NewRecorder()
+	handler.DeleteIncomeById(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "DeleteIncomeById")
+}
+
 func TestIncomeHandler_DeleteIncomeById_InvalidId(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
 	req := httptest.NewRequest(http.MethodDelete, "/incomes/invalid", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
 	req.SetPathValue("id", "invalid")
 	w := httptest.NewRecorder()
 
@@ -812,7 +933,7 @@ func TestIncomeHandler_DeleteIncomeById_InvalidEntityError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid income id")}
 	mockService.On("DeleteById", ctx, 0).Return(invalidEntityErr)
 
@@ -835,7 +956,7 @@ func TestIncomeHandler_DeleteIncomeById_ServiceError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := context.Background()
+	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("DeleteById", ctx, 1).Return(assert.AnError)
 
 	req := httptest.NewRequest(http.MethodDelete, "/incomes/1", nil)

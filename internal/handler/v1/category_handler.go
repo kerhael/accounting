@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/kerhael/accounting/internal/auth"
 	"github.com/kerhael/accounting/internal/domain"
 	"github.com/kerhael/accounting/internal/handler/utils"
 	"github.com/kerhael/accounting/internal/service"
@@ -28,9 +29,17 @@ func NewCategoryHandler(service service.CategoryServiceInterface) *CategoryHandl
 // @Param        category  body      CreateCategoryRequest  true  "Category payload"
 // @Success      201       {object}   CategoryResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/categories/ [post]
+// @Security BearerAuth
+// @Router       /categories/ [post]
 func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	var req CreateCategoryRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -63,9 +72,17 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 // @Accept       json
 // @Produce      json
 // @Success      200       {array}   CategoryResponse
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/categories/ [get]
+// @Security BearerAuth
+// @Router       /categories/ [get]
 func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	categories, err := h.service.GetAll(r.Context())
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
@@ -84,10 +101,18 @@ func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Reques
 // @Param 		id path int true "Category ID"
 // @Success      200       {object}   CategoryResponse
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      404       {object}   ErrorResponse  "Not found error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/categories/{id} [get]
+// @Security BearerAuth
+// @Router       /categories/{id} [get]
 func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	idStr := r.PathValue("id")
 
 	id, err := strconv.Atoi(idStr)
@@ -122,9 +147,17 @@ func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request
 // @Param 		id path int true "Category ID"
 // @Success      204       "No Content"
 // @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
 // @Failure      500       {object}   ErrorResponse  "Internal server error"
-// @Router       /api/v1/categories/{id} [delete]
+// @Security BearerAuth
+// @Router       /categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategoryById(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
 	idStr := r.PathValue("id")
 
 	id, err := strconv.Atoi(idStr)

@@ -19,8 +19,13 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/categories/": {
+        "/categories/": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve all categories",
                 "consumes": [
                     "application/json"
@@ -42,6 +47,12 @@ const docTemplate = `{
                             }
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -51,6 +62,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new category",
                 "consumes": [
                     "application/json"
@@ -86,6 +102,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -95,8 +117,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/categories/{id}": {
+        "/categories/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve a category by id",
                 "consumes": [
                     "application/json"
@@ -130,6 +157,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not found error",
                         "schema": {
@@ -145,6 +178,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a category by id",
                 "consumes": [
                     "application/json"
@@ -175,6 +213,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -184,7 +228,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/health": {
+        "/health": {
             "get": {
                 "description": "Check server and database connectivity",
                 "produces": [
@@ -210,8 +254,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/incomes/": {
+        "/incomes/": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve all incomes with optional date filtering (defaults to current month if not provided)",
                 "consumes": [
                     "application/json"
@@ -253,6 +302,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not found error",
                         "schema": {
@@ -268,6 +323,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new income",
                 "consumes": [
                     "application/json"
@@ -303,6 +363,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -312,8 +378,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/incomes/{id}": {
+        "/incomes/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve an income by id",
                 "consumes": [
                     "application/json"
@@ -347,6 +418,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not found error",
                         "schema": {
@@ -362,6 +439,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an income by id",
                 "consumes": [
                     "application/json"
@@ -392,6 +474,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -401,6 +489,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an income",
                 "consumes": [
                     "application/json"
@@ -443,6 +536,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not found error",
                         "schema": {
@@ -458,8 +557,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/outcomes/": {
+        "/outcomes/": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve all outcomes with optional date filtering (defaults to current month if not provided)",
                 "consumes": [
                     "application/json"
@@ -501,6 +605,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not found error",
                         "schema": {
@@ -516,6 +626,11 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new outcome",
                 "consumes": [
                     "application/json"
@@ -551,6 +666,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -560,8 +681,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/outcomes/series-by-category": {
+        "/outcomes/series-by-category": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the sum of outcomes by category for each month between dates (defaults to last 12 months if not provided)",
                 "consumes": [
                     "application/json"
@@ -606,6 +732,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -615,8 +747,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/outcomes/series-total": {
+        "/outcomes/series-total": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the total sum of outcomes for each month between dates (defaults to last 12 months if not provided)",
                 "consumes": [
                     "application/json"
@@ -661,6 +798,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -670,8 +813,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/outcomes/sums-by-category": {
+        "/outcomes/sums-by-category": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the total amount of outcomes by category between dates (defaults to current month if not provided), optionally filtered by category",
                 "consumes": [
                     "application/json"
@@ -719,6 +867,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not found error",
                         "schema": {
@@ -734,8 +888,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/outcomes/total": {
+        "/outcomes/total": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the total amount of outcomes between dates (defaults to current month if not provided)",
                 "consumes": [
                     "application/json"
@@ -774,6 +933,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -783,8 +948,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/outcomes/{id}": {
+        "/outcomes/{id}": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve an outcome by id",
                 "consumes": [
                     "application/json"
@@ -818,6 +988,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not found error",
                         "schema": {
@@ -833,6 +1009,11 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an outcome by id",
                 "consumes": [
                     "application/json"
@@ -863,6 +1044,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal server error",
                         "schema": {
@@ -872,6 +1059,11 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an outcome",
                 "consumes": [
                     "application/json"
@@ -914,6 +1106,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/v1.ErrorResponse"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized error",
+                        "schema": {
+                            "$ref": "#/definitions/v1.ErrorResponse"
+                        }
+                    },
                     "404": {
                         "description": "Not found error",
                         "schema": {
@@ -929,7 +1127,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/": {
+        "/users/": {
             "post": {
                 "description": "Create a new user. A rate limiter prevents from brute force attacks (speed 1s, burst 5)",
                 "consumes": [
@@ -981,7 +1179,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/login": {
+        "/users/login": {
             "post": {
                 "description": "User login. A rate limiter prevents from brute force attacks (speed 1s, burst 5)",
                 "consumes": [
@@ -1039,8 +1237,13 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/users/me": {
+        "/users/me": {
             "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve the authenticated user.",
                 "consumes": [
                     "application/json"
