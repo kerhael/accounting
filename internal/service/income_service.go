@@ -12,11 +12,11 @@ import (
 )
 
 type IncomeServiceInterface interface {
-	Create(ctx context.Context, name string, amount int, createdAt *time.Time) (*domain.Income, error)
-	GetAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Income, error)
-	GetById(ctx context.Context, id int) (*domain.Income, error)
-	PatchById(ctx context.Context, id int, name string, amount int, createdAt *time.Time) (*domain.Income, error)
-	DeleteById(ctx context.Context, id int) error
+	Create(ctx context.Context, name string, amount int, createdAt *time.Time, userId int) (*domain.Income, error)
+	GetAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error)
+	GetById(ctx context.Context, id int, userId int) (*domain.Income, error)
+	PatchById(ctx context.Context, id int, name string, amount int, createdAt *time.Time, userId int) (*domain.Income, error)
+	DeleteById(ctx context.Context, id int, userId int) error
 }
 
 type IncomeService struct {
@@ -27,7 +27,7 @@ func NewIncomeService(repo repository.IncomeRepository) *IncomeService {
 	return &IncomeService{repo: repo}
 }
 
-func (s *IncomeService) Create(ctx context.Context, name string, amount int, createdAt *time.Time) (*domain.Income, error) {
+func (s *IncomeService) Create(ctx context.Context, name string, amount int, createdAt *time.Time, userId int) (*domain.Income, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, &domain.InvalidEntityError{
@@ -51,6 +51,7 @@ func (s *IncomeService) Create(ctx context.Context, name string, amount int, cre
 		Name:      name,
 		CreatedAt: createdAt,
 		Amount:    amount,
+		UserId:    userId,
 	}
 
 	if err := s.repo.Create(ctx, income); err != nil {
@@ -60,14 +61,14 @@ func (s *IncomeService) Create(ctx context.Context, name string, amount int, cre
 	return income, nil
 }
 
-func (s *IncomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Income, error) {
+func (s *IncomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error) {
 	if from != nil && to != nil && from.After(*to) {
 		return nil, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
 		}
 	}
 
-	incomes, err := s.repo.FindAll(ctx, from, to)
+	incomes, err := s.repo.FindAll(ctx, from, to, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -75,14 +76,14 @@ func (s *IncomeService) GetAll(ctx context.Context, from *time.Time, to *time.Ti
 	return incomes, nil
 }
 
-func (s *IncomeService) GetById(ctx context.Context, id int) (*domain.Income, error) {
+func (s *IncomeService) GetById(ctx context.Context, id int, userId int) (*domain.Income, error) {
 	if id <= 0 {
 		return nil, &domain.InvalidEntityError{
 			UnderlyingCause: errors.New("invalid id"),
 		}
 	}
 
-	income, err := s.repo.FindById(ctx, id)
+	income, err := s.repo.FindById(ctx, id, userId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, &domain.EntityNotFoundError{
@@ -95,8 +96,8 @@ func (s *IncomeService) GetById(ctx context.Context, id int) (*domain.Income, er
 	return income, nil
 }
 
-func (s *IncomeService) PatchById(ctx context.Context, id int, name string, amount int, createdAt *time.Time) (*domain.Income, error) {
-	income, err := s.repo.FindById(ctx, id)
+func (s *IncomeService) PatchById(ctx context.Context, id int, name string, amount int, createdAt *time.Time, userId int) (*domain.Income, error) {
+	income, err := s.repo.FindById(ctx, id, userId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, &domain.EntityNotFoundError{
@@ -106,42 +107,43 @@ func (s *IncomeService) PatchById(ctx context.Context, id int, name string, amou
 		return nil, err
 	}
 
-	o := &domain.Income{
-		ID: income.ID,
+	i := &domain.Income{
+		ID:     income.ID,
+		UserId: income.UserId,
 	}
 
 	if name != "" {
-		o.Name = name
+		i.Name = name
 	} else {
-		o.Name = income.Name
+		i.Name = income.Name
 	}
 
 	if amount != 0 {
-		o.Amount = amount
+		i.Amount = amount
 	} else {
-		o.Amount = income.Amount
+		i.Amount = income.Amount
 	}
 
 	if createdAt != nil {
-		o.CreatedAt = createdAt
+		i.CreatedAt = createdAt
 	} else {
-		o.CreatedAt = income.CreatedAt
+		i.CreatedAt = income.CreatedAt
 	}
 
-	errUpdt := s.repo.Update(ctx, o)
+	errUpdt := s.repo.Update(ctx, i)
 	if errUpdt != nil {
 		return nil, errUpdt
 	}
 
-	return o, nil
+	return i, nil
 }
 
-func (s *IncomeService) DeleteById(ctx context.Context, id int) error {
+func (s *IncomeService) DeleteById(ctx context.Context, id int, userId int) error {
 	if id <= 0 {
 		return &domain.InvalidEntityError{
 			UnderlyingCause: errors.New("invalid id"),
 		}
 	}
 
-	return s.repo.DeleteById(ctx, id)
+	return s.repo.DeleteById(ctx, id, userId)
 }

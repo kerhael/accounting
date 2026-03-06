@@ -1,6 +1,7 @@
 package domain
 
 type Category struct {
-	ID    int
-	Label string
+	Label  string
+	ID     int
+	UserId int
 }

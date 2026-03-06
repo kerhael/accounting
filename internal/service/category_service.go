@@ -11,10 +11,10 @@ import (
 )
 
 type CategoryServiceInterface interface {
-	Create(ctx context.Context, label string) (*domain.Category, error)
-	GetAll(ctx context.Context) ([]domain.Category, error)
-	GetById(ctx context.Context, id int) (*domain.Category, error)
-	DeleteById(ctx context.Context, id int) error
+	Create(ctx context.Context, label string, userId int) (*domain.Category, error)
+	GetAll(ctx context.Context, userId int) ([]domain.Category, error)
+	GetById(ctx context.Context, id int, userId int) (*domain.Category, error)
+	DeleteById(ctx context.Context, id int, userId int) error
 }
 
 type CategoryService struct {
@@ -25,7 +25,7 @@ func NewCategoryService(repo repository.CategoryRepository) *CategoryService {
 	return &CategoryService{repo: repo}
 }
 
-func (s *CategoryService) Create(ctx context.Context, label string) (*domain.Category, error) {
+func (s *CategoryService) Create(ctx context.Context, label string, userId int) (*domain.Category, error) {
 	label = strings.TrimSpace(label)
 	if label == "" {
 		return nil, &domain.InvalidEntityError{
@@ -34,7 +34,8 @@ func (s *CategoryService) Create(ctx context.Context, label string) (*domain.Cat
 	}
 
 	category := &domain.Category{
-		Label: label,
+		Label:  label,
+		UserId: userId,
 	}
 
 	if err := s.repo.Create(ctx, category); err != nil {
@@ -44,8 +45,8 @@ func (s *CategoryService) Create(ctx context.Context, label string) (*domain.Cat
 	return category, nil
 }
 
-func (s *CategoryService) GetAll(ctx context.Context) ([]domain.Category, error) {
-	categories, err := s.repo.FindAll(ctx)
+func (s *CategoryService) GetAll(ctx context.Context, userId int) ([]domain.Category, error) {
+	categories, err := s.repo.FindAll(ctx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -53,14 +54,14 @@ func (s *CategoryService) GetAll(ctx context.Context) ([]domain.Category, error)
 	return categories, nil
 }
 
-func (s *CategoryService) GetById(ctx context.Context, id int) (*domain.Category, error) {
+func (s *CategoryService) GetById(ctx context.Context, id int, userId int) (*domain.Category, error) {
 	if id <= 0 {
 		return nil, &domain.InvalidEntityError{
 			UnderlyingCause: errors.New("invalid id"),
 		}
 	}
 
-	category, err := s.repo.FindById(ctx, id)
+	category, err := s.repo.FindById(ctx, id, userId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, &domain.EntityNotFoundError{
@@ -73,12 +74,12 @@ func (s *CategoryService) GetById(ctx context.Context, id int) (*domain.Category
 	return category, nil
 }
 
-func (s *CategoryService) DeleteById(ctx context.Context, id int) error {
+func (s *CategoryService) DeleteById(ctx context.Context, id int, userId int) error {
 	if id <= 0 {
 		return &domain.InvalidEntityError{
 			UnderlyingCause: errors.New("invalid id"),
 		}
 	}
 
-	return s.repo.DeleteById(ctx, id)
+	return s.repo.DeleteById(ctx, id, userId)
 }

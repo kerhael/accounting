@@ -7,4 +7,5 @@ type Income struct {
 	CreatedAt *time.Time
 	Amount    int
 	ID        int
+	UserId    int
 }

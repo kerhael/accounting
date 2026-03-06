@@ -36,7 +36,7 @@ func NewIncomeHandler(service service.IncomeServiceInterface) *IncomeHandler {
 // @Security BearerAuth
 // @Router       /incomes/ [post]
 func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -62,7 +62,7 @@ func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	income, err := h.service.Create(r.Context(), req.Name, req.Amount, &req.CreatedAt)
+	income, err := h.service.Create(r.Context(), req.Name, req.Amount, &req.CreatedAt, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -91,7 +91,7 @@ func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router       /incomes/ [get]
 func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -127,7 +127,7 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 		to = &now
 	}
 
-	incomes, err := h.service.GetAll(r.Context(), from, to)
+	incomes, err := h.service.GetAll(r.Context(), from, to, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -155,7 +155,7 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router       /incomes/{id} [get]
 func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -169,7 +169,7 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	income, err := h.service.GetById(r.Context(), id)
+	income, err := h.service.GetById(r.Context(), id, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -202,7 +202,7 @@ func (h *IncomeHandler) GetIncomeById(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router       /incomes/{id} [patch]
 func (h *IncomeHandler) PatchIncomeById(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -238,7 +238,7 @@ func (h *IncomeHandler) PatchIncomeById(w http.ResponseWriter, r *http.Request) 
 
 	}
 
-	income, err := h.service.PatchById(r.Context(), id, name, amount, req.CreatedAt)
+	income, err := h.service.PatchById(r.Context(), id, name, amount, req.CreatedAt, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
 			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
@@ -265,7 +265,7 @@ func (h *IncomeHandler) PatchIncomeById(w http.ResponseWriter, r *http.Request) 
 // @Security BearerAuth
 // @Router       /incomes/{id} [delete]
 func (h *IncomeHandler) DeleteIncomeById(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -279,7 +279,7 @@ func (h *IncomeHandler) DeleteIncomeById(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	err = h.service.DeleteById(r.Context(), id)
+	err = h.service.DeleteById(r.Context(), id, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())

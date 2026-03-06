@@ -34,7 +34,7 @@ func NewCategoryHandler(service service.CategoryServiceInterface) *CategoryHandl
 // @Security BearerAuth
 // @Router       /categories/ [post]
 func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -52,7 +52,7 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	category, err := h.service.Create(r.Context(), req.Label)
+	category, err := h.service.Create(r.Context(), req.Label, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -77,13 +77,13 @@ func (h *CategoryHandler) PostCategory(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router       /categories/ [get]
 func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
 	}
 
-	categories, err := h.service.GetAll(r.Context())
+	categories, err := h.service.GetAll(r.Context(), userId)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -107,7 +107,7 @@ func (h *CategoryHandler) GetAllCategories(w http.ResponseWriter, r *http.Reques
 // @Security BearerAuth
 // @Router       /categories/{id} [get]
 func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -121,7 +121,7 @@ func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	category, err := h.service.GetById(r.Context(), id)
+	category, err := h.service.GetById(r.Context(), id, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -152,7 +152,7 @@ func (h *CategoryHandler) GetCategoryById(w http.ResponseWriter, r *http.Request
 // @Security BearerAuth
 // @Router       /categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategoryById(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -166,7 +166,7 @@ func (h *CategoryHandler) DeleteCategoryById(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	err = h.service.DeleteById(r.Context(), id)
+	err = h.service.DeleteById(r.Context(), id, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())

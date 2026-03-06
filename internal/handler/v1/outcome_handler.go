@@ -36,7 +36,7 @@ func NewOutcomeHandler(service service.OutcomeServiceInterface) *OutcomeHandler 
 // @Security BearerAuth
 // @Router       /outcomes/ [post]
 func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -66,7 +66,7 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	outcome, err := h.service.Create(r.Context(), req.Name, req.Amount, req.CategoryId, &req.CreatedAt)
+	outcome, err := h.service.Create(r.Context(), req.Name, req.Amount, req.CategoryId, &req.CreatedAt, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -95,7 +95,7 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Router       /outcomes/ [get]
 func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -142,7 +142,7 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 		to = &now
 	}
 
-	outcomes, err := h.service.GetAll(r.Context(), from, to, categoryId)
+	outcomes, err := h.service.GetAll(r.Context(), from, to, categoryId, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -174,7 +174,7 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 // @Security BearerAuth
 // @Router       /outcomes/{id} [get]
 func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -188,7 +188,7 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	outcome, err := h.service.GetById(r.Context(), id)
+	outcome, err := h.service.GetById(r.Context(), id, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -221,7 +221,7 @@ func (h *OutcomeHandler) GetOutcomeById(w http.ResponseWriter, r *http.Request) 
 // @Security BearerAuth
 // @Router       /outcomes/{id} [patch]
 func (h *OutcomeHandler) PatchOutcomeById(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -267,7 +267,7 @@ func (h *OutcomeHandler) PatchOutcomeById(w http.ResponseWriter, r *http.Request
 		categoryId = reqCategoryId
 	}
 
-	outcome, err := h.service.PatchById(r.Context(), id, name, amount, categoryId, req.CreatedAt)
+	outcome, err := h.service.PatchById(r.Context(), id, name, amount, categoryId, req.CreatedAt, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -298,7 +298,7 @@ func (h *OutcomeHandler) PatchOutcomeById(w http.ResponseWriter, r *http.Request
 // @Security BearerAuth
 // @Router       /outcomes/{id} [delete]
 func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -312,7 +312,7 @@ func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	err = h.service.DeleteById(r.Context(), id)
+	err = h.service.DeleteById(r.Context(), id, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -342,7 +342,7 @@ func (h *OutcomeHandler) DeleteOutcomeById(w http.ResponseWriter, r *http.Reques
 // @Security BearerAuth
 // @Router       /outcomes/sums-by-category [get]
 func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -389,7 +389,7 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 		categoryId = categoryIdInt
 	}
 
-	categorySums, err := h.service.GetSum(r.Context(), from, to, categoryId)
+	categorySums, err := h.service.GetSum(r.Context(), from, to, categoryId, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -429,7 +429,7 @@ func (h *OutcomeHandler) GetOutcomesSum(w http.ResponseWriter, r *http.Request) 
 // @Security BearerAuth
 // @Router       /outcomes/total [get]
 func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -465,7 +465,7 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 		to = &now
 	}
 
-	total, err := h.service.GetTotal(r.Context(), from, to)
+	total, err := h.service.GetTotal(r.Context(), from, to, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -493,7 +493,7 @@ func (h *OutcomeHandler) GetOutcomesTotal(w http.ResponseWriter, r *http.Request
 // @Security BearerAuth
 // @Router       /outcomes/series-by-category [get]
 func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -537,7 +537,7 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	series, err := h.service.GetSeries(r.Context(), from, to)
+	series, err := h.service.GetSeries(r.Context(), from, to, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -573,7 +573,7 @@ func (h *OutcomeHandler) GetOutcomesSeries(w http.ResponseWriter, r *http.Reques
 // @Security BearerAuth
 // @Router       /outcomes/series-total [get]
 func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.Request) {
-	_, ok := auth.GetUserIDFromContext(r.Context())
+	userId, ok := auth.GetUserIDFromContext(r.Context())
 	if !ok {
 		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
 		return
@@ -617,7 +617,7 @@ func (h *OutcomeHandler) GetOutcomesTotalSeries(w http.ResponseWriter, r *http.R
 		}
 	}
 
-	series, err := h.service.GetTotalSeries(r.Context(), from, to)
+	series, err := h.service.GetTotalSeries(r.Context(), from, to, userId)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())

@@ -19,11 +19,13 @@ func TestCreateOutcome_Success(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	category := &domain.Category{
-		ID:    1,
-		Label: "Food",
+		ID:     1,
+		Label:  "Food",
+		UserId: userId,
 	}
-	mockCategoryRepo.On("FindById", ctx, category.ID).Return(category, nil)
+	mockCategoryRepo.On("FindById", ctx, category.ID, userId).Return(category, nil)
 
 	name := "Restaurant"
 	amount := 1999
@@ -35,7 +37,7 @@ func TestCreateOutcome_Success(t *testing.T) {
 		arg.ID = 1
 	})
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcome)
@@ -55,18 +57,20 @@ func TestCreateOutcome_InvalidName(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	category := &domain.Category{
-		ID:    1,
-		Label: "Food",
+		ID:     1,
+		Label:  "Food",
+		UserId: userId,
 	}
-	mockCategoryRepo.On("FindById", ctx, category.ID).Return(category, nil)
+	mockCategoryRepo.On("FindById", ctx, category.ID, userId).Return(category, nil)
 
 	name := ""
 	amount := 100
 	categoryId := category.ID
 	createdAt := time.Now()
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -79,18 +83,20 @@ func TestCreateOutcome_InvalidName_Whitespace(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	category := &domain.Category{
-		ID:    1,
-		Label: "Food",
+		ID:     1,
+		Label:  "Food",
+		UserId: userId,
 	}
-	mockCategoryRepo.On("FindById", ctx, category.ID).Return(category, nil)
+	mockCategoryRepo.On("FindById", ctx, category.ID, userId).Return(category, nil)
 
 	name := "   "
 	amount := 100
 	categoryId := category.ID
 	createdAt := time.Now()
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -103,18 +109,20 @@ func TestCreateOutcome_InvalidAmount_Zero(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	category := &domain.Category{
-		ID:    1,
-		Label: "Food",
+		ID:     1,
+		Label:  "Food",
+		UserId: userId,
 	}
-	mockCategoryRepo.On("FindById", ctx, category.ID).Return(category, nil)
+	mockCategoryRepo.On("FindById", ctx, category.ID, userId).Return(category, nil)
 
 	name := "Restaurant"
 	amount := 0
 	categoryId := category.ID
 	createdAt := time.Now()
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -127,18 +135,20 @@ func TestCreateOutcome_InvalidAmount_Negative(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	category := &domain.Category{
-		ID:    1,
-		Label: "Food",
+		ID:     1,
+		Label:  "Food",
+		UserId: userId,
 	}
-	mockCategoryRepo.On("FindById", ctx, category.ID).Return(category, nil)
+	mockCategoryRepo.On("FindById", ctx, category.ID, userId).Return(category, nil)
 
 	name := "Restaurant"
 	amount := -1
 	categoryId := category.ID
 	createdAt := time.Now()
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -156,7 +166,7 @@ func TestCreateOutcome_InvalidCategoryId(t *testing.T) {
 	categoryId := 0
 	createdAt := time.Now()
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -170,13 +180,14 @@ func TestCreateOutcome_CategoryNotFound(t *testing.T) {
 	ctx := context.Background()
 
 	categoryId := 1
-	mockCategoryRepo.On("FindById", ctx, categoryId).Return((*domain.Category)(nil), errors.New("not found"))
+	userId := 123
+	mockCategoryRepo.On("FindById", ctx, categoryId, userId).Return((*domain.Category)(nil), errors.New("not found"))
 
 	name := "Restaurant"
 	amount := 1999
 	createdAt := time.Now()
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -191,18 +202,20 @@ func TestCreateOutcome_InvalidCreatedAt(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	category := &domain.Category{
-		ID:    1,
-		Label: "Food",
+		ID:     1,
+		Label:  "Food",
+		UserId: userId,
 	}
-	mockCategoryRepo.On("FindById", ctx, category.ID).Return(category, nil)
+	mockCategoryRepo.On("FindById", ctx, category.ID, userId).Return(category, nil)
 
 	name := "Restaurant"
 	amount := 1999
 	categoryId := category.ID
 	var createdAt *time.Time = nil
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -217,11 +230,13 @@ func TestCreateOutcome_RepoError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	category := &domain.Category{
-		ID:    1,
-		Label: "Food",
+		ID:     1,
+		Label:  "Food",
+		UserId: userId,
 	}
-	mockCategoryRepo.On("FindById", ctx, category.ID).Return(category, nil)
+	mockCategoryRepo.On("FindById", ctx, category.ID, userId).Return(category, nil)
 
 	name := "Restaurant"
 	amount := 1999
@@ -230,7 +245,7 @@ func TestCreateOutcome_RepoError(t *testing.T) {
 
 	mockRepo.On("Create", ctx, mock.AnythingOfType("*domain.Outcome")).Return(errors.New("repo error"))
 
-	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt)
+	outcome, err := service.Create(ctx, name, amount, categoryId, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -246,6 +261,7 @@ func TestGetAllOutcomes_Success(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	expectedOutcomes := []domain.Outcome{
 		{
 			ID:         1,
@@ -253,6 +269,7 @@ func TestGetAllOutcomes_Success(t *testing.T) {
 			Amount:     1999,
 			CategoryId: 1,
 			CreatedAt:  &time.Time{},
+			UserId:     userId,
 		},
 		{
 			ID:         2,
@@ -260,11 +277,12 @@ func TestGetAllOutcomes_Success(t *testing.T) {
 			Amount:     5000,
 			CategoryId: 2,
 			CreatedAt:  &time.Time{},
+			UserId:     userId,
 		},
 	}
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(expectedOutcomes, nil)
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId).Return(expectedOutcomes, nil)
 
-	outcomes, err := service.GetAll(ctx, nil, nil, 0)
+	outcomes, err := service.GetAll(ctx, nil, nil, 0, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcomes)
@@ -286,14 +304,14 @@ func TestGetAllOutcomes_InvalidDates(t *testing.T) {
 	to := time.Now()
 	from := to.Add(24 * time.Hour)
 
-	outcomes, err := service.GetAll(ctx, &from, &to, 0)
+	outcomes, err := service.GetAll(ctx, &from, &to, 0, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcomes)
 	assert.IsType(t, &domain.InvalidDateError{}, err)
 
 	// Repository should not be called since validation happens first
-	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything, 123)
 }
 
 func TestGetAllOutcomes_CategoryNotFound(t *testing.T) {
@@ -303,16 +321,17 @@ func TestGetAllOutcomes_CategoryNotFound(t *testing.T) {
 	ctx := context.Background()
 
 	categoryId := 1
-	mockCategoryRepo.On("FindById", ctx, categoryId).Return((*domain.Category)(nil), errors.New("not found"))
+	userId := 123
+	mockCategoryRepo.On("FindById", ctx, categoryId, userId).Return((*domain.Category)(nil), errors.New("not found"))
 
-	outcomes, err := service.GetAll(ctx, nil, nil, categoryId)
+	outcomes, err := service.GetAll(ctx, nil, nil, categoryId, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcomes)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
 	// Repository should not be called since validation happens first
-	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything, userId)
 }
 
 func TestGetAllOutcomes_EmptyList(t *testing.T) {
@@ -322,9 +341,9 @@ func TestGetAllOutcomes_EmptyList(t *testing.T) {
 	ctx := context.Background()
 
 	expectedOutcomes := []domain.Outcome{}
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(expectedOutcomes, nil)
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, 123).Return(expectedOutcomes, nil)
 
-	outcomes, err := service.GetAll(ctx, nil, nil, 0)
+	outcomes, err := service.GetAll(ctx, nil, nil, 0, 123)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcomes)
@@ -340,9 +359,10 @@ func TestGetAllOutcomes_RepoError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return([]domain.Outcome(nil), errors.New("repo error"))
+	userId := 123
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId).Return([]domain.Outcome(nil), errors.New("repo error"))
 
-	outcomes, err := service.GetAll(ctx, nil, nil, 0)
+	outcomes, err := service.GetAll(ctx, nil, nil, 0, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcomes)
@@ -357,16 +377,18 @@ func TestGetById_Success(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	expectedOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       "Restaurant",
 		Amount:     1999,
 		CategoryId: 1,
 		CreatedAt:  &time.Time{},
+		UserId:     userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(expectedOutcome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(expectedOutcome, nil)
 
-	outcome, err := service.GetById(ctx, 1)
+	outcome, err := service.GetById(ctx, 1, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcome)
@@ -375,6 +397,7 @@ func TestGetById_Success(t *testing.T) {
 	assert.Equal(t, expectedOutcome.Amount, outcome.Amount)
 	assert.Equal(t, expectedOutcome.CategoryId, outcome.CategoryId)
 	assert.Equal(t, expectedOutcome.CreatedAt, outcome.CreatedAt)
+	assert.Equal(t, expectedOutcome.UserId, outcome.UserId)
 
 	mockRepo.AssertExpectations(t)
 }
@@ -385,13 +408,13 @@ func TestGetById_InvalidId_Zero(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	outcome, err := service.GetById(ctx, 0)
+	outcome, err := service.GetById(ctx, 0, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
-	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything, 123)
 }
 
 func TestGetById_InvalidId_Negative(t *testing.T) {
@@ -400,13 +423,13 @@ func TestGetById_InvalidId_Negative(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	outcome, err := service.GetById(ctx, -1)
+	outcome, err := service.GetById(ctx, -1, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
-	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything, 123)
 }
 
 func TestGetById_NotFound(t *testing.T) {
@@ -415,9 +438,9 @@ func TestGetById_NotFound(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("FindById", ctx, 999).Return((*domain.Outcome)(nil), pgx.ErrNoRows)
+	mockRepo.On("FindById", ctx, 999, 123).Return((*domain.Outcome)(nil), pgx.ErrNoRows)
 
-	outcome, err := service.GetById(ctx, 999)
+	outcome, err := service.GetById(ctx, 999, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -433,9 +456,9 @@ func TestGetById_RepoError(t *testing.T) {
 	ctx := context.Background()
 
 	repoErr := errors.New("repo error")
-	mockRepo.On("FindById", ctx, 1).Return((*domain.Outcome)(nil), repoErr)
+	mockRepo.On("FindById", ctx, 1, 123).Return((*domain.Outcome)(nil), repoErr)
 
-	outcome, err := service.GetById(ctx, 1)
+	outcome, err := service.GetById(ctx, 1, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -450,14 +473,16 @@ func TestPatchById_Success_NameOnly(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	existingOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       "Old Name",
 		Amount:     1000,
 		CategoryId: 1,
 		CreatedAt:  &time.Time{},
+		UserId:     userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(existingOutcome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(existingOutcome, nil)
 
 	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Outcome")).Return(nil).Run(func(args mock.Arguments) {
 		updated := args.Get(1).(*domain.Outcome)
@@ -468,7 +493,7 @@ func TestPatchById_Success_NameOnly(t *testing.T) {
 		assert.Equal(t, existingOutcome.CreatedAt, updated.CreatedAt)
 	})
 
-	outcome, err := service.PatchById(ctx, 1, "New Name", 0, 0, nil)
+	outcome, err := service.PatchById(ctx, 1, "New Name", 0, 0, nil, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcome)
@@ -477,6 +502,7 @@ func TestPatchById_Success_NameOnly(t *testing.T) {
 	assert.Equal(t, 1000, outcome.Amount)
 	assert.Equal(t, 1, outcome.CategoryId)
 	assert.Equal(t, existingOutcome.CreatedAt, outcome.CreatedAt)
+	assert.Equal(t, existingOutcome.UserId, outcome.UserId)
 
 	mockRepo.AssertExpectations(t)
 	mockCategoryRepo.AssertNotCalled(t, "FindById")
@@ -488,20 +514,23 @@ func TestPatchById_Success_AllFields(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	existingOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       "Old Name",
 		Amount:     1000,
 		CategoryId: 1,
 		CreatedAt:  &time.Time{},
+		UserId:     userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(existingOutcome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(existingOutcome, nil)
 
 	newCategory := &domain.Category{
-		ID:    2,
-		Label: "Transport",
+		ID:     2,
+		Label:  "Transport",
+		UserId: userId,
 	}
-	mockCategoryRepo.On("FindById", ctx, 2).Return(newCategory, nil)
+	mockCategoryRepo.On("FindById", ctx, 2, userId).Return(newCategory, nil)
 
 	newCreatedAt := time.Now()
 	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Outcome")).Return(nil).Run(func(args mock.Arguments) {
@@ -511,9 +540,10 @@ func TestPatchById_Success_AllFields(t *testing.T) {
 		assert.Equal(t, 2000, updated.Amount)
 		assert.Equal(t, 2, updated.CategoryId)
 		assert.Equal(t, &newCreatedAt, updated.CreatedAt)
+		assert.Equal(t, userId, updated.UserId)
 	})
 
-	outcome, err := service.PatchById(ctx, 1, "New Name", 2000, 2, &newCreatedAt)
+	outcome, err := service.PatchById(ctx, 1, "New Name", 2000, 2, &newCreatedAt, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, outcome)
@@ -521,6 +551,7 @@ func TestPatchById_Success_AllFields(t *testing.T) {
 	assert.Equal(t, 2000, outcome.Amount)
 	assert.Equal(t, 2, outcome.CategoryId)
 	assert.Equal(t, &newCreatedAt, outcome.CreatedAt)
+	assert.Equal(t, userId, outcome.UserId)
 
 	mockRepo.AssertExpectations(t)
 	mockCategoryRepo.AssertExpectations(t)
@@ -532,18 +563,20 @@ func TestPatchById_InvalidCategory(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	existingOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       "Old Name",
 		Amount:     1000,
 		CategoryId: 1,
 		CreatedAt:  &time.Time{},
+		UserId:     userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(existingOutcome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(existingOutcome, nil)
 
-	mockCategoryRepo.On("FindById", ctx, 999).Return((*domain.Category)(nil), errors.New("not found"))
+	mockCategoryRepo.On("FindById", ctx, 999, userId).Return((*domain.Category)(nil), errors.New("not found"))
 
-	outcome, err := service.PatchById(ctx, 1, "", 0, 999, nil)
+	outcome, err := service.PatchById(ctx, 1, "", 0, 999, nil, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -559,9 +592,10 @@ func TestPatchById_NotFound(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("FindById", ctx, 999).Return((*domain.Outcome)(nil), pgx.ErrNoRows)
+	userId := 123
+	mockRepo.On("FindById", ctx, 999, userId).Return((*domain.Outcome)(nil), pgx.ErrNoRows)
 
-	outcome, err := service.PatchById(ctx, 999, "New Name", 0, 0, nil)
+	outcome, err := service.PatchById(ctx, 999, "New Name", 0, 0, nil, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -577,18 +611,20 @@ func TestPatchById_UpdateError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	existingOutcome := &domain.Outcome{
 		ID:         1,
 		Name:       "Old Name",
 		Amount:     1000,
 		CategoryId: 1,
 		CreatedAt:  &time.Time{},
+		UserId:     userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(existingOutcome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(existingOutcome, nil)
 
 	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Outcome")).Return(errors.New("update error"))
 
-	outcome, err := service.PatchById(ctx, 1, "New Name", 0, 0, nil)
+	outcome, err := service.PatchById(ctx, 1, "New Name", 0, 0, nil, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, outcome)
@@ -604,9 +640,10 @@ func TestOutcomeDeleteById_Success(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("DeleteById", ctx, 1).Return(nil)
+	userId := 123
+	mockRepo.On("DeleteById", ctx, 1, userId).Return(nil)
 
-	err := service.DeleteById(ctx, 1)
+	err := service.DeleteById(ctx, 1, userId)
 
 	assert.NoError(t, err)
 
@@ -620,12 +657,12 @@ func TestOutcomeDeleteById_InvalidId_Zero(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	err := service.DeleteById(ctx, 0)
+	err := service.DeleteById(ctx, 0, 123)
 
 	assert.Error(t, err)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
-	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything, 123)
 	mockCategoryRepo.AssertNotCalled(t, "FindById")
 }
 
@@ -635,12 +672,12 @@ func TestOutcomeDeleteById_InvalidId_Negative(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	err := service.DeleteById(ctx, -1)
+	err := service.DeleteById(ctx, -1, 123)
 
 	assert.Error(t, err)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
-	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything, 123)
 	mockCategoryRepo.AssertNotCalled(t, "FindById")
 }
 
@@ -650,10 +687,11 @@ func TestOutcomeDeleteById_RepoError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	repoErr := errors.New("repo error")
-	mockRepo.On("DeleteById", ctx, 1).Return(repoErr)
+	mockRepo.On("DeleteById", ctx, 1, userId).Return(repoErr)
 
-	err := service.DeleteById(ctx, 1)
+	err := service.DeleteById(ctx, 1, userId)
 
 	assert.Error(t, err)
 	assert.Equal(t, repoErr, err)
@@ -672,9 +710,9 @@ func TestGetSum_Success_NoFilters(t *testing.T) {
 		{CategoryId: 1, Total: 3000},
 		{CategoryId: 2, Total: 1500},
 	}
-	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(categorySums, nil)
+	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, 123).Return(categorySums, nil)
 
-	result, err := service.GetSum(ctx, nil, nil, 0)
+	result, err := service.GetSum(ctx, nil, nil, 0, 123)
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
@@ -693,8 +731,9 @@ func TestGetSum_Success_WithFilters(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	category := &domain.Category{ID: 1, Label: "Food"}
-	mockCategoryRepo.On("FindById", ctx, 1).Return(category, nil)
+	userId := 123
+	category := &domain.Category{ID: 1, Label: "Food", UserId: userId}
+	mockCategoryRepo.On("FindById", ctx, 1, userId).Return(category, nil)
 
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -702,9 +741,9 @@ func TestGetSum_Success_WithFilters(t *testing.T) {
 	categorySums := []domain.CategorySum{
 		{CategoryId: 1, Total: 3000},
 	}
-	mockRepo.On("GetSumByCategory", ctx, &from, &to, 1).Return(categorySums, nil)
+	mockRepo.On("GetSumByCategory", ctx, &from, &to, 1, userId).Return(categorySums, nil)
 
-	result, err := service.GetSum(ctx, &from, &to, 1)
+	result, err := service.GetSum(ctx, &from, &to, 1, userId)
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -724,7 +763,7 @@ func TestGetSum_InvalidDates(t *testing.T) {
 	to := time.Now()
 	from := to.Add(24 * time.Hour)
 
-	result, err := service.GetSum(ctx, &from, &to, 0)
+	result, err := service.GetSum(ctx, &from, &to, 0, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -740,9 +779,9 @@ func TestGetSum_InvalidCategory(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockCategoryRepo.On("FindById", ctx, 999).Return((*domain.Category)(nil), errors.New("not found"))
+	mockCategoryRepo.On("FindById", ctx, 999, 123).Return((*domain.Category)(nil), errors.New("not found"))
 
-	result, err := service.GetSum(ctx, nil, nil, 999)
+	result, err := service.GetSum(ctx, nil, nil, 999, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -759,9 +798,9 @@ func TestGetSum_EmptyList(t *testing.T) {
 	ctx := context.Background()
 
 	categorySums := []domain.CategorySum{}
-	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return(categorySums, nil)
+	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, 123).Return(categorySums, nil)
 
-	result, err := service.GetSum(ctx, nil, nil, 0)
+	result, err := service.GetSum(ctx, nil, nil, 0, 123)
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 0)
@@ -776,9 +815,9 @@ func TestGetSum_RepoError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0).Return([]domain.CategorySum(nil), errors.New("repo error"))
+	mockRepo.On("GetSumByCategory", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, 123).Return([]domain.CategorySum(nil), errors.New("repo error"))
 
-	result, err := service.GetSum(ctx, nil, nil, 0)
+	result, err := service.GetSum(ctx, nil, nil, 0, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -795,9 +834,9 @@ func TestGetTotal_Success_NoFilters(t *testing.T) {
 	ctx := context.Background()
 
 	expectedTotal := 4500
-	mockRepo.On("GetTotalSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedTotal, nil)
+	mockRepo.On("GetTotalSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return(expectedTotal, nil)
 
-	result, err := service.GetTotal(ctx, nil, nil)
+	result, err := service.GetTotal(ctx, nil, nil, 123)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedTotal, result)
@@ -815,9 +854,10 @@ func TestGetTotal_Success_WithFilters(t *testing.T) {
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	expectedTotal := 3000
-	mockRepo.On("GetTotalSum", ctx, &from, &to).Return(expectedTotal, nil)
+	userId := 123
+	mockRepo.On("GetTotalSum", ctx, &from, &to, userId).Return(expectedTotal, nil)
 
-	result, err := service.GetTotal(ctx, &from, &to)
+	result, err := service.GetTotal(ctx, &from, &to, userId)
 
 	assert.NoError(t, err)
 	assert.Equal(t, expectedTotal, result)
@@ -834,8 +874,9 @@ func TestGetTotal_InvalidDates(t *testing.T) {
 
 	to := time.Now()
 	from := to.Add(24 * time.Hour)
+	userId := 123
 
-	result, err := service.GetTotal(ctx, &from, &to)
+	result, err := service.GetTotal(ctx, &from, &to, userId)
 
 	assert.Error(t, err)
 	assert.Equal(t, 0, result)
@@ -851,9 +892,9 @@ func TestGetTotal_RepoError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("GetTotalSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(0, errors.New("repo error"))
+	mockRepo.On("GetTotalSum", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return(0, errors.New("repo error"))
 
-	result, err := service.GetTotal(ctx, nil, nil)
+	result, err := service.GetTotal(ctx, nil, nil, 123)
 
 	assert.Error(t, err)
 	assert.Equal(t, 0, result)
@@ -869,6 +910,7 @@ func TestGetSeries_Success_NoFilters(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	expectedSeries := []domain.MonthlySeries{
 		{
 			Month: "2025-07",
@@ -887,9 +929,9 @@ func TestGetSeries_Success_NoFilters(t *testing.T) {
 			},
 		},
 	}
-	mockRepo.On("GetMonthlySeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedSeries, nil)
+	mockRepo.On("GetMonthlySeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(expectedSeries, nil)
 
-	result, err := service.GetSeries(ctx, nil, nil)
+	result, err := service.GetSeries(ctx, nil, nil, userId)
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
@@ -908,6 +950,7 @@ func TestGetSeries_Success_WithFilters(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	expectedSeries := []domain.MonthlySeries{
@@ -918,9 +961,9 @@ func TestGetSeries_Success_WithFilters(t *testing.T) {
 			},
 		},
 	}
-	mockRepo.On("GetMonthlySeries", ctx, &from, &to).Return(expectedSeries, nil)
+	mockRepo.On("GetMonthlySeries", ctx, &from, &to, userId).Return(expectedSeries, nil)
 
-	result, err := service.GetSeries(ctx, &from, &to)
+	result, err := service.GetSeries(ctx, &from, &to, userId)
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -940,7 +983,7 @@ func TestGetSeries_InvalidDates(t *testing.T) {
 	to := time.Now()
 	from := to.Add(24 * time.Hour)
 
-	result, err := service.GetSeries(ctx, &from, &to)
+	result, err := service.GetSeries(ctx, &from, &to, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -956,9 +999,10 @@ func TestGetSeries_RepoError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("GetMonthlySeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, errors.New("repo error"))
+	userId := 123
+	mockRepo.On("GetMonthlySeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(nil, errors.New("repo error"))
 
-	result, err := service.GetSeries(ctx, nil, nil)
+	result, err := service.GetSeries(ctx, nil, nil, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -974,6 +1018,7 @@ func TestGetTotalSeries_Success_NoFilters(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	expectedSeries := []domain.MonthlyTotalSeries{
 		{
 			Month: "2025-07",
@@ -984,9 +1029,9 @@ func TestGetTotalSeries_Success_NoFilters(t *testing.T) {
 			Total: 2500,
 		},
 	}
-	mockRepo.On("GetMonthlyTotalSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedSeries, nil)
+	mockRepo.On("GetMonthlyTotalSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(expectedSeries, nil)
 
-	result, err := service.GetTotalSeries(ctx, nil, nil)
+	result, err := service.GetTotalSeries(ctx, nil, nil, userId)
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 2)
@@ -1005,6 +1050,7 @@ func TestGetTotalSeries_Success_WithFilters(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
+	userId := 123
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 	expectedSeries := []domain.MonthlyTotalSeries{
@@ -1013,9 +1059,9 @@ func TestGetTotalSeries_Success_WithFilters(t *testing.T) {
 			Total: 3000,
 		},
 	}
-	mockRepo.On("GetMonthlyTotalSeries", ctx, &from, &to).Return(expectedSeries, nil)
+	mockRepo.On("GetMonthlyTotalSeries", ctx, &from, &to, userId).Return(expectedSeries, nil)
 
-	result, err := service.GetTotalSeries(ctx, &from, &to)
+	result, err := service.GetTotalSeries(ctx, &from, &to, userId)
 
 	assert.NoError(t, err)
 	assert.Len(t, result, 1)
@@ -1035,7 +1081,7 @@ func TestGetTotalSeries_InvalidDates(t *testing.T) {
 	to := time.Now()
 	from := to.Add(24 * time.Hour)
 
-	result, err := service.GetTotalSeries(ctx, &from, &to)
+	result, err := service.GetTotalSeries(ctx, &from, &to, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)
@@ -1051,9 +1097,10 @@ func TestGetTotalSeries_RepoError(t *testing.T) {
 	service := NewOutcomeService(mockRepo, mockCategoryRepo)
 	ctx := context.Background()
 
-	mockRepo.On("GetMonthlyTotalSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(nil, errors.New("repo error"))
+	userId := 123
+	mockRepo.On("GetMonthlyTotalSeries", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(nil, errors.New("repo error"))
 
-	result, err := service.GetTotalSeries(ctx, nil, nil)
+	result, err := service.GetTotalSeries(ctx, nil, nil, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, result)

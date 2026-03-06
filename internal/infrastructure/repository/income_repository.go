@@ -11,10 +11,10 @@ import (
 
 type IncomeRepository interface {
 	Create(ctx context.Context, c *domain.Income) error
-	FindAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Income, error)
-	FindById(ctx context.Context, id int) (*domain.Income, error)
+	FindAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error)
+	FindById(ctx context.Context, id int, userId int) (*domain.Income, error)
 	Update(ctx context.Context, o *domain.Income) error
-	DeleteById(ctx context.Context, id int) error
+	DeleteById(ctx context.Context, id int, userId int) error
 }
 
 type PostgresIncomeRepository struct {
@@ -25,19 +25,19 @@ func NewIncomeRepository(db *pgxpool.Pool) *PostgresIncomeRepository {
 	return &PostgresIncomeRepository{db: db}
 }
 
-func (r *PostgresIncomeRepository) Create(ctx context.Context, o *domain.Income) error {
+func (r *PostgresIncomeRepository) Create(ctx context.Context, i *domain.Income) error {
 	query := `
-		INSERT INTO incomes (name, amount, created_at)
-		VALUES ($1, $2, $3)
+		INSERT INTO incomes (name, amount, created_at, user_id)
+		VALUES ($1, $2, $3, $4)
 		RETURNING id
 	`
-	return r.db.QueryRow(ctx, query, o.Name, o.Amount, &o.CreatedAt).Scan(&o.ID)
+	return r.db.QueryRow(ctx, query, i.Name, i.Amount, &i.CreatedAt, i.UserId).Scan(&i.ID)
 }
 
-func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Income, error) {
-	query := `SELECT id, name, amount, created_at FROM incomes WHERE 1=1`
-	args := []any{}
-	argCount := 0
+func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error) {
+	query := `SELECT id, name, amount, created_at FROM incomes WHERE user_id = $1`
+	args := []any{userId}
+	argCount := 1
 
 	if from != nil {
 		argCount++
@@ -63,11 +63,11 @@ func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time,
 
 	var incomes []domain.Income
 	for rows.Next() {
-		var o domain.Income
-		if err := rows.Scan(&o.ID, &o.Name, &o.Amount, &o.CreatedAt); err != nil {
+		var i domain.Income
+		if err := rows.Scan(&i.ID, &i.Name, &i.Amount, &i.CreatedAt, &i.UserId); err != nil {
 			return nil, err
 		}
-		incomes = append(incomes, o)
+		incomes = append(incomes, i)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -77,35 +77,35 @@ func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time,
 	return incomes, nil
 }
 
-func (r *PostgresIncomeRepository) FindById(ctx context.Context, id int) (*domain.Income, error) {
-	var c domain.Income
+func (r *PostgresIncomeRepository) FindById(ctx context.Context, id int, userId int) (*domain.Income, error) {
+	var i domain.Income
 
 	query := `
 		SELECT id, name, amount, created_at FROM incomes
-		WHERE id = $1
+		WHERE id = $1 AND user_id = $2
 	`
 
-	err := r.db.QueryRow(ctx, query, id).Scan(&c.ID, &c.Name, &c.Amount, &c.CreatedAt)
+	err := r.db.QueryRow(ctx, query, id, userId).Scan(&i.ID, &i.Name, &i.Amount, &i.CreatedAt, &i.UserId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &c, nil
+	return &i, nil
 }
 
-func (r *PostgresIncomeRepository) Update(ctx context.Context, o *domain.Income) error {
-	query := `UPDATE incomes SET name = $1, amount = $2, created_at = $3 WHERE id = $4`
+func (r *PostgresIncomeRepository) Update(ctx context.Context, i *domain.Income) error {
+	query := `UPDATE incomes SET name = $1, amount = $2, created_at = $3 WHERE id = $4 AND user_id = $5`
 
-	_, err := r.db.Exec(ctx, query, o.Name, o.Amount, o.CreatedAt, o.ID)
+	_, err := r.db.Exec(ctx, query, i.Name, i.Amount, i.CreatedAt, i.ID, i.UserId)
 	return err
 }
 
-func (r *PostgresIncomeRepository) DeleteById(ctx context.Context, id int) error {
+func (r *PostgresIncomeRepository) DeleteById(ctx context.Context, id int, userId int) error {
 	query := `
 		DELETE FROM incomes
-		WHERE id = $1
+		WHERE id = $1 AND user_id = $2
 	`
 
-	_, err := r.db.Exec(ctx, query, id)
+	_, err := r.db.Exec(ctx, query, id, userId)
 	return err
 }

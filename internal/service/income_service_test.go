@@ -21,13 +21,14 @@ func TestCreateIncome_Success(t *testing.T) {
 	name := "Restaurant"
 	amount := 1999
 	createdAt := time.Now()
+	userId := 123
 
 	mockRepo.On("Create", ctx, mock.AnythingOfType("*domain.Income")).Return(nil).Run(func(args mock.Arguments) {
 		arg := args.Get(1).(*domain.Income)
 		arg.ID = 1
 	})
 
-	income, err := service.Create(ctx, name, amount, &createdAt)
+	income, err := service.Create(ctx, name, amount, &createdAt, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, income)
@@ -47,8 +48,9 @@ func TestCreateIncome_InvalidName(t *testing.T) {
 	name := ""
 	amount := 100
 	createdAt := time.Now()
+	userId := 123
 
-	income, err := service.Create(ctx, name, amount, &createdAt)
+	income, err := service.Create(ctx, name, amount, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -63,8 +65,9 @@ func TestCreateIncome_InvalidName_Whitespace(t *testing.T) {
 	name := "   "
 	amount := 100
 	createdAt := time.Now()
+	userId := 123
 
-	income, err := service.Create(ctx, name, amount, &createdAt)
+	income, err := service.Create(ctx, name, amount, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -79,8 +82,9 @@ func TestCreateIncome_InvalidAmount_Zero(t *testing.T) {
 	name := "Restaurant"
 	amount := 0
 	createdAt := time.Now()
+	userId := 123
 
-	income, err := service.Create(ctx, name, amount, &createdAt)
+	income, err := service.Create(ctx, name, amount, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -95,8 +99,9 @@ func TestCreateIncome_InvalidAmount_Negative(t *testing.T) {
 	name := "Restaurant"
 	amount := -1
 	createdAt := time.Now()
+	userId := 123
 
-	income, err := service.Create(ctx, name, amount, &createdAt)
+	income, err := service.Create(ctx, name, amount, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -111,8 +116,9 @@ func TestCreateIncome_InvalidCreatedAt(t *testing.T) {
 	name := "Restaurant"
 	amount := 1999
 	var createdAt *time.Time = nil
+	userId := 123
 
-	income, err := service.Create(ctx, name, amount, createdAt)
+	income, err := service.Create(ctx, name, amount, createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -127,10 +133,11 @@ func TestCreateIncome_RepoError(t *testing.T) {
 	name := "Restaurant"
 	amount := 1999
 	createdAt := time.Now()
+	userId := 123
 
 	mockRepo.On("Create", ctx, mock.AnythingOfType("*domain.Income")).Return(errors.New("repo error"))
 
-	income, err := service.Create(ctx, name, amount, &createdAt)
+	income, err := service.Create(ctx, name, amount, &createdAt, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -143,6 +150,7 @@ func TestGetAllIncomes_Success(t *testing.T) {
 	mockRepo := new(mocks.IncomeRepository)
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
+	userId := 123
 
 	expectedIncomes := []domain.Income{
 		{
@@ -150,17 +158,19 @@ func TestGetAllIncomes_Success(t *testing.T) {
 			Name:      "Restaurant",
 			Amount:    1999,
 			CreatedAt: &time.Time{},
+			UserId:    userId,
 		},
 		{
 			ID:        2,
 			Name:      "Groceries",
 			Amount:    5000,
 			CreatedAt: &time.Time{},
+			UserId:    userId,
 		},
 	}
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedIncomes, nil)
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(expectedIncomes, nil)
 
-	incomes, err := service.GetAll(ctx, nil, nil)
+	incomes, err := service.GetAll(ctx, nil, nil, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, incomes)
@@ -180,15 +190,16 @@ func TestGetAllIncomes_InvalidDates(t *testing.T) {
 
 	to := time.Now()
 	from := to.Add(24 * time.Hour)
+	userId := 123
 
-	incomes, err := service.GetAll(ctx, &from, &to)
+	incomes, err := service.GetAll(ctx, &from, &to, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, incomes)
 	assert.IsType(t, &domain.InvalidDateError{}, err)
 
 	// Repository should not be called since validation happens first
-	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything, userId)
 }
 
 func TestGetAllIncomes_EmptyList(t *testing.T) {
@@ -197,9 +208,9 @@ func TestGetAllIncomes_EmptyList(t *testing.T) {
 	ctx := context.Background()
 
 	expectedIncomes := []domain.Income{}
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedIncomes, nil)
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return(expectedIncomes, nil)
 
-	incomes, err := service.GetAll(ctx, nil, nil)
+	incomes, err := service.GetAll(ctx, nil, nil, 123)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, incomes)
@@ -214,9 +225,9 @@ func TestGetAllIncomes_RepoError(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Income(nil), errors.New("repo error"))
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return([]domain.Income(nil), errors.New("repo error"))
 
-	incomes, err := service.GetAll(ctx, nil, nil)
+	incomes, err := service.GetAll(ctx, nil, nil, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, incomes)
@@ -229,16 +240,18 @@ func TestGetIncomeById_Success(t *testing.T) {
 	mockRepo := new(mocks.IncomeRepository)
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
+	userId := 123
 
 	expectedIncome := &domain.Income{
 		ID:        1,
 		Name:      "Restaurant",
 		Amount:    1999,
 		CreatedAt: &time.Time{},
+		UserId:    userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(expectedIncome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(expectedIncome, nil)
 
-	income, err := service.GetById(ctx, 1)
+	income, err := service.GetById(ctx, 1, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, income)
@@ -255,13 +268,13 @@ func TestGetIncomeById_InvalidId_Zero(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	income, err := service.GetById(ctx, 0)
+	income, err := service.GetById(ctx, 0, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
-	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything, 123)
 }
 
 func TestGetIncomeById_InvalidId_Negative(t *testing.T) {
@@ -269,13 +282,13 @@ func TestGetIncomeById_InvalidId_Negative(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	income, err := service.GetById(ctx, -1)
+	income, err := service.GetById(ctx, -1, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
-	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "FindById", mock.Anything, mock.Anything, 123)
 }
 
 func TestGetIncomeById_NotFound(t *testing.T) {
@@ -283,9 +296,9 @@ func TestGetIncomeById_NotFound(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	mockRepo.On("FindById", ctx, 999).Return((*domain.Income)(nil), pgx.ErrNoRows)
+	mockRepo.On("FindById", ctx, 999, 123).Return((*domain.Income)(nil), pgx.ErrNoRows)
 
-	income, err := service.GetById(ctx, 999)
+	income, err := service.GetById(ctx, 999, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -300,9 +313,9 @@ func TestGetIncomeById_RepoError(t *testing.T) {
 	ctx := context.Background()
 
 	repoErr := errors.New("repo error")
-	mockRepo.On("FindById", ctx, 1).Return((*domain.Income)(nil), repoErr)
+	mockRepo.On("FindById", ctx, 1, 123).Return((*domain.Income)(nil), repoErr)
 
-	income, err := service.GetById(ctx, 1)
+	income, err := service.GetById(ctx, 1, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -315,14 +328,16 @@ func TestPatchIncomeById_Success_NameOnly(t *testing.T) {
 	mockRepo := new(mocks.IncomeRepository)
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
+	userId := 123
 
 	existingIncome := &domain.Income{
 		ID:        1,
 		Name:      "Old Name",
 		Amount:    1000,
 		CreatedAt: &time.Time{},
+		UserId:    userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(existingIncome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(existingIncome, nil)
 
 	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Income")).Return(nil).Run(func(args mock.Arguments) {
 		updated := args.Get(1).(*domain.Income)
@@ -330,9 +345,10 @@ func TestPatchIncomeById_Success_NameOnly(t *testing.T) {
 		assert.Equal(t, "New Name", updated.Name)
 		assert.Equal(t, 1000, updated.Amount)
 		assert.Equal(t, existingIncome.CreatedAt, updated.CreatedAt)
+		assert.Equal(t, userId, updated.UserId)
 	})
 
-	income, err := service.PatchById(ctx, 1, "New Name", 0, nil)
+	income, err := service.PatchById(ctx, 1, "New Name", 0, nil, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, income)
@@ -340,6 +356,7 @@ func TestPatchIncomeById_Success_NameOnly(t *testing.T) {
 	assert.Equal(t, "New Name", income.Name)
 	assert.Equal(t, 1000, income.Amount)
 	assert.Equal(t, existingIncome.CreatedAt, income.CreatedAt)
+	assert.Equal(t, existingIncome.UserId, income.UserId)
 
 	mockRepo.AssertExpectations(t)
 }
@@ -348,14 +365,16 @@ func TestPatchIncomeById_Success_AllFields(t *testing.T) {
 	mockRepo := new(mocks.IncomeRepository)
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
+	userId := 123
 
 	existingIncome := &domain.Income{
 		ID:        1,
 		Name:      "Old Name",
 		Amount:    1000,
 		CreatedAt: &time.Time{},
+		UserId:    userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(existingIncome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(existingIncome, nil)
 
 	newCreatedAt := time.Now()
 	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Income")).Return(nil).Run(func(args mock.Arguments) {
@@ -364,9 +383,10 @@ func TestPatchIncomeById_Success_AllFields(t *testing.T) {
 		assert.Equal(t, "New Name", updated.Name)
 		assert.Equal(t, 2000, updated.Amount)
 		assert.Equal(t, &newCreatedAt, updated.CreatedAt)
+		assert.Equal(t, userId, updated.UserId)
 	})
 
-	income, err := service.PatchById(ctx, 1, "New Name", 2000, &newCreatedAt)
+	income, err := service.PatchById(ctx, 1, "New Name", 2000, &newCreatedAt, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, income)
@@ -382,9 +402,9 @@ func TestPatchIncomeById_NotFound(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	mockRepo.On("FindById", ctx, 999).Return((*domain.Income)(nil), pgx.ErrNoRows)
+	mockRepo.On("FindById", ctx, 999, 123).Return((*domain.Income)(nil), pgx.ErrNoRows)
 
-	income, err := service.PatchById(ctx, 999, "New Name", 0, nil)
+	income, err := service.PatchById(ctx, 999, "New Name", 0, nil, 123)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -398,17 +418,19 @@ func TestPatchIncomeById_UpdateError(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
+	userId := 123
 	existingIncome := &domain.Income{
 		ID:        1,
 		Name:      "Old Name",
 		Amount:    1000,
 		CreatedAt: &time.Time{},
+		UserId:    userId,
 	}
-	mockRepo.On("FindById", ctx, 1).Return(existingIncome, nil)
+	mockRepo.On("FindById", ctx, 1, userId).Return(existingIncome, nil)
 
 	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.Income")).Return(errors.New("update error"))
 
-	income, err := service.PatchById(ctx, 1, "New Name", 0, nil)
+	income, err := service.PatchById(ctx, 1, "New Name", 0, nil, userId)
 
 	assert.Error(t, err)
 	assert.Nil(t, income)
@@ -422,9 +444,9 @@ func TestIncomeDeleteById_Success(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	mockRepo.On("DeleteById", ctx, 1).Return(nil)
+	mockRepo.On("DeleteById", ctx, 1, 123).Return(nil)
 
-	err := service.DeleteById(ctx, 1)
+	err := service.DeleteById(ctx, 1, 123)
 
 	assert.NoError(t, err)
 
@@ -436,12 +458,12 @@ func TestIncomeDeleteById_InvalidId_Zero(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	err := service.DeleteById(ctx, 0)
+	err := service.DeleteById(ctx, 0, 123)
 
 	assert.Error(t, err)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
-	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything, 123)
 }
 
 func TestIncomeDeleteById_InvalidId_Negative(t *testing.T) {
@@ -449,12 +471,12 @@ func TestIncomeDeleteById_InvalidId_Negative(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	err := service.DeleteById(ctx, -1)
+	err := service.DeleteById(ctx, -1, 123)
 
 	assert.Error(t, err)
 	assert.IsType(t, &domain.InvalidEntityError{}, err)
 
-	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything)
+	mockRepo.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything, 123)
 }
 
 func TestIncomeDeleteById_RepoError(t *testing.T) {
@@ -463,9 +485,9 @@ func TestIncomeDeleteById_RepoError(t *testing.T) {
 	ctx := context.Background()
 
 	repoErr := errors.New("repo error")
-	mockRepo.On("DeleteById", ctx, 1).Return(repoErr)
+	mockRepo.On("DeleteById", ctx, 1, 123).Return(repoErr)
 
-	err := service.DeleteById(ctx, 1)
+	err := service.DeleteById(ctx, 1, 123)
 
 	assert.Error(t, err)
 	assert.Equal(t, repoErr, err)

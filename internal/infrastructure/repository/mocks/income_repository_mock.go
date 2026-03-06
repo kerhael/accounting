@@ -17,8 +17,8 @@ func (m *IncomeRepository) Create(ctx context.Context, o *domain.Income) error {
 	return args.Error(0)
 }
 
-func (m *IncomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time) ([]domain.Income, error) {
-	args := m.Called(ctx, from, to)
+func (m *IncomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error) {
+	args := m.Called(ctx, from, to, userId)
 
 	var incomes []domain.Income
 	if args.Get(0) != nil {
@@ -28,8 +28,8 @@ func (m *IncomeRepository) FindAll(ctx context.Context, from *time.Time, to *tim
 	return incomes, args.Error(1)
 }
 
-func (m *IncomeRepository) FindById(ctx context.Context, id int) (*domain.Income, error) {
-	args := m.Called(ctx, id)
+func (m *IncomeRepository) FindById(ctx context.Context, id int, userId int) (*domain.Income, error) {
+	args := m.Called(ctx, id, userId)
 
 	var income *domain.Income
 	if args.Get(0) != nil {
@@ -39,12 +39,12 @@ func (m *IncomeRepository) FindById(ctx context.Context, id int) (*domain.Income
 	return income, args.Error(1)
 }
 
-func (m *IncomeRepository) Update(ctx context.Context, o *domain.Income) error {
-	args := m.Called(ctx, o)
+func (m *IncomeRepository) Update(ctx context.Context, i *domain.Income) error {
+	args := m.Called(ctx, i)
 	return args.Error(0)
 }
 
-func (m *IncomeRepository) DeleteById(ctx context.Context, id int) error {
-	args := m.Called(ctx, id)
+func (m *IncomeRepository) DeleteById(ctx context.Context, id int, userId int) error {
+	args := m.Called(ctx, id, userId)
 	return args.Error(0)
 }

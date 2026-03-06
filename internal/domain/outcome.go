@@ -8,6 +8,7 @@ type Outcome struct {
 	Amount     int
 	CategoryId int
 	ID         int
+	UserId     int
 }
 
 type CategorySum struct {

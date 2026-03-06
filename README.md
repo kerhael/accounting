@@ -433,7 +433,6 @@ Error response format:
 
 
 TODO: 
-- userID for categories, incomes and outcomes
 - update user route
 - delete user route
 - refresh jwt token

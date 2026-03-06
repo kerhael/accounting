@@ -16,8 +16,8 @@ func (m *CategoryRepository) Create(ctx context.Context, c *domain.Category) err
 	return args.Error(0)
 }
 
-func (m *CategoryRepository) FindAll(ctx context.Context) ([]domain.Category, error) {
-	args := m.Called(ctx)
+func (m *CategoryRepository) FindAll(ctx context.Context, userId int) ([]domain.Category, error) {
+	args := m.Called(ctx, userId)
 
 	var categories []domain.Category
 	if args.Get(0) != nil {
@@ -27,8 +27,8 @@ func (m *CategoryRepository) FindAll(ctx context.Context) ([]domain.Category, er
 	return categories, args.Error(1)
 }
 
-func (m *CategoryRepository) FindById(ctx context.Context, id int) (*domain.Category, error) {
-	args := m.Called(ctx, id)
+func (m *CategoryRepository) FindById(ctx context.Context, id int, userId int) (*domain.Category, error) {
+	args := m.Called(ctx, id, userId)
 
 	var category *domain.Category
 	if args.Get(0) != nil {
@@ -38,7 +38,7 @@ func (m *CategoryRepository) FindById(ctx context.Context, id int) (*domain.Cate
 	return category, args.Error(1)
 }
 
-func (m *CategoryRepository) DeleteById(ctx context.Context, id int) error {
-	args := m.Called(ctx, id)
+func (m *CategoryRepository) DeleteById(ctx context.Context, id int, userId int) error {
+	args := m.Called(ctx, id, userId)
 	return args.Error(0)
 }

@@ -24,9 +24,10 @@ func TestCategoryHandler_PostCategory_Success(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
-	mockService.On("Create", ctx, "Food").Return(&domain.Category{
-		ID:    1,
-		Label: "Food",
+	mockService.On("Create", ctx, "Food", 123).Return(&domain.Category{
+		ID:     1,
+		UserId: 123,
+		Label:  "Food",
 	}, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
@@ -134,7 +135,7 @@ func TestCategoryHandler_PostCategory_ServiceError(t *testing.T) {
 	body, _ := json.Marshal(input)
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
-	mockService.On("Create", ctx, "Travel").Return(nil, errors.New("db failure"))
+	mockService.On("Create", ctx, "Travel", 123).Return(nil, errors.New("db failure"))
 
 	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -157,7 +158,7 @@ func TestCategoryHandler_PostCategory_InvalidEntityError(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("category already exists")}
-	mockService.On("Create", ctx, "InvalidCategory").Return(nil, invalidEntityErr)
+	mockService.On("Create", ctx, "InvalidCategory", 123).Return(nil, invalidEntityErr)
 
 	req := httptest.NewRequest(http.MethodPost, "/categories/", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -177,10 +178,11 @@ func TestCategoryHandler_GetCategoryById_Success(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedCategory := &domain.Category{
-		ID:    1,
-		Label: "Food",
+		ID:     1,
+		UserId: 123,
+		Label:  "Food",
 	}
-	mockService.On("GetById", ctx, 1).Return(expectedCategory, nil)
+	mockService.On("GetById", ctx, 1, 123).Return(expectedCategory, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/1", nil)
 	req = req.WithContext(ctx)
@@ -247,7 +249,7 @@ func TestCategoryHandler_GetCategoryById_InvalidEntityError(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category id")}
-	mockService.On("GetById", ctx, -1).Return(nil, invalidEntityErr)
+	mockService.On("GetById", ctx, -1, 123).Return(nil, invalidEntityErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/-1", nil)
 	req = req.WithContext(ctx)
@@ -270,7 +272,7 @@ func TestCategoryHandler_GetCategoryById_EntityNotFoundError(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("category not found")}
-	mockService.On("GetById", ctx, 999).Return(nil, entityNotFoundErr)
+	mockService.On("GetById", ctx, 999, 123).Return(nil, entityNotFoundErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/999", nil)
 	req = req.WithContext(ctx)
@@ -293,7 +295,7 @@ func TestCategoryHandler_GetCategoryById_ServiceError(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	serviceErr := errors.New("database connection failed")
-	mockService.On("GetById", ctx, 1).Return(nil, serviceErr)
+	mockService.On("GetById", ctx, 1, 123).Return(nil, serviceErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/1", nil)
 	req = req.WithContext(ctx)
@@ -315,7 +317,7 @@ func TestCategoryHandler_DeleteCategoryById_Success(t *testing.T) {
 	handler := NewCategoryHandler(mockService)
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
-	mockService.On("DeleteById", ctx, 1).Return(nil)
+	mockService.On("DeleteById", ctx, 1, 123).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/categories/1", nil)
 	req = req.WithContext(ctx)
@@ -375,7 +377,7 @@ func TestCategoryHandler_DeleteCategoryById_InvalidEntityError(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("cannot delete category with existing transactions")}
-	mockService.On("DeleteById", ctx, 1).Return(invalidEntityErr)
+	mockService.On("DeleteById", ctx, 1, 123).Return(invalidEntityErr)
 
 	req := httptest.NewRequest(http.MethodDelete, "/categories/1", nil)
 	req = req.WithContext(ctx)
@@ -398,7 +400,7 @@ func TestCategoryHandler_DeleteCategoryById_ServiceError(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	serviceErr := errors.New("database connection failed")
-	mockService.On("DeleteById", ctx, 1).Return(serviceErr)
+	mockService.On("DeleteById", ctx, 1, 123).Return(serviceErr)
 
 	req := httptest.NewRequest(http.MethodDelete, "/categories/1", nil)
 	req = req.WithContext(ctx)
@@ -425,7 +427,7 @@ func TestCategoryHandler_GetAllCategories_Success(t *testing.T) {
 		{ID: 2, Label: "Travel"},
 		{ID: 3, Label: "Books"},
 	}
-	mockService.On("GetAll", ctx).Return(expectedCategories, nil)
+	mockService.On("GetAll", ctx, 123).Return(expectedCategories, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/", nil)
 	req = req.WithContext(ctx)
@@ -473,7 +475,7 @@ func TestCategoryHandler_GetAllCategories_ServiceError(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	serviceErr := errors.New("database connection failed")
-	mockService.On("GetAll", ctx).Return(nil, serviceErr)
+	mockService.On("GetAll", ctx, 123).Return(nil, serviceErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/", nil)
 	req = req.WithContext(ctx)
@@ -495,7 +497,7 @@ func TestCategoryHandler_GetAllCategories_EmptyList(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	expectedCategories := []domain.Category{}
-	mockService.On("GetAll", ctx).Return(expectedCategories, nil)
+	mockService.On("GetAll", ctx, 123).Return(expectedCategories, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/categories/", nil)
 	req = req.WithContext(ctx)

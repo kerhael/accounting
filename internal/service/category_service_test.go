@@ -18,13 +18,14 @@ func TestCreateCategory_Success(t *testing.T) {
 
 	ctx := context.Background()
 	label := "Food"
+	userId := 123
 
 	mockRepo.On("Create", ctx, mock.AnythingOfType("*domain.Category")).Return(nil).Run(func(args mock.Arguments) {
 		arg := args.Get(1).(*domain.Category)
 		arg.ID = 1
 	})
 
-	category, err := service.Create(ctx, label)
+	category, err := service.Create(ctx, label, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, category)
@@ -39,7 +40,7 @@ func TestCreateCategory_InvalidLabel(t *testing.T) {
 	service := NewCategoryService(mockRepo)
 
 	ctx := context.Background()
-	category, err := service.Create(ctx, "  ")
+	category, err := service.Create(ctx, "  ", 123)
 
 	assert.Nil(t, category)
 	assert.Error(t, err)
@@ -55,10 +56,11 @@ func TestCreateCategory_RepoError(t *testing.T) {
 
 	ctx := context.Background()
 	label := "Travel"
+	userId := 123
 
 	mockRepo.On("Create", ctx, mock.AnythingOfType("*domain.Category")).Return(errors.New("db failure"))
 
-	category, err := service.Create(ctx, label)
+	category, err := service.Create(ctx, label, userId)
 
 	assert.Nil(t, category)
 	assert.Error(t, err)
@@ -74,10 +76,11 @@ func TestDeleteById_Success(t *testing.T) {
 
 	ctx := context.Background()
 	id := 1
+	userId := 123
 
-	mockRepo.On("DeleteById", ctx, id).Return(nil)
+	mockRepo.On("DeleteById", ctx, id, userId).Return(nil)
 
-	err := service.DeleteById(ctx, id)
+	err := service.DeleteById(ctx, id, userId)
 
 	assert.NoError(t, err)
 
@@ -90,8 +93,9 @@ func TestDeleteById_InvalidId(t *testing.T) {
 
 	ctx := context.Background()
 	invalidId := -1
+	userId := 123
 
-	err := service.DeleteById(ctx, invalidId)
+	err := service.DeleteById(ctx, invalidId, userId)
 
 	assert.Error(t, err)
 
@@ -106,11 +110,12 @@ func TestDeleteById_RepositoryError(t *testing.T) {
 
 	ctx := context.Background()
 	id := 1
+	userId := 123
 	repoErr := errors.New("foreign key constraint violation")
 
-	mockRepo.On("DeleteById", ctx, id).Return(repoErr)
+	mockRepo.On("DeleteById", ctx, id, userId).Return(repoErr)
 
-	err := service.DeleteById(ctx, id)
+	err := service.DeleteById(ctx, id, userId)
 
 	assert.Error(t, err)
 	assert.Equal(t, repoErr.Error(), err.Error())
@@ -124,13 +129,14 @@ func TestGetCategoryById_Success(t *testing.T) {
 
 	ctx := context.Background()
 	category := &domain.Category{
-		ID:    1,
-		Label: "Books",
+		ID:     1,
+		UserId: 123,
+		Label:  "Books",
 	}
 
-	mockRepo.On("FindById", ctx, category.ID).Return(category, nil)
+	mockRepo.On("FindById", ctx, category.ID, category.UserId).Return(category, nil)
 
-	c, err := service.GetById(ctx, category.ID)
+	c, err := service.GetById(ctx, category.ID, category.UserId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, category)
@@ -145,7 +151,7 @@ func TestGetCategoryById_InvalidId(t *testing.T) {
 
 	ctx := context.Background()
 
-	category, err := service.GetById(ctx, -10)
+	category, err := service.GetById(ctx, -10, 123)
 
 	assert.Nil(t, category)
 	assert.Error(t, err)
@@ -161,10 +167,11 @@ func TestGetCategoryById_NotFound(t *testing.T) {
 
 	ctx := context.Background()
 	id := 2
+	userId := 123
 
-	mockRepo.On("FindById", ctx, id).Return(nil, pgx.ErrNoRows)
+	mockRepo.On("FindById", ctx, id, userId).Return(nil, pgx.ErrNoRows)
 
-	category, err := service.GetById(ctx, id)
+	category, err := service.GetById(ctx, id, userId)
 
 	assert.Nil(t, category)
 
@@ -179,18 +186,21 @@ func TestGetAllCategories_Success(t *testing.T) {
 	service := NewCategoryService(mockRepo)
 
 	ctx := context.Background()
+	userId := 123
 	category1 := domain.Category{
-		ID:    1,
-		Label: "Books",
+		ID:     1,
+		UserId: userId,
+		Label:  "Books",
 	}
 	category2 := domain.Category{
-		ID:    2,
-		Label: "Food",
+		ID:     2,
+		UserId: userId,
+		Label:  "Food",
 	}
 
-	mockRepo.On("FindAll", ctx).Return([]domain.Category{category1, category2}, nil)
+	mockRepo.On("FindAll", ctx, userId).Return([]domain.Category{category1, category2}, nil)
 
-	categories, err := service.GetAll(ctx)
+	categories, err := service.GetAll(ctx, userId)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, []domain.Category{category1, category2})
@@ -206,10 +216,11 @@ func TestGetAllCategories_RepositoryError(t *testing.T) {
 	service := NewCategoryService(mockRepo)
 
 	ctx := context.Background()
+	userId := 123
 	repoErr := errors.New("database connection failed")
-	mockRepo.On("FindAll", ctx).Return(nil, repoErr)
+	mockRepo.On("FindAll", ctx, userId).Return(nil, repoErr)
 
-	categories, err := service.GetAll(ctx)
+	categories, err := service.GetAll(ctx, userId)
 
 	assert.Nil(t, categories)
 	assert.Error(t, err)

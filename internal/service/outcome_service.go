@@ -12,15 +12,15 @@ import (
 )
 
 type OutcomeServiceInterface interface {
-	Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
-	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
-	GetById(ctx context.Context, id int) (*domain.Outcome, error)
-	PatchById(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error)
-	DeleteById(ctx context.Context, id int) error
-	GetSum(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error)
-	GetTotal(ctx context.Context, from *time.Time, to *time.Time) (int, error)
-	GetSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error)
-	GetTotalSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlyTotalSeries, error)
+	Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time, userId int) (*domain.Outcome, error)
+	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error)
+	GetById(ctx context.Context, id int, userId int) (*domain.Outcome, error)
+	PatchById(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time, userId int) (*domain.Outcome, error)
+	DeleteById(ctx context.Context, id int, userId int) error
+	GetSum(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.CategorySum, error)
+	GetTotal(ctx context.Context, from *time.Time, to *time.Time, userId int) (int, error)
+	GetSeries(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.MonthlySeries, error)
+	GetTotalSeries(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.MonthlyTotalSeries, error)
 }
 
 type OutcomeService struct {
@@ -32,7 +32,7 @@ func NewOutcomeService(repo repository.OutcomeRepository, categoryRepo repositor
 	return &OutcomeService{repo: repo, categoryRepo: categoryRepo}
 }
 
-func (s *OutcomeService) Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error) {
+func (s *OutcomeService) Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time, userId int) (*domain.Outcome, error) {
 	name = strings.TrimSpace(name)
 	if name == "" {
 		return nil, &domain.InvalidEntityError{
@@ -51,7 +51,7 @@ func (s *OutcomeService) Create(ctx context.Context, name string, amount int, ca
 			UnderlyingCause: errors.New("invalid category"),
 		}
 	}
-	_, err := s.categoryRepo.FindById(ctx, categoryId)
+	_, err := s.categoryRepo.FindById(ctx, categoryId, userId)
 	if err != nil {
 		return nil, &domain.InvalidEntityError{
 			UnderlyingCause: errors.New("invalid category"),
@@ -78,7 +78,7 @@ func (s *OutcomeService) Create(ctx context.Context, name string, amount int, ca
 	return outcome, nil
 }
 
-func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error) {
+func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error) {
 	if from != nil && to != nil && from.After(*to) {
 		return nil, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
@@ -86,7 +86,7 @@ func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.T
 	}
 
 	if categoryId != 0 {
-		_, err := s.categoryRepo.FindById(ctx, categoryId)
+		_, err := s.categoryRepo.FindById(ctx, categoryId, userId)
 		if err != nil {
 			return nil, &domain.InvalidEntityError{
 				UnderlyingCause: errors.New("invalid category"),
@@ -94,7 +94,7 @@ func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.T
 		}
 	}
 
-	outcomes, err := s.repo.FindAll(ctx, from, to, categoryId)
+	outcomes, err := s.repo.FindAll(ctx, from, to, categoryId, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -102,14 +102,14 @@ func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.T
 	return outcomes, nil
 }
 
-func (s *OutcomeService) GetById(ctx context.Context, id int) (*domain.Outcome, error) {
+func (s *OutcomeService) GetById(ctx context.Context, id int, userId int) (*domain.Outcome, error) {
 	if id <= 0 {
 		return nil, &domain.InvalidEntityError{
 			UnderlyingCause: errors.New("invalid id"),
 		}
 	}
 
-	outcome, err := s.repo.FindById(ctx, id)
+	outcome, err := s.repo.FindById(ctx, id, userId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, &domain.EntityNotFoundError{
@@ -122,8 +122,8 @@ func (s *OutcomeService) GetById(ctx context.Context, id int) (*domain.Outcome, 
 	return outcome, nil
 }
 
-func (s *OutcomeService) PatchById(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time) (*domain.Outcome, error) {
-	outcome, err := s.repo.FindById(ctx, id)
+func (s *OutcomeService) PatchById(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time, userId int) (*domain.Outcome, error) {
+	outcome, err := s.repo.FindById(ctx, id, userId)
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, &domain.EntityNotFoundError{
@@ -134,7 +134,8 @@ func (s *OutcomeService) PatchById(ctx context.Context, id int, name string, amo
 	}
 
 	o := &domain.Outcome{
-		ID: outcome.ID,
+		ID:     outcome.ID,
+		UserId: outcome.UserId,
 	}
 
 	if name != "" {
@@ -150,7 +151,7 @@ func (s *OutcomeService) PatchById(ctx context.Context, id int, name string, amo
 	}
 
 	if categoryId != 0 {
-		_, err := s.categoryRepo.FindById(ctx, categoryId)
+		_, err := s.categoryRepo.FindById(ctx, categoryId, userId)
 		if err != nil {
 			return nil, &domain.InvalidEntityError{
 				UnderlyingCause: errors.New("invalid category"),
@@ -175,17 +176,17 @@ func (s *OutcomeService) PatchById(ctx context.Context, id int, name string, amo
 	return o, nil
 }
 
-func (s *OutcomeService) DeleteById(ctx context.Context, id int) error {
+func (s *OutcomeService) DeleteById(ctx context.Context, id int, userId int) error {
 	if id <= 0 {
 		return &domain.InvalidEntityError{
 			UnderlyingCause: errors.New("invalid id"),
 		}
 	}
 
-	return s.repo.DeleteById(ctx, id)
+	return s.repo.DeleteById(ctx, id, userId)
 }
 
-func (s *OutcomeService) GetSum(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error) {
+func (s *OutcomeService) GetSum(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.CategorySum, error) {
 	if from != nil && to != nil && from.After(*to) {
 		return nil, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
@@ -193,7 +194,7 @@ func (s *OutcomeService) GetSum(ctx context.Context, from *time.Time, to *time.T
 	}
 
 	if categoryId != 0 {
-		_, err := s.categoryRepo.FindById(ctx, categoryId)
+		_, err := s.categoryRepo.FindById(ctx, categoryId, userId)
 		if err != nil {
 			return nil, &domain.InvalidEntityError{
 				UnderlyingCause: errors.New("invalid category"),
@@ -201,35 +202,35 @@ func (s *OutcomeService) GetSum(ctx context.Context, from *time.Time, to *time.T
 		}
 	}
 
-	return s.repo.GetSumByCategory(ctx, from, to, categoryId)
+	return s.repo.GetSumByCategory(ctx, from, to, categoryId, userId)
 }
 
-func (s *OutcomeService) GetTotal(ctx context.Context, from *time.Time, to *time.Time) (int, error) {
+func (s *OutcomeService) GetTotal(ctx context.Context, from *time.Time, to *time.Time, userId int) (int, error) {
 	if from != nil && to != nil && from.After(*to) {
 		return 0, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
 		}
 	}
 
-	return s.repo.GetTotalSum(ctx, from, to)
+	return s.repo.GetTotalSum(ctx, from, to, userId)
 }
 
-func (s *OutcomeService) GetSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error) {
+func (s *OutcomeService) GetSeries(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.MonthlySeries, error) {
 	if from != nil && to != nil && from.After(*to) {
 		return nil, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
 		}
 	}
 
-	return s.repo.GetMonthlySeries(ctx, from, to)
+	return s.repo.GetMonthlySeries(ctx, from, to, userId)
 }
 
-func (s *OutcomeService) GetTotalSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlyTotalSeries, error) {
+func (s *OutcomeService) GetTotalSeries(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.MonthlyTotalSeries, error) {
 	if from != nil && to != nil && from.After(*to) {
 		return nil, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
 		}
 	}
 
-	return s.repo.GetMonthlyTotalSeries(ctx, from, to)
+	return s.repo.GetMonthlyTotalSeries(ctx, from, to, userId)
 }

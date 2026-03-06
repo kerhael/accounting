@@ -11,14 +11,14 @@ import (
 
 type OutcomeRepository interface {
 	Create(ctx context.Context, c *domain.Outcome) error
-	FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error)
-	FindById(ctx context.Context, id int) (*domain.Outcome, error)
+	FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error)
+	FindById(ctx context.Context, id int, userId int) (*domain.Outcome, error)
 	Update(ctx context.Context, o *domain.Outcome) error
-	DeleteById(ctx context.Context, id int) error
-	GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error)
-	GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error)
-	GetMonthlySeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error)
-	GetMonthlyTotalSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlyTotalSeries, error)
+	DeleteById(ctx context.Context, id int, userId int) error
+	GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.CategorySum, error)
+	GetTotalSum(ctx context.Context, from *time.Time, to *time.Time, userId int) (int, error)
+	GetMonthlySeries(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.MonthlySeries, error)
+	GetMonthlyTotalSeries(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.MonthlyTotalSeries, error)
 }
 
 type PostgresOutcomeRepository struct {
@@ -31,17 +31,17 @@ func NewOutcomeRepository(db *pgxpool.Pool) *PostgresOutcomeRepository {
 
 func (r *PostgresOutcomeRepository) Create(ctx context.Context, o *domain.Outcome) error {
 	query := `
-		INSERT INTO outcomes (name, amount, category_id, created_at)
-		VALUES ($1, $2, $3, $4)
+		INSERT INTO outcomes (name, amount, category_id, created_at, user_id)
+		VALUES ($1, $2, $3, $4, $5)
 		RETURNING id
 	`
-	return r.db.QueryRow(ctx, query, o.Name, o.Amount, o.CategoryId, &o.CreatedAt).Scan(&o.ID)
+	return r.db.QueryRow(ctx, query, o.Name, o.Amount, o.CategoryId, &o.CreatedAt, o.UserId).Scan(&o.ID)
 }
 
-func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.Outcome, error) {
-	query := `SELECT id, name, amount, category_id, created_at FROM outcomes WHERE 1=1`
-	args := []any{}
-	argCount := 0
+func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error) {
+	query := `SELECT id, name, amount, category_id, created_at FROM outcomes WHERE user_id = $1`
+	args := []any{userId}
+	argCount := 1
 
 	if from != nil {
 		argCount++
@@ -74,7 +74,7 @@ func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time
 	var outcomes []domain.Outcome
 	for rows.Next() {
 		var o domain.Outcome
-		if err := rows.Scan(&o.ID, &o.Name, &o.Amount, &o.CategoryId, &o.CreatedAt); err != nil {
+		if err := rows.Scan(&o.ID, &o.Name, &o.Amount, &o.CategoryId, &o.CreatedAt, &o.UserId); err != nil {
 			return nil, err
 		}
 		outcomes = append(outcomes, o)
@@ -87,15 +87,15 @@ func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time
 	return outcomes, nil
 }
 
-func (r *PostgresOutcomeRepository) FindById(ctx context.Context, id int) (*domain.Outcome, error) {
+func (r *PostgresOutcomeRepository) FindById(ctx context.Context, id int, userId int) (*domain.Outcome, error) {
 	var o domain.Outcome
 
 	query := `
 		SELECT id, name, amount, category_id, created_at FROM outcomes
-		WHERE id = $1
+		WHERE id = $1 AND user_id = $2
 	`
 
-	err := r.db.QueryRow(ctx, query, id).Scan(&o.ID, &o.Name, &o.Amount, &o.CategoryId, &o.CreatedAt)
+	err := r.db.QueryRow(ctx, query, id, userId).Scan(&o.ID, &o.Name, &o.Amount, &o.CategoryId, &o.CreatedAt, &o.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -104,29 +104,30 @@ func (r *PostgresOutcomeRepository) FindById(ctx context.Context, id int) (*doma
 }
 
 func (r *PostgresOutcomeRepository) Update(ctx context.Context, o *domain.Outcome) error {
-	query := `UPDATE outcomes SET name = $1, amount = $2, category_id = $3, created_at = $4 WHERE id = $5`
+	query := `UPDATE outcomes SET name = $1, amount = $2, category_id = $3, created_at = $4 WHERE id = $5 AND user_id = $6`
 
-	_, err := r.db.Exec(ctx, query, o.Name, o.Amount, o.CategoryId, o.CreatedAt, o.ID)
+	_, err := r.db.Exec(ctx, query, o.Name, o.Amount, o.CategoryId, o.CreatedAt, o.ID, o.UserId)
 	return err
 }
 
-func (r *PostgresOutcomeRepository) DeleteById(ctx context.Context, id int) error {
+func (r *PostgresOutcomeRepository) DeleteById(ctx context.Context, id int, userId int) error {
 	query := `
 		DELETE FROM outcomes
-		WHERE id = $1
+		WHERE id = $1 AND user_id = $2
 	`
 
-	_, err := r.db.Exec(ctx, query, id)
+	_, err := r.db.Exec(ctx, query, id, userId)
 	return err
 }
 
-func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int) ([]domain.CategorySum, error) {
+func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.CategorySum, error) {
 	query := `
 		SELECT c.id as category_id, COALESCE(SUM(o.amount), 0) as total
 		FROM categories c
-		LEFT JOIN outcomes o ON c.id = o.category_id`
-	args := []any{}
-	argCount := 0
+		LEFT JOIN outcomes o ON c.id = o.category_id AND c.user_id = o.user_id
+		WHERE c.user_id = $1`
+	args := []any{userId}
+	argCount := 1
 
 	if from != nil || to != nil {
 		query += ` AND (`
@@ -155,7 +156,7 @@ func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *
 
 	if categoryId != 0 {
 		argCount++
-		query += ` WHERE c.id = $` + strconv.Itoa(argCount)
+		query += ` AND c.id = $` + strconv.Itoa(argCount)
 		args = append(args, categoryId)
 	}
 
@@ -183,10 +184,10 @@ func (r *PostgresOutcomeRepository) GetSumByCategory(ctx context.Context, from *
 	return sums, nil
 }
 
-func (r *PostgresOutcomeRepository) GetTotalSum(ctx context.Context, from *time.Time, to *time.Time) (int, error) {
-	query := `SELECT COALESCE(SUM(amount), 0) as total FROM outcomes WHERE 1 = 1`
-	args := []any{}
-	argCount := 0
+func (r *PostgresOutcomeRepository) GetTotalSum(ctx context.Context, from *time.Time, to *time.Time, userId int) (int, error) {
+	query := `SELECT COALESCE(SUM(amount), 0) as total FROM outcomes WHERE user_id = $1`
+	args := []any{userId}
+	argCount := 1
 
 	if from != nil {
 		argCount++
@@ -211,7 +212,7 @@ func (r *PostgresOutcomeRepository) GetTotalSum(ctx context.Context, from *time.
 	return total, nil
 }
 
-func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlySeries, error) {
+func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.MonthlySeries, error) {
 	query := `
 		WITH months AS (
 			SELECT generate_series(
@@ -229,11 +230,13 @@ func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *
 		LEFT JOIN outcomes o
 			ON o.category_id = c.id
 			AND o.month = m.month
+			AND o.user_id = c.user_id
+		WHERE o.user_id = $3
 		GROUP BY m.month, c.id
 		ORDER BY m.month, c.id
 	`
 
-	rows, err := r.db.Query(ctx, query, *from, *to)
+	rows, err := r.db.Query(ctx, query, *from, *to, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +278,7 @@ func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *
 	return series, nil
 }
 
-func (r *PostgresOutcomeRepository) GetMonthlyTotalSeries(ctx context.Context, from *time.Time, to *time.Time) ([]domain.MonthlyTotalSeries, error) {
+func (r *PostgresOutcomeRepository) GetMonthlyTotalSeries(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.MonthlyTotalSeries, error) {
 	query := `
 		WITH months AS (
 			SELECT generate_series(
@@ -290,11 +293,12 @@ func (r *PostgresOutcomeRepository) GetMonthlyTotalSeries(ctx context.Context, f
 		FROM months m
 		LEFT JOIN outcomes o
 			ON o.month = m.month
+		WHERE o.user_id = $3
 		GROUP BY m.month
 		ORDER BY m.month
 	`
 
-	rows, err := r.db.Query(ctx, query, *from, *to)
+	rows, err := r.db.Query(ctx, query, *from, *to, userId)
 	if err != nil {
 		return nil, err
 	}

@@ -39,7 +39,7 @@ func TestIncomeHandler_PostIncome_Success(t *testing.T) {
 	}
 	mockService.On("Create", ctx, "Salary", 300000, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(createdAt)
-	})).Return(expectedIncome, nil)
+	}), 123).Return(expectedIncome, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/incomes/", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -222,7 +222,7 @@ func TestIncomeHandler_PostIncome_ServiceError(t *testing.T) {
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Create", ctx, "Salary", 300000, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(createdAt)
-	})).Return(nil, &domain.InvalidEntityError{UnderlyingCause: assert.AnError})
+	}), 123).Return(nil, &domain.InvalidEntityError{UnderlyingCause: assert.AnError})
 
 	req := httptest.NewRequest(http.MethodPost, "/incomes/", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -253,7 +253,7 @@ func TestIncomeHandler_PostIncome_InternalError(t *testing.T) {
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	mockService.On("Create", ctx, "Salary", 300000, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(createdAt)
-	})).Return(nil, assert.AnError)
+	}), 123).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodPost, "/incomes/", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -280,15 +280,17 @@ func TestIncomeHandler_GetAllIncomes_Success(t *testing.T) {
 			Name:      "Salary",
 			Amount:    300000,
 			CreatedAt: &time.Time{},
+			UserId:    123,
 		},
 		{
 			ID:        2,
 			Name:      "Bonus",
 			Amount:    50000,
 			CreatedAt: &time.Time{},
+			UserId:    123,
 		},
 	}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedIncomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return(expectedIncomes, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/", nil)
 	req = req.WithContext(ctx)
@@ -336,9 +338,10 @@ func TestIncomeHandler_GetAllIncomes_EmptyList(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	expectedIncomes := []domain.Income{}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return(expectedIncomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(expectedIncomes, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/", nil)
 	req = req.WithContext(ctx)
@@ -364,7 +367,8 @@ func TestIncomeHandler_GetAllIncomes_WithDateFilters(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	from := time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC)
 	to := time.Date(2026, 1, 1, 0, 0, 0, 0, time.UTC)
 
@@ -374,9 +378,10 @@ func TestIncomeHandler_GetAllIncomes_WithDateFilters(t *testing.T) {
 			Name:      "Salary",
 			Amount:    300000,
 			CreatedAt: &time.Time{},
+			UserId:    userId,
 		},
 	}
-	mockService.On("GetAll", ctx, &from, &to).Return(expectedIncomes, nil)
+	mockService.On("GetAll", ctx, &from, &to, userId).Return(expectedIncomes, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
@@ -405,9 +410,10 @@ func TestIncomeHandler_GetAllIncomes_BadFromAndToDates(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Income(nil), invalidDatesErr)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return([]domain.Income(nil), invalidDatesErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
@@ -468,8 +474,9 @@ func TestIncomeHandler_GetAllIncomes_ServiceError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time")).Return([]domain.Income(nil), assert.AnError)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return([]domain.Income(nil), assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/", nil)
 	req = req.WithContext(ctx)
@@ -489,14 +496,16 @@ func TestIncomeHandler_GetIncomeById_Success(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	expectedIncome := &domain.Income{
 		ID:        1,
 		Name:      "Salary",
 		Amount:    300000,
 		CreatedAt: &time.Time{},
+		UserId:    userId,
 	}
-	mockService.On("GetById", ctx, 1).Return(expectedIncome, nil)
+	mockService.On("GetById", ctx, 1, userId).Return(expectedIncome, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/1", nil)
 	req = req.WithContext(ctx)
@@ -562,9 +571,10 @@ func TestIncomeHandler_GetIncomeById_InvalidEntityError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid income id")}
-	mockService.On("GetById", ctx, -1).Return(nil, invalidEntityErr)
+	mockService.On("GetById", ctx, -1, userId).Return(nil, invalidEntityErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/-1", nil)
 	req = req.WithContext(ctx)
@@ -585,9 +595,10 @@ func TestIncomeHandler_GetIncomeById_EntityNotFoundError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("income not found")}
-	mockService.On("GetById", ctx, 999).Return(nil, entityNotFoundErr)
+	mockService.On("GetById", ctx, 999, userId).Return(nil, entityNotFoundErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/999", nil)
 	req = req.WithContext(ctx)
@@ -608,9 +619,10 @@ func TestIncomeHandler_GetIncomeById_ServiceError(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	serviceErr := errors.New("database connection failed")
-	mockService.On("GetById", ctx, 1).Return(nil, serviceErr)
+	mockService.On("GetById", ctx, 1, userId).Return(nil, serviceErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/1", nil)
 	req = req.WithContext(ctx)
@@ -637,14 +649,16 @@ func TestIncomeHandler_PatchIncomeById_Success_NameOnly(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	expectedIncome := &domain.Income{
 		ID:        1,
 		Name:      name,
 		Amount:    300000,
 		CreatedAt: &time.Time{},
+		UserId:    userId,
 	}
-	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil)).Return(expectedIncome, nil)
+	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil), userId).Return(expectedIncome, nil)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -676,6 +690,7 @@ func TestIncomeHandler_PatchIncomeById_Success_AllFields(t *testing.T) {
 	name := "Updated Salary"
 	amount := 350000
 	newCreatedAt := time.Now()
+	userId := 123
 	input := PatchIncomeByIdRequest{
 		Name:      &name,
 		Amount:    &amount,
@@ -683,16 +698,17 @@ func TestIncomeHandler_PatchIncomeById_Success_AllFields(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	expectedIncome := &domain.Income{
 		ID:        1,
 		Name:      name,
 		Amount:    amount,
 		CreatedAt: &newCreatedAt,
+		UserId:    userId,
 	}
 	mockService.On("PatchById", ctx, 1, name, amount, mock.MatchedBy(func(t *time.Time) bool {
 		return t != nil && t.Equal(newCreatedAt)
-	})).Return(expectedIncome, nil)
+	}), userId).Return(expectedIncome, nil)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -818,9 +834,10 @@ func TestIncomeHandler_PatchIncomeById_EntityNotFoundError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	entityNotFoundErr := &domain.EntityNotFoundError{UnderlyingCause: errors.New("income not found")}
-	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil)).Return(nil, entityNotFoundErr)
+	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil), userId).Return(nil, entityNotFoundErr)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -847,8 +864,9 @@ func TestIncomeHandler_PatchIncomeById_ServiceError(t *testing.T) {
 	}
 	body, _ := json.Marshal(input)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
-	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil)).Return(nil, assert.AnError)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
+	mockService.On("PatchById", ctx, 1, name, 0, (*time.Time)(nil), userId).Return(nil, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodPatch, "/incomes/1", bytes.NewReader(body))
 	req = req.WithContext(ctx)
@@ -869,8 +887,9 @@ func TestIncomeHandler_DeleteIncomeById_Success(t *testing.T) {
 	mockService := new(mocks.IncomeService)
 	handler := NewIncomeHandler(mockService)
 
-	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
-	mockService.On("DeleteById", ctx, 1).Return(nil)
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
+	mockService.On("DeleteById", ctx, 1, userId).Return(nil)
 
 	req := httptest.NewRequest(http.MethodDelete, "/incomes/1", nil)
 	req = req.WithContext(ctx)
@@ -926,7 +945,7 @@ func TestIncomeHandler_DeleteIncomeById_InvalidId(t *testing.T) {
 	bodyBytes, _ := io.ReadAll(resp.Body)
 	assert.Contains(t, string(bodyBytes), "invalid id")
 
-	mockService.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything)
+	mockService.AssertNotCalled(t, "DeleteById", mock.Anything, mock.Anything, 123)
 }
 
 func TestIncomeHandler_DeleteIncomeById_InvalidEntityError(t *testing.T) {
@@ -935,7 +954,7 @@ func TestIncomeHandler_DeleteIncomeById_InvalidEntityError(t *testing.T) {
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid income id")}
-	mockService.On("DeleteById", ctx, 0).Return(invalidEntityErr)
+	mockService.On("DeleteById", ctx, 0, 123).Return(invalidEntityErr)
 
 	req := httptest.NewRequest(http.MethodDelete, "/incomes/0", nil)
 	req = req.WithContext(ctx)
@@ -957,7 +976,7 @@ func TestIncomeHandler_DeleteIncomeById_ServiceError(t *testing.T) {
 	handler := NewIncomeHandler(mockService)
 
 	ctx := auth.ContextWithUserIDForTests(context.Background(), 123)
-	mockService.On("DeleteById", ctx, 1).Return(assert.AnError)
+	mockService.On("DeleteById", ctx, 1, 123).Return(assert.AnError)
 
 	req := httptest.NewRequest(http.MethodDelete, "/incomes/1", nil)
 	req = req.WithContext(ctx)

@@ -9,9 +9,9 @@ import (
 
 type CategoryRepository interface {
 	Create(ctx context.Context, c *domain.Category) error
-	FindAll(ctx context.Context) ([]domain.Category, error)
-	FindById(ctx context.Context, id int) (*domain.Category, error)
-	DeleteById(ctx context.Context, id int) error
+	FindAll(ctx context.Context, userId int) ([]domain.Category, error)
+	FindById(ctx context.Context, id int, userId int) (*domain.Category, error)
+	DeleteById(ctx context.Context, id int, userId int) error
 }
 
 type PostgresCategoryRepository struct {
@@ -24,17 +24,17 @@ func NewCategoryRepository(db *pgxpool.Pool) *PostgresCategoryRepository {
 
 func (r *PostgresCategoryRepository) Create(ctx context.Context, c *domain.Category) error {
 	query := `
-		INSERT INTO categories (label)
-		VALUES ($1)
+		INSERT INTO categories (label, user_id)
+		VALUES ($1, $2)
 		RETURNING id
 	`
-	return r.db.QueryRow(ctx, query, c.Label).Scan(&c.ID)
+	return r.db.QueryRow(ctx, query, c.Label, c.UserId).Scan(&c.ID)
 }
 
-func (r *PostgresCategoryRepository) FindAll(ctx context.Context) ([]domain.Category, error) {
-	query := `SELECT id, label FROM categories ORDER BY label`
+func (r *PostgresCategoryRepository) FindAll(ctx context.Context, userId int) ([]domain.Category, error) {
+	query := `SELECT id, label FROM categories WHERE user_id = $1 ORDER BY label`
 
-	rows, err := r.db.Query(ctx, query)
+	rows, err := r.db.Query(ctx, query, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +43,7 @@ func (r *PostgresCategoryRepository) FindAll(ctx context.Context) ([]domain.Cate
 	var categories []domain.Category
 	for rows.Next() {
 		var c domain.Category
-		if err := rows.Scan(&c.ID, &c.Label); err != nil {
+		if err := rows.Scan(&c.ID, &c.Label, &c.UserId); err != nil {
 			return nil, err
 		}
 		categories = append(categories, c)
@@ -56,15 +56,15 @@ func (r *PostgresCategoryRepository) FindAll(ctx context.Context) ([]domain.Cate
 	return categories, nil
 }
 
-func (r *PostgresCategoryRepository) FindById(ctx context.Context, id int) (*domain.Category, error) {
+func (r *PostgresCategoryRepository) FindById(ctx context.Context, id int, userId int) (*domain.Category, error) {
 	var c domain.Category
 
 	query := `
 		SELECT id, label FROM categories
-		WHERE id = $1
+		WHERE id = $1 and user_id = $2
 	`
 
-	err := r.db.QueryRow(ctx, query, id).Scan(&c.ID, &c.Label)
+	err := r.db.QueryRow(ctx, query, id, userId).Scan(&c.ID, &c.Label, &c.UserId)
 	if err != nil {
 		return nil, err
 	}
@@ -72,12 +72,12 @@ func (r *PostgresCategoryRepository) FindById(ctx context.Context, id int) (*dom
 	return &c, nil
 }
 
-func (r *PostgresCategoryRepository) DeleteById(ctx context.Context, id int) error {
+func (r *PostgresCategoryRepository) DeleteById(ctx context.Context, id int, userId int) error {
 	query := `
 		DELETE FROM categories
-		WHERE id = $1
+		WHERE id = $1 and user_id = $2
 	`
 
-	_, err := r.db.Exec(ctx, query, id)
+	_, err := r.db.Exec(ctx, query, id, userId)
 	return err
 }
