@@ -433,6 +433,7 @@ Error response format:
 
 
 TODO: 
+- check missing null months in GetOutcomesSeries and GetOutcomesTotalSeries routes
 - update user route
 - delete user route
 - refresh jwt token

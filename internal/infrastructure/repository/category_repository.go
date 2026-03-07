@@ -32,7 +32,7 @@ func (r *PostgresCategoryRepository) Create(ctx context.Context, c *domain.Categ
 }
 
 func (r *PostgresCategoryRepository) FindAll(ctx context.Context, userId int) ([]domain.Category, error) {
-	query := `SELECT id, label FROM categories WHERE user_id = $1 ORDER BY label`
+	query := `SELECT id, label, user_id FROM categories WHERE user_id = $1 ORDER BY label`
 
 	rows, err := r.db.Query(ctx, query, userId)
 	if err != nil {
@@ -60,7 +60,7 @@ func (r *PostgresCategoryRepository) FindById(ctx context.Context, id int, userI
 	var c domain.Category
 
 	query := `
-		SELECT id, label FROM categories
+		SELECT id, label, user_id FROM categories
 		WHERE id = $1 and user_id = $2
 	`
 

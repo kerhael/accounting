@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kerhael/accounting/internal/domain"
 )
 
@@ -22,10 +21,10 @@ type OutcomeRepository interface {
 }
 
 type PostgresOutcomeRepository struct {
-	db *pgxpool.Pool
+	db DB
 }
 
-func NewOutcomeRepository(db *pgxpool.Pool) *PostgresOutcomeRepository {
+func NewOutcomeRepository(db DB) *PostgresOutcomeRepository {
 	return &PostgresOutcomeRepository{db: db}
 }
 
@@ -39,7 +38,7 @@ func (r *PostgresOutcomeRepository) Create(ctx context.Context, o *domain.Outcom
 }
 
 func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error) {
-	query := `SELECT id, name, amount, category_id, created_at FROM outcomes WHERE user_id = $1`
+	query := `SELECT id, name, amount, category_id, created_at, user_id FROM outcomes WHERE user_id = $1`
 	args := []any{userId}
 	argCount := 1
 
@@ -91,7 +90,7 @@ func (r *PostgresOutcomeRepository) FindById(ctx context.Context, id int, userId
 	var o domain.Outcome
 
 	query := `
-		SELECT id, name, amount, category_id, created_at FROM outcomes
+		SELECT id, name, amount, category_id, created_at, user_id FROM outcomes
 		WHERE id = $1 AND user_id = $2
 	`
 

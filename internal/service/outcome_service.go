@@ -69,6 +69,7 @@ func (s *OutcomeService) Create(ctx context.Context, name string, amount int, ca
 		CreatedAt:  createdAt,
 		Amount:     amount,
 		CategoryId: categoryId,
+		UserId:     userId,
 	}
 
 	if err := s.repo.Create(ctx, outcome); err != nil {

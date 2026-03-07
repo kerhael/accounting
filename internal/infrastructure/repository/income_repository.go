@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/kerhael/accounting/internal/domain"
 )
 
@@ -18,10 +17,10 @@ type IncomeRepository interface {
 }
 
 type PostgresIncomeRepository struct {
-	db *pgxpool.Pool
+	db DB
 }
 
-func NewIncomeRepository(db *pgxpool.Pool) *PostgresIncomeRepository {
+func NewIncomeRepository(db DB) *PostgresIncomeRepository {
 	return &PostgresIncomeRepository{db: db}
 }
 
