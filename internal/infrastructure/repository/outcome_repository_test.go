@@ -126,3 +126,111 @@ func TestPostgresOutcomeRepository_DeleteById(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
+
+func TestPostgresOutcomeRepository_GetSumByCategory(t *testing.T) {
+	mock, _ := pgxmock.NewPool()
+	defer mock.Close()
+
+	repo := NewOutcomeRepository(mock)
+
+	rows := pgxmock.NewRows([]string{"category_id", "total"}).
+		AddRow(1, 1000).
+		AddRow(2, 2000)
+
+	mock.ExpectQuery("SELECT (.+) FROM categories").
+		WithArgs(123).
+		WillReturnRows(rows)
+
+	sums, err := repo.GetSumByCategory(context.Background(), nil, nil, 0, 123)
+
+	assert.NoError(t, err)
+	assert.Len(t, sums, 2)
+	assert.Equal(t, 1, sums[0].CategoryId)
+	assert.Equal(t, 1000, sums[0].Total)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestPostgresOutcomeRepository_GetTotalSum(t *testing.T) {
+	mock, _ := pgxmock.NewPool()
+	defer mock.Close()
+
+	repo := NewOutcomeRepository(mock)
+
+	rows := pgxmock.NewRows([]string{"total"}).AddRow(3000)
+
+	mock.ExpectQuery("SELECT (.+) FROM outcomes").
+		WithArgs(123).
+		WillReturnRows(rows)
+
+	total, err := repo.GetTotalSum(context.Background(), nil, nil, 123)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 3000, total)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestPostgresOutcomeRepository_GetMonthlySeries(t *testing.T) {
+	mock, _ := pgxmock.NewPool()
+	defer mock.Close()
+
+	repo := NewOutcomeRepository(mock)
+
+	from := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2023, 4, 1, 0, 0, 0, 0, time.UTC)
+
+	rows := pgxmock.NewRows([]string{"month", "category_id", "total"}).
+		AddRow("2023-01", 1, 1000).
+		AddRow("2023-01", 2, 2000).
+		AddRow("2023-02", 1, 0).
+		AddRow("2023-02", 2, 0).
+		AddRow("2023-03", 1, 3000).
+		AddRow("2023-03", 2, 4000).
+		AddRow("2023-04", 1, 0).
+		AddRow("2023-04", 2, 0)
+
+	mock.ExpectQuery("WITH months AS").
+		WithArgs(from, to, 123).
+		WillReturnRows(rows)
+
+	series, err := repo.GetMonthlySeries(context.Background(), &from, &to, 123)
+
+	assert.NoError(t, err)
+	assert.Len(t, series, 4)
+	assert.Equal(t, "2023-01", series[0].Month)
+	assert.Equal(t, 2, len(series[0].Categories))
+	assert.Equal(t, 1000, series[0].Categories[1])
+	assert.Equal(t, 2000, series[0].Categories[2])
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestPostgresOutcomeRepository_GetMonthlyTotalSeries(t *testing.T) {
+	mock, _ := pgxmock.NewPool()
+	defer mock.Close()
+
+	repo := NewOutcomeRepository(mock)
+
+	from := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	to := time.Date(2023, 4, 1, 0, 0, 0, 0, time.UTC)
+
+	rows := pgxmock.NewRows([]string{"month", "total"}).
+		AddRow("2023-01", 3000).
+		AddRow("2023-02", 0).
+		AddRow("2023-03", 7000).
+		AddRow("2023-04", 0)
+
+	mock.ExpectQuery("WITH months AS").
+		WithArgs(from, to, 123).
+		WillReturnRows(rows)
+
+	series, err := repo.GetMonthlyTotalSeries(context.Background(), &from, &to, 123)
+
+	assert.NoError(t, err)
+	assert.Len(t, series, 4)
+	assert.Equal(t, "2023-01", series[0].Month)
+	assert.Equal(t, 3000, series[0].Total)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}

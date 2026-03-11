@@ -219,20 +219,31 @@ func (r *PostgresOutcomeRepository) GetMonthlySeries(ctx context.Context, from *
 				date_trunc('month', $2::date),
 				interval '1 month'
 			) AS month
+		),
+		user_categories AS (
+			SELECT id
+			FROM categories
+			WHERE user_id = $3
+		),
+		agg_outcomes AS (
+			SELECT
+				date_trunc('month', o.month) AS month,
+				o.category_id,
+				SUM(o.amount) AS total
+			FROM outcomes o
+			WHERE o.user_id = $3
+			GROUP BY date_trunc('month', o.month), o.category_id
 		)
 		SELECT
-			to_char(m.month, 'YYYY-MM')      AS month,
-			c.id                             AS category_id,
-			COALESCE(SUM(o.amount), 0)::int  AS total
+			to_char(m.month, 'YYYY-MM') AS month,
+			c.id AS category_id,
+			COALESCE(a.total, 0)::int AS total
 		FROM months m
-		CROSS JOIN categories c
-		LEFT JOIN outcomes o
-			ON o.category_id = c.id
-			AND o.month = m.month
-			AND o.user_id = c.user_id
-		WHERE o.user_id = $3
-		GROUP BY m.month, c.id
-		ORDER BY m.month, c.id
+		CROSS JOIN user_categories c
+		LEFT JOIN agg_outcomes a
+			ON a.category_id = c.id
+			AND a.month = m.month
+		ORDER BY m.month, c.id;
 	`
 
 	rows, err := r.db.Query(ctx, query, *from, *to, userId)
@@ -285,15 +296,21 @@ func (r *PostgresOutcomeRepository) GetMonthlyTotalSeries(ctx context.Context, f
 				date_trunc('month', $2::date),
 				interval '1 month'
 			) AS month
+		),
+		agg_outcomes AS (
+			SELECT
+				date_trunc('month', o.month) AS month,
+				SUM(o.amount) AS total
+			FROM outcomes o
+			WHERE o.user_id = $3
+			GROUP BY date_trunc('month', o.month)
 		)
 		SELECT
-			to_char(m.month, 'YYYY-MM')      AS month,
-			COALESCE(SUM(o.amount), 0) AS total
+			to_char(m.month, 'YYYY-MM') AS month,
+			COALESCE(a.total, 0) AS total
 		FROM months m
-		LEFT JOIN outcomes o
-			ON o.month = m.month
-		WHERE o.user_id = $3
-		GROUP BY m.month
+		LEFT JOIN agg_outcomes a
+			ON a.month = m.month
 		ORDER BY m.month
 	`
 
