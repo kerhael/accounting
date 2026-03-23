@@ -34,3 +34,11 @@ func (m *UserService) FindById(ctx context.Context, id int) (*domain.User, error
 	}
 	return nil, args.Error(1)
 }
+
+func (m *UserService) PatchById(ctx context.Context, id int, firstName string, lastName string, password string) (*domain.User, error) {
+	args := m.Called(ctx, id, firstName, lastName, password)
+	if income, ok := args.Get(0).(*domain.User); ok {
+		return income, args.Error(1)
+	}
+	return nil, args.Error(1)
+}

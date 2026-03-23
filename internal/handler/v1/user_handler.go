@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/kerhael/accounting/internal/auth"
@@ -95,6 +96,84 @@ func (h *UserHandler) GetMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := h.service.FindById(r.Context(), userID)
+	if err != nil {
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
+			return
+		}
+		if error, ok := errors.AsType[*domain.EntityNotFoundError](err); ok {
+			utils.WriteJSONError(w, http.StatusNotFound, error.Error())
+			return
+		}
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, toUserResponse(user))
+}
+
+// Update a user
+// @Summary      Update a user
+// @Description  Update a user
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param 		 id path int true "User ID"
+// @Param        user  body      PatchUserByIdRequest  true  "User payload"
+// @Success      200       {object}   UserResponse
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
+// @Failure      404       {object}   ErrorResponse  "Not found error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
+// @Security BearerAuth
+// @Router       /users/{id} [patch]
+func (h *UserHandler) PatchUserById(w http.ResponseWriter, r *http.Request) {
+	userId, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
+	idStr := r.PathValue("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	if userId != id {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user cannot be updated")
+		return
+	}
+
+	var req PatchUserByIdRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	firstName := ""
+	if req.FirstName != nil {
+		cleanName := strings.TrimSpace(*req.FirstName)
+		firstName = cleanName
+	}
+
+	lastName := ""
+	if req.LastName != nil {
+		cleanName := strings.TrimSpace(*req.LastName)
+		lastName = cleanName
+	}
+
+	password := ""
+	if req.Password != nil {
+		if len(*req.Password) < 8 {
+			utils.WriteJSONError(w, http.StatusBadRequest, "password must be at least 8 characters")
+			return
+		}
+		password = *req.Password
+	}
+
+	user, err := h.service.PatchById(r.Context(), userId, firstName, lastName, password)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"testing"
 
 	"github.com/kerhael/accounting/internal/auth"
@@ -429,6 +430,426 @@ func TestUserHandler_GetMe_EntityNotFoundError(t *testing.T) {
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
 	assert.Equal(t, "entity not found: user not found", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_PatchUserById_Success_AllFields(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	firstName := "Jane"
+	lastName := "Doe"
+	password := "newpassword123"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	expectedUser := &domain.User{
+		ID:        userID,
+		FirstName: "Jane",
+		LastName:  "Doe",
+		Email:     "john@example.com",
+	}
+	mockService.On("PatchById", mock.Anything, userID, "Jane", "Doe", "newpassword123").Return(expectedUser, nil)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(userID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response UserResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, userID, response.ID)
+	assert.Equal(t, "Jane", response.FirstName)
+	assert.Equal(t, "Doe", response.LastName)
+	assert.Equal(t, "john@example.com", response.Email)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_PatchUserById_Success_FirstNameOnly(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	firstName := "Jane"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  nil,
+		Password:  nil,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	expectedUser := &domain.User{
+		ID:        userID,
+		FirstName: "Jane",
+		LastName:  "Doe",
+		Email:     "john@example.com",
+	}
+	mockService.On("PatchById", mock.Anything, userID, "Jane", "", "").Return(expectedUser, nil)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(userID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response UserResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, userID, response.ID)
+	assert.Equal(t, "Jane", response.FirstName)
+	assert.Equal(t, "Doe", response.LastName)
+	assert.Equal(t, "john@example.com", response.Email)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_PatchUserById_Success_LastNameOnly(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	lastName := "Doe"
+	reqBody := PatchUserByIdRequest{
+		FirstName: nil,
+		LastName:  &lastName,
+		Password:  nil,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	expectedUser := &domain.User{
+		ID:        userID,
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "john@example.com",
+	}
+	mockService.On("PatchById", mock.Anything, userID, "", "Doe", "").Return(expectedUser, nil)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(userID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response UserResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, userID, response.ID)
+	assert.Equal(t, "John", response.FirstName)
+	assert.Equal(t, "Doe", response.LastName)
+	assert.Equal(t, "john@example.com", response.Email)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_PatchUserById_Success_PasswordOnly(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	password := "newpassword123"
+	reqBody := PatchUserByIdRequest{
+		FirstName: nil,
+		LastName:  nil,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	expectedUser := &domain.User{
+		ID:        userID,
+		FirstName: "John",
+		LastName:  "Doe",
+		Email:     "john@example.com",
+	}
+	mockService.On("PatchById", mock.Anything, userID, "", "", "newpassword123").Return(expectedUser, nil)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(userID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response UserResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, userID, response.ID)
+	assert.Equal(t, "John", response.FirstName)
+	assert.Equal(t, "Doe", response.LastName)
+	assert.Equal(t, "john@example.com", response.Email)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_PatchUserById_NotAuthenticated(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	firstName := "Jane"
+	lastName := "Doe"
+	password := "newpassword123"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/123", bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "PatchById")
+}
+
+func TestUserHandler_PatchUserById_InvalidID(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	firstName := "Jane"
+	lastName := "Doe"
+	password := "newpassword123"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/invalid", bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "invalid id", response.Message)
+
+	mockService.AssertNotCalled(t, "PatchById")
+}
+
+func TestUserHandler_PatchUserById_UnauthorizedUser(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	otherUserID := 456
+	firstName := "Jane"
+	lastName := "Doe"
+	password := "newpassword123"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(otherUserID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "invalid id", response.Message)
+
+	mockService.AssertNotCalled(t, "PatchById")
+}
+
+func TestUserHandler_PatchUserById_ShortPassword(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	firstName := "Jane"
+	lastName := "Doe"
+	password := "short"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(userID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "password must be at least 8 characters", response.Message)
+
+	mockService.AssertNotCalled(t, "PatchById")
+}
+
+func TestUserHandler_PatchUserById_InvalidEntityError(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	firstName := "Jane"
+	lastName := "Doe"
+	password := "newpassword123"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	invalidErr := &domain.InvalidEntityError{
+		UnderlyingCause: errors.New("invalid id"),
+	}
+	mockService.On("PatchById", mock.Anything, userID, "Jane", "Doe", "newpassword123").Return((*domain.User)(nil), invalidErr)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(userID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "invalid entity data: invalid id", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_PatchUserById_EntityNotFoundError(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	firstName := "Jane"
+	lastName := "Doe"
+	password := "newpassword123"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	notFoundErr := &domain.EntityNotFoundError{
+		UnderlyingCause: errors.New("user not found"),
+	}
+	mockService.On("PatchById", mock.Anything, userID, "Jane", "Doe", "newpassword123").Return((*domain.User)(nil), notFoundErr)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(userID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "entity not found: user not found", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_PatchUserById_ServiceError(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	firstName := "Jane"
+	lastName := "Doe"
+	password := "newpassword123"
+	reqBody := PatchUserByIdRequest{
+		FirstName: &firstName,
+		LastName:  &lastName,
+		Password:  &password,
+	}
+	reqBodyBytes, _ := json.Marshal(reqBody)
+
+	serviceErr := errors.New("database error")
+	mockService.On("PatchById", mock.Anything, userID, "Jane", "Doe", "newpassword123").Return((*domain.User)(nil), serviceErr)
+
+	req := httptest.NewRequest(http.MethodPatch, "/api/v1/users/"+strconv.Itoa(userID), bytes.NewBuffer(reqBodyBytes))
+	req.Header.Set("Content-Type", "application/json")
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.PatchUserById(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "database error", response.Message)
 
 	mockService.AssertExpectations(t)
 }

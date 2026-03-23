@@ -42,3 +42,8 @@ func (m *UserRepository) DeleteById(ctx context.Context, id int) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
+
+func (m *UserRepository) Update(ctx context.Context, u *domain.User) error {
+	args := m.Called(ctx, u)
+	return args.Error(0)
+}

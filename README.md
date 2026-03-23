@@ -146,6 +146,17 @@ curl http://localhost:8080/api/v1/users/me \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 ```
 
+**PATCH** `/api/v1/users/{id}`
+
+Update a specific user (partial update).
+
+```bash
+curl -X PATCH http://localhost:8080/api/v1/users/1 \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk" \
+  -d '{"firstName": "Jane", "lastName": "Doe", "password": "newPlainPassword"}'
+```
+
 #### Categories
 
 **POST** `/api/v1/categories/`
@@ -433,8 +444,8 @@ Error response format:
 
 
 TODO: 
-- update user route
 - delete user route
 - refresh jwt token
+- pagination
 - frontend
 - CI/CD

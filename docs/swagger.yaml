@@ -161,6 +161,18 @@ definitions:
         description: Name of the expense (optional)
         type: string
     type: object
+  v1.PatchUserByIdRequest:
+    properties:
+      firstName:
+        description: User first name (optional)
+        type: string
+      lastName:
+        description: User last name (optional)
+        type: string
+      password:
+        description: User password (optional)
+        type: string
+    type: object
   v1.TotalOutcomeResponse:
     properties:
       total:
@@ -942,6 +954,51 @@ paths:
           schema:
             $ref: '#/definitions/v1.ErrorResponse'
       summary: Create a user
+      tags:
+      - users
+  /users/{id}:
+    patch:
+      consumes:
+      - application/json
+      description: Update a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User payload
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/v1.PatchUserByIdRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.UserResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "404":
+          description: Not found error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update a user
       tags:
       - users
   /users/login:

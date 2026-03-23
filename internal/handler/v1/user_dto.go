@@ -13,3 +13,9 @@ type UserResponse struct {
 	LastName  string `json:"lastName"`  // User last name
 	Email     string `json:"email"`     // User email
 }
+
+type PatchUserByIdRequest struct {
+	FirstName *string `json:"firstName"` // User first name (optional)
+	LastName  *string `json:"lastName"`  // User last name (optional)
+	Password  *string `json:"password"`  // User password (optional)
+}

@@ -12,6 +12,7 @@ type UserRepository interface {
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	FindById(ctx context.Context, id int) (*domain.User, error)
 	DeleteById(ctx context.Context, id int) error
+	Update(ctx context.Context, u *domain.User) error
 }
 
 type PostgresUserRepository struct {
@@ -65,5 +66,16 @@ func (r *PostgresUserRepository) DeleteById(ctx context.Context, id int) error {
 	`
 
 	_, err := r.db.Exec(ctx, query, id)
+	return err
+}
+
+func (r *PostgresUserRepository) Update(ctx context.Context, u *domain.User) error {
+	query := `
+		UPDATE users 
+		SET first_name = $2, last_name = $3, password_hash = $4, updated_at = NOW()
+		WHERE id = $1 AND deleted_at IS NULL
+	`
+
+	_, err := r.db.Exec(ctx, query, u.ID, u.FirstName, u.LastName, u.PasswordHash)
 	return err
 }

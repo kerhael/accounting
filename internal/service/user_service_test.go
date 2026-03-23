@@ -363,3 +363,232 @@ func TestUserService_FindById_UserNotFound(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestUserService_PatchById_Success_AllFields(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	existingUser := &domain.User{
+		ID:           1,
+		FirstName:    "John",
+		LastName:     "Doe",
+		Email:        "john@example.com",
+		PasswordHash: "oldhash",
+	}
+
+	mockRepo.On("FindById", ctx, 1).Return(existingUser, nil)
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.User")).Return(nil)
+
+	user, err := svc.PatchById(ctx, 1, "Jane", "Smith", "newpassword")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, 1, user.ID)
+	assert.Equal(t, "Jane", user.FirstName)
+	assert.Equal(t, "Smith", user.LastName)
+	assert.Equal(t, "john@example.com", user.Email)
+	assert.NotEqual(t, "oldhash", user.PasswordHash)
+	assert.NotEqual(t, "newpassword", user.PasswordHash)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_PatchById_Success_FirstNameOnly(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	existingUser := &domain.User{
+		ID:           1,
+		FirstName:    "John",
+		LastName:     "Doe",
+		Email:        "john@example.com",
+		PasswordHash: "oldhash",
+	}
+
+	mockRepo.On("FindById", ctx, 1).Return(existingUser, nil)
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.User")).Return(nil)
+
+	user, err := svc.PatchById(ctx, 1, "Jane", "", "")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, 1, user.ID)
+	assert.Equal(t, "Jane", user.FirstName)
+	assert.Equal(t, "Doe", user.LastName)
+	assert.Equal(t, "john@example.com", user.Email)
+	assert.Equal(t, "oldhash", user.PasswordHash)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_PatchById_Success_LastNameOnly(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	existingUser := &domain.User{
+		ID:           1,
+		FirstName:    "John",
+		LastName:     "Doe",
+		Email:        "john@example.com",
+		PasswordHash: "oldhash",
+	}
+
+	mockRepo.On("FindById", ctx, 1).Return(existingUser, nil)
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.User")).Return(nil)
+
+	user, err := svc.PatchById(ctx, 1, "", "Smith", "")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, 1, user.ID)
+	assert.Equal(t, "John", user.FirstName)
+	assert.Equal(t, "Smith", user.LastName)
+	assert.Equal(t, "john@example.com", user.Email)
+	assert.Equal(t, "oldhash", user.PasswordHash)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_PatchById_Success_PasswordOnly(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	existingUser := &domain.User{
+		ID:           1,
+		FirstName:    "John",
+		LastName:     "Doe",
+		Email:        "john@example.com",
+		PasswordHash: "oldhash",
+	}
+
+	mockRepo.On("FindById", ctx, 1).Return(existingUser, nil)
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.User")).Return(nil)
+
+	user, err := svc.PatchById(ctx, 1, "", "", "newpassword")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, 1, user.ID)
+	assert.Equal(t, "John", user.FirstName)
+	assert.Equal(t, "Doe", user.LastName)
+	assert.Equal(t, "john@example.com", user.Email)
+	assert.NotEqual(t, "oldhash", user.PasswordHash)
+	assert.NotEqual(t, "newpassword", user.PasswordHash)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_PatchById_Success_NoChanges(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	existingUser := &domain.User{
+		ID:           1,
+		FirstName:    "John",
+		LastName:     "Doe",
+		Email:        "john@example.com",
+		PasswordHash: "oldhash",
+	}
+
+	mockRepo.On("FindById", ctx, 1).Return(existingUser, nil)
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.User")).Return(nil)
+
+	user, err := svc.PatchById(ctx, 1, "", "", "")
+
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+	assert.Equal(t, 1, user.ID)
+	assert.Equal(t, "John", user.FirstName)
+	assert.Equal(t, "Doe", user.LastName)
+	assert.Equal(t, "john@example.com", user.Email)
+	assert.Equal(t, "oldhash", user.PasswordHash)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_PatchById_InvalidID_Zero(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	user, err := svc.PatchById(ctx, 0, "Jane", "Smith", "newpassword")
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+	assert.Equal(t, "invalid id", invalidErr.UnderlyingCause.Error())
+
+	mockRepo.AssertNotCalled(t, "FindById")
+	mockRepo.AssertNotCalled(t, "Update")
+}
+
+func TestUserService_PatchById_InvalidID_Negative(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	user, err := svc.PatchById(ctx, -1, "Jane", "Smith", "newpassword")
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+
+	mockRepo.AssertNotCalled(t, "FindById")
+	mockRepo.AssertNotCalled(t, "Update")
+}
+
+func TestUserService_PatchById_UserNotFound(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	repoErr := errors.New("user not found")
+
+	mockRepo.On("FindById", ctx, 999).Return((*domain.User)(nil), repoErr)
+
+	user, err := svc.PatchById(ctx, 999, "Jane", "Smith", "newpassword")
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+	assert.Equal(t, "user not found", err.Error())
+
+	mockRepo.AssertExpectations(t)
+	mockRepo.AssertNotCalled(t, "Update")
+}
+
+func TestUserService_PatchById_UpdateError(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	existingUser := &domain.User{
+		ID:           1,
+		FirstName:    "John",
+		LastName:     "Doe",
+		Email:        "john@example.com",
+		PasswordHash: "oldhash",
+	}
+	repoErr := errors.New("update failed")
+
+	mockRepo.On("FindById", ctx, 1).Return(existingUser, nil)
+	mockRepo.On("Update", ctx, mock.AnythingOfType("*domain.User")).Return(repoErr)
+
+	user, err := svc.PatchById(ctx, 1, "Jane", "Smith", "newpassword")
+
+	assert.Nil(t, user)
+	assert.Error(t, err)
+	assert.Equal(t, "update failed", err.Error())
+
+	mockRepo.AssertExpectations(t)
+}

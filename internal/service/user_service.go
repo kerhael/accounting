@@ -15,6 +15,7 @@ type UserServiceInterface interface {
 	Create(ctx context.Context, firstName string, lastName string, email string, password string) (*domain.User, error)
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	FindById(ctx context.Context, id int) (*domain.User, error)
+	PatchById(ctx context.Context, id int, firstName string, lastName string, password string) (*domain.User, error)
 }
 
 type UserService struct {
@@ -104,4 +105,56 @@ func (s *UserService) FindById(ctx context.Context, id int) (*domain.User, error
 	}
 
 	return user, nil
+}
+
+func (s *UserService) PatchById(ctx context.Context, id int, firstName string, lastName string, password string) (*domain.User, error) {
+	if id <= 0 {
+		return nil, &domain.InvalidEntityError{
+			UnderlyingCause: errors.New("invalid id"),
+		}
+	}
+
+	user, err := s.repo.FindById(ctx, id)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, &domain.EntityNotFoundError{
+				UnderlyingCause: err,
+			}
+		}
+		return nil, err
+	}
+
+	u := &domain.User{
+		ID:    user.ID,
+		Email: user.Email,
+	}
+
+	if firstName != "" {
+		u.FirstName = firstName
+	} else {
+		u.FirstName = user.FirstName
+	}
+
+	if lastName != "" {
+		u.LastName = lastName
+	} else {
+		u.LastName = user.LastName
+	}
+
+	if password != "" {
+		passwordHash, err := security.HashPassword(password)
+		if err != nil {
+			return nil, err
+		}
+		u.PasswordHash = passwordHash
+	} else {
+		u.PasswordHash = user.PasswordHash
+	}
+
+	errUpdt := s.repo.Update(ctx, u)
+	if errUpdt != nil {
+		return nil, errUpdt
+	}
+
+	return u, nil
 }
