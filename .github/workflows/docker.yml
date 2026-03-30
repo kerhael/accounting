@@ -1,0 +1,22 @@
+name: Docker
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t go-accounting-api .
+
+      - name: Run container (smoke test)
+        run: |
+          docker run -d -p 8080:8080 --name test-api go-accounting-api
+          sleep 5
+          curl --fail http://localhost:8080/api/v1/health

@@ -1,5 +1,7 @@
 # Go Accounting API
 
+![CI](https://github.com/kerhael/accounting/actions/workflows/ci.yml/badge.svg)
+
 A REST API for managing personal accounting data including categories and outcomes, built with Go and PostgreSQL.
 
 ## Features
@@ -444,8 +446,6 @@ Error response format:
 
 
 TODO: 
-- delete user route
 - refresh jwt token
 - pagination
 - frontend
-- CI/CD
