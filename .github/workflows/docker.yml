@@ -55,8 +55,8 @@ jobs:
       - name: Run container (smoke test)
         run: |
           docker rm -f test-api || true
-          docker run -d -p 8080:8080 \
-            -e DB_HOST=postgres \
+          docker run -d --network host \
+            -e DB_HOST=localhost \
             -e DB_PORT=5432 \
             -e DB_USER=testuser \
             -e DB_PASSWORD=testpass \
