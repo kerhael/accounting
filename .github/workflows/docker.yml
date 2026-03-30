@@ -18,7 +18,15 @@ jobs:
       - name: Run container (smoke test)
         run: |
           docker rm -f test-api || true
-          docker run -d -p 8080:8080 --name test-api go-accounting-api
+          docker run -d -p 8080:8080 \
+          -e DB_HOST=${{ secrets.DB_HOST }} \
+          -e DB_PORT=${{ secrets.DB_PORT }} \
+          -e DB_USER=${{ secrets.DB_USER }} \
+          -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+          -e DB_NAME=${{ secrets.DB_NAME }} \
+          -e DB_SSLMODE=${{ secrets.DB_SSLMODE }} \
+          -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+          --name test-api go-accounting-api
 
       - name: Wait for API to be healthy
         run: |
