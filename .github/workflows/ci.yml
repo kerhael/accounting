@@ -14,7 +14,7 @@ jobs:
         image: postgres:18
         env:
           POSTGRES_USER: accounting
-          POSTGRES_PASSWORD: password
+          POSTGRES_PASSWORD: accounting
           POSTGRES_DB: accounting
         ports:
           - 5432:5432
@@ -28,7 +28,7 @@ jobs:
       DB_HOST: localhost
       DB_PORT: 5432
       DB_USER: accounting
-      DB_PASSWORD: password
+      DB_PASSWORD: accounting
       DB_NAME: accounting
       DB_SSLMODE: disable
 
@@ -53,7 +53,16 @@ jobs:
         run: go mod download
 
       - name: Install migrate
-        run: go install github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+        run: |
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz
+          sudo mv migrate.linux-amd64 /usr/local/bin/migrate
+
+      - name: Wait for Postgres
+        run: |
+          until pg_isready -h localhost -p 5432 -U accounting; do
+            echo "Waiting for database..."
+            sleep 2
+          done
 
       - name: Run migrations
         run: |
