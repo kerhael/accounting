@@ -58,7 +58,7 @@ jobs:
       - name: Run migrations
         run: |
           migrate -path migrations \
-          -database "postgres://accounting:password@localhost:5432/accounting?sslmode=disable" up
+          -database "postgres://accounting:accounting@localhost:5432/accounting?sslmode=disable" up
 
       - name: Lint
         uses: golangci/golangci-lint-action@v6
