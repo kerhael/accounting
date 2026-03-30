@@ -54,8 +54,10 @@ jobs:
 
       - name: Install migrate
         run: |
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz | tar xvz
-          sudo mv migrate.linux-amd64 /usr/local/bin/migrate
+          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz -o migrate.tar.gz
+          tar -xzf migrate.tar.gz
+          sudo mv migrate /usr/local/bin/
+          migrate -version
 
       - name: Wait for Postgres
         run: |
