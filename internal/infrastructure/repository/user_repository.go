@@ -61,7 +61,8 @@ func (r *PostgresUserRepository) FindById(ctx context.Context, id int) (*domain.
 
 func (r *PostgresUserRepository) DeleteById(ctx context.Context, id int) error {
 	query := `
-		DELETE FROM users
+		UPDATE users
+		SET deleted_at = NOW()
 		WHERE id = $1
 	`
 

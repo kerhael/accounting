@@ -16,6 +16,7 @@ type UserServiceInterface interface {
 	FindByEmail(ctx context.Context, email string) (*domain.User, error)
 	FindById(ctx context.Context, id int) (*domain.User, error)
 	PatchById(ctx context.Context, id int, firstName string, lastName string, password string) (*domain.User, error)
+	DeleteById(ctx context.Context, id int) error
 }
 
 type UserService struct {
@@ -157,4 +158,14 @@ func (s *UserService) PatchById(ctx context.Context, id int, firstName string, l
 	}
 
 	return u, nil
+}
+
+func (s *UserService) DeleteById(ctx context.Context, id int) error {
+	if id <= 0 {
+		return &domain.InvalidEntityError{
+			UnderlyingCause: errors.New("invalid id"),
+		}
+	}
+
+	return s.repo.DeleteById(ctx, id)
 }

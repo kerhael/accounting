@@ -42,3 +42,8 @@ func (m *UserService) PatchById(ctx context.Context, id int, firstName string, l
 	}
 	return nil, args.Error(1)
 }
+
+func (m *UserService) DeleteById(ctx context.Context, id int) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}

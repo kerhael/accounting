@@ -190,6 +190,47 @@ func (h *UserHandler) PatchUserById(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, toUserResponse(user))
 }
 
+// Delete a user
+// @Summary      Delete a user
+// @Description Delete a user by id
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Param 		id path int true "User ID"
+// @Success      204       "No Content"
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
+// @Security BearerAuth
+// @Router       /users/{id} [delete]
+func (h *UserHandler) DeleteUserById(w http.ResponseWriter, r *http.Request) {
+	_, ok := auth.GetUserIDFromContext(r.Context())
+	if !ok {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "user not authenticated")
+		return
+	}
+
+	idStr := r.PathValue("id")
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, "invalid id")
+		return
+	}
+
+	err = h.service.DeleteById(r.Context(), id)
+	if err != nil {
+		if error, ok := errors.AsType[*domain.InvalidEntityError](err); ok {
+			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
+			return
+		}
+		utils.WriteJSONError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func toUserResponse(user *domain.User) UserResponse {
 	return UserResponse{
 		ID:        user.ID,

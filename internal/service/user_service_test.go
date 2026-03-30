@@ -592,3 +592,70 @@ func TestUserService_PatchById_UpdateError(t *testing.T) {
 
 	mockRepo.AssertExpectations(t)
 }
+
+func TestUserService_DeleteById_Success(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	userID := 123
+
+	mockRepo.On("DeleteById", ctx, userID).Return(nil)
+
+	err := svc.DeleteById(ctx, userID)
+
+	assert.NoError(t, err)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestUserService_DeleteById_InvalidID_Zero(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	err := svc.DeleteById(ctx, 0)
+
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+	assert.Equal(t, "invalid id", invalidErr.UnderlyingCause.Error())
+
+	mockRepo.AssertNotCalled(t, "DeleteById")
+}
+
+func TestUserService_DeleteById_InvalidID_Negative(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+
+	err := svc.DeleteById(ctx, -1)
+
+	assert.Error(t, err)
+
+	var invalidErr *domain.InvalidEntityError
+	assert.True(t, errors.As(err, &invalidErr))
+
+	mockRepo.AssertNotCalled(t, "DeleteById")
+}
+
+func TestUserService_DeleteById_RepoError(t *testing.T) {
+	mockRepo := new(mocks.UserRepository)
+	svc := NewUserService(mockRepo)
+
+	ctx := context.Background()
+	userID := 123
+	repoErr := errors.New("database error")
+
+	mockRepo.On("DeleteById", ctx, userID).Return(repoErr)
+
+	err := svc.DeleteById(ctx, userID)
+
+	assert.Error(t, err)
+	assert.Equal(t, "database error", err.Error())
+
+	mockRepo.AssertExpectations(t)
+}

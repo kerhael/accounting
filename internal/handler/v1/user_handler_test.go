@@ -853,3 +853,117 @@ func TestUserHandler_PatchUserById_ServiceError(t *testing.T) {
 
 	mockService.AssertExpectations(t)
 }
+
+func TestUserHandler_DeleteUserById_Success(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	mockService.On("DeleteById", mock.Anything, userID).Return(nil)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/users/"+strconv.Itoa(userID), nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.DeleteUserById(w, req)
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, 0, w.Body.Len())
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_DeleteUserById_NotAuthenticated(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/users/123", nil)
+
+	w := httptest.NewRecorder()
+	handler.DeleteUserById(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "user not authenticated", response.Message)
+
+	mockService.AssertNotCalled(t, "DeleteById")
+}
+
+func TestUserHandler_DeleteUserById_InvalidID(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/users/invalid", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+
+	w := httptest.NewRecorder()
+	handler.DeleteUserById(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "invalid id", response.Message)
+
+	mockService.AssertNotCalled(t, "DeleteById")
+}
+
+func TestUserHandler_DeleteUserById_InvalidEntityError(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	invalidErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid id")}
+	mockService.On("DeleteById", mock.Anything, userID).Return(invalidErr)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/users/"+strconv.Itoa(userID), nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.DeleteUserById(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "invalid entity data: invalid id", response.Message)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestUserHandler_DeleteUserById_ServiceError(t *testing.T) {
+	mockService := new(mocks.UserService)
+	handler := NewUserHandler(mockService)
+
+	userID := 123
+	serviceErr := errors.New("database error")
+	mockService.On("DeleteById", mock.Anything, userID).Return(serviceErr)
+
+	req := httptest.NewRequest(http.MethodDelete, "/api/v1/users/"+strconv.Itoa(userID), nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), userID)
+	req = req.WithContext(ctx)
+	req.SetPathValue("id", strconv.Itoa(userID))
+
+	w := httptest.NewRecorder()
+	handler.DeleteUserById(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var response ErrorResponse
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, "database error", response.Message)
+
+	mockService.AssertExpectations(t)
+}
