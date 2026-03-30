@@ -17,6 +17,13 @@ jobs:
 
       - name: Run container (smoke test)
         run: |
+          docker rm -f test-api || true
           docker run -d -p 8080:8080 --name test-api go-accounting-api
-          sleep 5
-          curl --fail http://localhost:8080/api/v1/health
+          for i in {1..20}; do
+            if curl --fail http://localhost:8080/api/v1/health; then
+              echo "API is up!"
+              break
+            fi
+            echo "Waiting for API..."
+            sleep 3
+          done
