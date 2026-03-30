@@ -10,15 +10,15 @@ jobs:
 
     services:
       postgres:
-        image: postgres:15
+        image: postgres:18
         env:
-          POSTGRES_USER: ${{ secrets.DB_USER }}
-          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          POSTGRES_DB: ${{ secrets.DB_NAME }}
+          POSTGRES_USER: testuser
+          POSTGRES_PASSWORD: testpass
+          POSTGRES_DB: testdb
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U ${{ secrets.DB_USER }}"
+          --health-cmd "pg_isready -U testuser"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -30,15 +30,37 @@ jobs:
       - name: Build Docker image
         run: docker build -t go-accounting-api .
 
+      - name: Run database migrations
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..20}; do
+            if pg_isready -h localhost -p 5432 -U testuser; then
+              break
+            fi
+            echo "Waiting for Postgres..."
+            sleep 3
+          done
+          echo "✅ PostgreSQL ready"
+
+          echo "Running migrations using migrate/migrate..."
+          docker run --rm \
+            -v ${{ github.workspace }}/migrations:/migrations \
+            --network host \
+            -e PGPASSWORD=testpass \
+            migrate/migrate \
+            -path /migrations \
+            -database "postgres://testuser:testpass@localhost:5432/testdb?sslmode=disable" \
+            up
+
       - name: Run container (smoke test)
         run: |
           docker rm -f test-api || true
           docker run -d -p 8080:8080 \
             -e DB_HOST=postgres \
             -e DB_PORT=5432 \
-            -e DB_USER=${{ secrets.DB_USER }} \
-            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-            -e DB_NAME=${{ secrets.DB_NAME }} \
+            -e DB_USER=testuser \
+            -e DB_PASSWORD=testpass \
+            -e DB_NAME=testdb \
             -e DB_SSLMODE=disable \
             -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
             --name test-api go-accounting-api
