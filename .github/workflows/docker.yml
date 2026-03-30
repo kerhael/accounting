@@ -1,4 +1,4 @@
-name: Docker
+name: Docker CI/CD
 
 on:
   push:
@@ -7,6 +7,21 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ${{ secrets.DB_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ${{ secrets.DB_USER }}"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout
@@ -19,23 +34,21 @@ jobs:
         run: |
           docker rm -f test-api || true
           docker run -d -p 8080:8080 \
-          -e DB_HOST=${{ secrets.DB_HOST }} \
-          -e DB_PORT=${{ secrets.DB_PORT }} \
-          -e DB_USER=${{ secrets.DB_USER }} \
-          -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-          -e DB_NAME=${{ secrets.DB_NAME }} \
-          -e DB_SSLMODE=${{ secrets.DB_SSLMODE }} \
-          -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-          --name test-api go-accounting-api
+            -e DB_HOST=postgres \
+            -e DB_PORT=5432 \
+            -e DB_USER=${{ secrets.DB_USER }} \
+            -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
+            -e DB_NAME=${{ secrets.DB_NAME }} \
+            -e DB_SSLMODE=disable \
+            -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
+            --name test-api go-accounting-api
 
       - name: Wait for API to be healthy
         run: |
           echo "⏳ Waiting for API to respond on /api/v1/health..."
-          # Timeout après 60 secondes
           timeout=60
           elapsed=0
           interval=3
-
           until curl --fail http://localhost:8080/api/v1/health >/dev/null 2>&1; do
             sleep $interval
             elapsed=$((elapsed + interval))
@@ -47,9 +60,7 @@ jobs:
             fi
             echo "Waiting... ($elapsed/$timeout)"
           done
-
           echo "✅ API is healthy!"
 
       - name: Cleanup container
-        run: |
-          docker rm -f test-api
+        run: docker rm -f test-api
