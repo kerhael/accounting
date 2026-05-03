@@ -290,7 +290,7 @@ func TestIncomeHandler_GetAllIncomes_Success(t *testing.T) {
 			UserId:    123,
 		},
 	}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return(expectedIncomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123, 20, 0).Return(expectedIncomes, 2, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/", nil)
 	req = req.WithContext(ctx)
@@ -303,14 +303,17 @@ func TestIncomeHandler_GetAllIncomes_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var data []domain.Income
+	var data PaginatedIncomesResponse
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
-	assert.Len(t, data, 2)
-	assert.Equal(t, expectedIncomes[0].ID, data[0].ID)
-	assert.Equal(t, expectedIncomes[0].Name, data[0].Name)
-	assert.Equal(t, expectedIncomes[1].ID, data[1].ID)
-	assert.Equal(t, expectedIncomes[1].Name, data[1].Name)
+	assert.Len(t, data.Data, 2)
+	assert.Equal(t, expectedIncomes[0].ID, data.Data[0].ID)
+	assert.Equal(t, expectedIncomes[0].Name, data.Data[0].Name)
+	assert.Equal(t, expectedIncomes[1].ID, data.Data[1].ID)
+	assert.Equal(t, expectedIncomes[1].Name, data.Data[1].Name)
+	assert.Equal(t, 0, data.Pagination.Offset)
+	assert.Equal(t, 20, data.Pagination.Limit)
+	assert.Equal(t, 2, data.Pagination.Total)
 
 	mockService.AssertExpectations(t)
 }
@@ -341,7 +344,7 @@ func TestIncomeHandler_GetAllIncomes_EmptyList(t *testing.T) {
 	userId := 123
 	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	expectedIncomes := []domain.Income{}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(expectedIncomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId, 20, 0).Return(expectedIncomes, 0, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/", nil)
 	req = req.WithContext(ctx)
@@ -354,11 +357,12 @@ func TestIncomeHandler_GetAllIncomes_EmptyList(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var data []domain.Income
+	var data PaginatedIncomesResponse
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
-	assert.Len(t, data, 0)
-	assert.Empty(t, data)
+	assert.Len(t, data.Data, 0)
+	assert.Empty(t, data.Data)
+	assert.Equal(t, 0, data.Pagination.Total)
 
 	mockService.AssertExpectations(t)
 }
@@ -381,7 +385,7 @@ func TestIncomeHandler_GetAllIncomes_WithDateFilters(t *testing.T) {
 			UserId:    userId,
 		},
 	}
-	mockService.On("GetAll", ctx, &from, &to, userId).Return(expectedIncomes, nil)
+	mockService.On("GetAll", ctx, &from, &to, userId, 20, 0).Return(expectedIncomes, 1, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
@@ -394,16 +398,87 @@ func TestIncomeHandler_GetAllIncomes_WithDateFilters(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var data []domain.Income
+	var data PaginatedIncomesResponse
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
-	assert.Len(t, data, 1)
-	assert.Equal(t, expectedIncomes[0].ID, data[0].ID)
-	assert.Equal(t, expectedIncomes[0].Name, data[0].Name)
-	assert.Equal(t, expectedIncomes[0].Amount, data[0].Amount)
-	assert.Equal(t, expectedIncomes[0].CreatedAt, data[0].CreatedAt)
+	assert.Len(t, data.Data, 1)
+	assert.Equal(t, expectedIncomes[0].ID, data.Data[0].ID)
+	assert.Equal(t, expectedIncomes[0].Name, data.Data[0].Name)
+	assert.Equal(t, expectedIncomes[0].Amount, data.Data[0].Amount)
+	assert.Equal(t, expectedIncomes[0].CreatedAt, data.Data[0].CreatedAt)
 
 	mockService.AssertExpectations(t)
+}
+
+func TestIncomeHandler_GetAllIncomes_WithPagination(t *testing.T) {
+	mockService := new(mocks.IncomeService)
+	handler := NewIncomeHandler(mockService)
+
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
+	expectedIncomes := []domain.Income{
+		{
+			ID:        3,
+			Name:      "Freelance",
+			Amount:    120000,
+			CreatedAt: &time.Time{},
+			UserId:    userId,
+		},
+	}
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId, 10, 20).Return(expectedIncomes, 31, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/incomes/?offset=20&limit=10", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllIncomes(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data PaginatedIncomesResponse
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data.Data, 1)
+	assert.Equal(t, 20, data.Pagination.Offset)
+	assert.Equal(t, 10, data.Pagination.Limit)
+	assert.Equal(t, 31, data.Pagination.Total)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestIncomeHandler_GetAllIncomes_InvalidOffset(t *testing.T) {
+	mockService := new(mocks.IncomeService)
+	handler := NewIncomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/incomes/?offset=-1", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllIncomes(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "invalid offset")
+	mockService.AssertNotCalled(t, "GetAll")
+}
+
+func TestIncomeHandler_GetAllIncomes_InvalidLimit(t *testing.T) {
+	mockService := new(mocks.IncomeService)
+	handler := NewIncomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/incomes/?limit=101", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllIncomes(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "limit must be less than or equal to 100")
+	mockService.AssertNotCalled(t, "GetAll")
 }
 
 func TestIncomeHandler_GetAllIncomes_BadFromAndToDates(t *testing.T) {
@@ -413,7 +488,7 @@ func TestIncomeHandler_GetAllIncomes_BadFromAndToDates(t *testing.T) {
 	userId := 123
 	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return([]domain.Income(nil), invalidDatesErr)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId, 20, 0).Return([]domain.Income(nil), 0, invalidDatesErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
@@ -476,7 +551,7 @@ func TestIncomeHandler_GetAllIncomes_ServiceError(t *testing.T) {
 
 	userId := 123
 	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return([]domain.Income(nil), assert.AnError)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId, 20, 0).Return([]domain.Income(nil), 0, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/incomes/", nil)
 	req = req.WithContext(ctx)

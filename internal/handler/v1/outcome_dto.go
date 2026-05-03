@@ -17,12 +17,6 @@ type GetAllOutcomeRequest struct {
 	CategoryId int       `json:"categoryId"` // ID of a category (optional)
 }
 
-type PaginationResponse struct {
-	Offset int `json:"offset"`
-	Limit  int `json:"limit"`
-	Total  int `json:"total"`
-}
-
 type PaginatedOutcomesResponse struct {
 	Data       []OutcomeResponse  `json:"data"`
 	Pagination PaginationResponse `json:"pagination"`

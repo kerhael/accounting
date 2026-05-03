@@ -168,13 +168,15 @@ func TestGetAllIncomes_Success(t *testing.T) {
 			UserId:    userId,
 		},
 	}
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(expectedIncomes, nil)
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId, 20, 0).Return(expectedIncomes, nil)
+	mockRepo.On("CountAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(2, nil)
 
-	incomes, err := service.GetAll(ctx, nil, nil, userId)
+	incomes, total, err := service.GetAll(ctx, nil, nil, userId, 20, 0)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, incomes)
 	assert.Len(t, incomes, 2)
+	assert.Equal(t, 2, total)
 	assert.Equal(t, expectedIncomes[0].ID, incomes[0].ID)
 	assert.Equal(t, expectedIncomes[0].Name, incomes[0].Name)
 	assert.Equal(t, expectedIncomes[1].ID, incomes[1].ID)
@@ -192,11 +194,12 @@ func TestGetAllIncomes_InvalidDates(t *testing.T) {
 	from := to.Add(24 * time.Hour)
 	userId := 123
 
-	incomes, err := service.GetAll(ctx, &from, &to, userId)
+	incomes, total, err := service.GetAll(ctx, &from, &to, userId, 20, 0)
 
 	assert.Error(t, err)
 	assert.Nil(t, incomes)
 	assert.IsType(t, &domain.InvalidDateError{}, err)
+	assert.Equal(t, 0, total)
 
 	// Repository should not be called since validation happens first
 	mockRepo.AssertNotCalled(t, "FindAll", mock.Anything, mock.Anything, mock.Anything, userId)
@@ -208,14 +211,16 @@ func TestGetAllIncomes_EmptyList(t *testing.T) {
 	ctx := context.Background()
 
 	expectedIncomes := []domain.Income{}
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return(expectedIncomes, nil)
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123, 20, 0).Return(expectedIncomes, nil)
+	mockRepo.On("CountAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return(0, nil)
 
-	incomes, err := service.GetAll(ctx, nil, nil, 123)
+	incomes, total, err := service.GetAll(ctx, nil, nil, 123, 20, 0)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, incomes)
 	assert.Len(t, incomes, 0)
 	assert.Empty(t, incomes)
+	assert.Equal(t, 0, total)
 
 	mockRepo.AssertExpectations(t)
 }
@@ -225,13 +230,42 @@ func TestGetAllIncomes_RepoError(t *testing.T) {
 	service := NewIncomeService(mockRepo)
 	ctx := context.Background()
 
-	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123).Return([]domain.Income(nil), errors.New("repo error"))
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 123, 20, 0).Return([]domain.Income(nil), errors.New("repo error"))
 
-	incomes, err := service.GetAll(ctx, nil, nil, 123)
+	incomes, total, err := service.GetAll(ctx, nil, nil, 123, 20, 0)
 
 	assert.Error(t, err)
 	assert.Nil(t, incomes)
 	assert.Equal(t, "repo error", err.Error())
+	assert.Equal(t, 0, total)
+
+	mockRepo.AssertExpectations(t)
+}
+
+func TestGetAllIncomes_CountError(t *testing.T) {
+	mockRepo := new(mocks.IncomeRepository)
+	service := NewIncomeService(mockRepo)
+	ctx := context.Background()
+
+	userId := 123
+	expectedIncomes := []domain.Income{
+		{
+			ID:        1,
+			Name:      "Restaurant",
+			Amount:    1999,
+			CreatedAt: &time.Time{},
+			UserId:    userId,
+		},
+	}
+	mockRepo.On("FindAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId, 20, 0).Return(expectedIncomes, nil)
+	mockRepo.On("CountAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), userId).Return(0, errors.New("count error"))
+
+	incomes, total, err := service.GetAll(ctx, nil, nil, userId, 20, 0)
+
+	assert.Error(t, err)
+	assert.Nil(t, incomes)
+	assert.Equal(t, 0, total)
+	assert.Equal(t, "count error", err.Error())
 
 	mockRepo.AssertExpectations(t)
 }

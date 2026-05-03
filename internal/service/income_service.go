@@ -13,7 +13,7 @@ import (
 
 type IncomeServiceInterface interface {
 	Create(ctx context.Context, name string, amount int, createdAt *time.Time, userId int) (*domain.Income, error)
-	GetAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error)
+	GetAll(ctx context.Context, from *time.Time, to *time.Time, userId int, limit int, offset int) ([]domain.Income, int, error)
 	GetById(ctx context.Context, id int, userId int) (*domain.Income, error)
 	PatchById(ctx context.Context, id int, name string, amount int, createdAt *time.Time, userId int) (*domain.Income, error)
 	DeleteById(ctx context.Context, id int, userId int) error
@@ -61,19 +61,24 @@ func (s *IncomeService) Create(ctx context.Context, name string, amount int, cre
 	return income, nil
 }
 
-func (s *IncomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error) {
+func (s *IncomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, userId int, limit int, offset int) ([]domain.Income, int, error) {
 	if from != nil && to != nil && from.After(*to) {
-		return nil, &domain.InvalidDateError{
+		return nil, 0, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
 		}
 	}
 
-	incomes, err := s.repo.FindAll(ctx, from, to, userId)
+	incomes, err := s.repo.FindAll(ctx, from, to, userId, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return incomes, nil
+	total, err := s.repo.CountAll(ctx, from, to, userId)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return incomes, total, nil
 }
 
 func (s *IncomeService) GetById(ctx context.Context, id int, userId int) (*domain.Income, error) {

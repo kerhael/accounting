@@ -284,16 +284,25 @@ const docTemplate = `{
                         "description": "End date filter (ISO 8601 format, defaults to now)",
                         "name": "to",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items offset (defaults to 0)",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items limit (defaults to 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/v1.IncomeResponse"
-                            }
+                            "$ref": "#/definitions/v1.PaginatedIncomesResponse"
                         }
                     },
                     "400": {
@@ -564,7 +573,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Retrieve all outcomes with optional date filtering (defaults to current month if not provided)",
+                "description": "Retrieve all outcomes with optional category and date filtering (defaults to current month if not provided)",
                 "consumes": [
                     "application/json"
                 ],
@@ -586,6 +595,12 @@ const docTemplate = `{
                         "type": "string",
                         "description": "End date filter (ISO 8601 format, defaults to now)",
                         "name": "to",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Category ID filter",
+                        "name": "categoryId",
                         "in": "query"
                     },
                     {
@@ -1667,6 +1682,20 @@ const docTemplate = `{
                 "name": {
                     "description": "Name of the expense",
                     "type": "string"
+                }
+            }
+        },
+        "v1.PaginatedIncomesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.IncomeResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/v1.PaginationResponse"
                 }
             }
         },

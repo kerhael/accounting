@@ -81,12 +81,13 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 
 // Get all outcomes
 // @Summary      Get all outcomes
-// @Description  Retrieve all outcomes with optional date filtering (defaults to current month if not provided)
+// @Description  Retrieve all outcomes with optional category and date filtering (defaults to current month if not provided)
 // @Tags         outcomes
 // @Accept       json
 // @Produce      json
 // @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
+// @Param        categoryId    query    int false "Category ID filter"
 // @Param        offset query    int     false  "Items offset (defaults to 0)"
 // @Param        limit query     int     false  "Items limit (defaults to 20, max 100)"
 // @Success      200   {object}  PaginatedOutcomesResponse

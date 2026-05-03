@@ -15,6 +15,11 @@ type GetAllIncomeRequest struct {
 	To   time.Time `json:"to"`   // End date (optional)
 }
 
+type PaginatedIncomesResponse struct {
+	Data       []IncomeResponse   `json:"data"`
+	Pagination PaginationResponse `json:"pagination"`
+}
+
 type IncomeResponse struct {
 	Name      string     `json:"name"`      // Name of the income
 	CreatedAt *time.Time `json:"createdAt"` // Date of the income (ex: "2026-01-01T00:00:00Z")

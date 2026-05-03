@@ -10,7 +10,8 @@ import (
 
 type IncomeRepository interface {
 	Create(ctx context.Context, c *domain.Income) error
-	FindAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error)
+	FindAll(ctx context.Context, from *time.Time, to *time.Time, userId int, limit int, offset int) ([]domain.Income, error)
+	CountAll(ctx context.Context, from *time.Time, to *time.Time, userId int) (int, error)
 	FindById(ctx context.Context, id int, userId int) (*domain.Income, error)
 	Update(ctx context.Context, o *domain.Income) error
 	DeleteById(ctx context.Context, id int, userId int) error
@@ -33,8 +34,8 @@ func (r *PostgresIncomeRepository) Create(ctx context.Context, i *domain.Income)
 	return r.db.QueryRow(ctx, query, i.Name, i.Amount, &i.CreatedAt, i.UserId).Scan(&i.ID)
 }
 
-func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error) {
-	query := `SELECT id, name, amount, created_at FROM incomes WHERE user_id = $1`
+func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, userId int, limit int, offset int) ([]domain.Income, error) {
+	query := `SELECT id, name, amount, created_at, user_id FROM incomes WHERE user_id = $1`
 	args := []any{userId}
 	argCount := 1
 
@@ -52,7 +53,13 @@ func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time,
 		query += ` AND created_at <= NOW()`
 	}
 
-	query += ` ORDER BY created_at DESC`
+	query += ` ORDER BY created_at DESC, id DESC`
+	argCount++
+	query += ` LIMIT $` + strconv.Itoa(argCount)
+	args = append(args, limit)
+	argCount++
+	query += ` OFFSET $` + strconv.Itoa(argCount)
+	args = append(args, offset)
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -76,11 +83,39 @@ func (r *PostgresIncomeRepository) FindAll(ctx context.Context, from *time.Time,
 	return incomes, nil
 }
 
+func (r *PostgresIncomeRepository) CountAll(ctx context.Context, from *time.Time, to *time.Time, userId int) (int, error) {
+	query := `SELECT COUNT(*) FROM incomes WHERE user_id = $1`
+	args := []any{userId}
+	argCount := 1
+
+	if from != nil {
+		argCount++
+		query += ` AND created_at >= $` + strconv.Itoa(argCount)
+		args = append(args, *from)
+	}
+
+	if to != nil {
+		argCount++
+		query += ` AND created_at <= $` + strconv.Itoa(argCount)
+		args = append(args, *to)
+	} else {
+		query += ` AND created_at <= NOW()`
+	}
+
+	var total int
+	err := r.db.QueryRow(ctx, query, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
+}
+
 func (r *PostgresIncomeRepository) FindById(ctx context.Context, id int, userId int) (*domain.Income, error) {
 	var i domain.Income
 
 	query := `
-		SELECT id, name, amount, created_at FROM incomes
+		SELECT id, name, amount, created_at, user_id FROM incomes
 		WHERE id = $1 AND user_id = $2
 	`
 

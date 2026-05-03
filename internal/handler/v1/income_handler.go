@@ -83,7 +83,9 @@ func (h *IncomeHandler) PostIncome(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
-// @Success      200   {array}   IncomeResponse
+// @Param        offset query    int     false  "Items offset (defaults to 0)"
+// @Param        limit query     int     false  "Items limit (defaults to 20, max 100)"
+// @Success      200   {object}  PaginatedIncomesResponse
 // @Failure      400   {object}  ErrorResponse  "Bad request error"
 // @Failure      401   {object}  ErrorResponse  "Unauthorized error"
 // @Failure      404   {object}  ErrorResponse  "Not found error"
@@ -98,6 +100,8 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var from, to *time.Time
+	offset := domain.DefaultOffset
+	limit := domain.DefaultLimit
 
 	fromStr := r.URL.Query().Get("from")
 	if fromStr != "" {
@@ -127,7 +131,31 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 		to = &now
 	}
 
-	incomes, err := h.service.GetAll(r.Context(), from, to, userId)
+	offsetStr := r.URL.Query().Get("offset")
+	if offsetStr != "" {
+		parsedOffset, err := strconv.Atoi(offsetStr)
+		if err != nil || parsedOffset < 0 {
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid offset")
+			return
+		}
+		offset = parsedOffset
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr != "" {
+		parsedLimit, err := strconv.Atoi(limitStr)
+		if err != nil || parsedLimit <= 0 {
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid limit")
+			return
+		}
+		if parsedLimit > domain.MaxLimit {
+			utils.WriteJSONError(w, http.StatusBadRequest, "limit must be less than or equal to 100")
+			return
+		}
+		limit = parsedLimit
+	}
+
+	incomes, total, err := h.service.GetAll(r.Context(), from, to, userId, limit, offset)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -137,7 +165,14 @@ func (h *IncomeHandler) GetAllIncomes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, toIncomesResponse(incomes))
+	utils.WriteJSON(w, http.StatusOK, PaginatedIncomesResponse{
+		Data: toIncomesResponse(incomes),
+		Pagination: PaginationResponse{
+			Offset: offset,
+			Limit:  limit,
+			Total:  total,
+		},
+	})
 }
 
 // Get an income

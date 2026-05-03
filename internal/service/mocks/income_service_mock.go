@@ -20,15 +20,20 @@ func (m *IncomeService) Create(ctx context.Context, name string, amount int, cre
 	return nil, args.Error(1)
 }
 
-func (m *IncomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, userId int) ([]domain.Income, error) {
-	args := m.Called(ctx, from, to, userId)
+func (m *IncomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, userId int, limit int, offset int) ([]domain.Income, int, error) {
+	args := m.Called(ctx, from, to, userId, limit, offset)
 
 	var incomes []domain.Income
 	if args.Get(0) != nil {
 		incomes = args.Get(0).([]domain.Income)
 	}
 
-	return incomes, args.Error(1)
+	var total int
+	if args.Get(1) != nil {
+		total = args.Get(1).(int)
+	}
+
+	return incomes, total, args.Error(2)
 }
 
 func (m *IncomeService) GetById(ctx context.Context, id int, userId int) (*domain.Income, error) {

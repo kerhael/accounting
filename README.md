@@ -347,10 +347,13 @@ curl -X POST http://localhost:8080/api/v1/incomes/ \
 
 **GET** `/api/v1/incomes/`
 
-Retrieve all incomes.
+Retrieve all incomes. Supports pagination with `offset` and `limit` query parameters.
 
 ```bash
 curl http://localhost:8080/api/v1/incomes/ \
+  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
+
+curl http://localhost:8080/api/v1/incomes/?offset=20&limit=20 \
   -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzIxMTU5NjQsInVzZXJfaWQiOjF9.kbwcJlJT-lZDS-IJeFL_duEDmvWT4zRM5jZQE6RHdpk"
 
 curl http://localhost:8080/api/v1/incomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z \
@@ -459,5 +462,4 @@ Error response format:
 
 
 TODO: 
-- pagination
 - frontend
