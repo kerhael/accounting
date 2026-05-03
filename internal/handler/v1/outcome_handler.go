@@ -87,7 +87,9 @@ func (h *OutcomeHandler) PostOutcome(w http.ResponseWriter, r *http.Request) {
 // @Produce      json
 // @Param        from  query     string  false  "Start date filter (ISO 8601 format, defaults to first day of current month)"
 // @Param        to    query     string  false  "End date filter (ISO 8601 format, defaults to now)"
-// @Success      200   {array}   OutcomeResponse
+// @Param        offset query    int     false  "Items offset (defaults to 0)"
+// @Param        limit query     int     false  "Items limit (defaults to 20, max 100)"
+// @Success      200   {object}  PaginatedOutcomesResponse
 // @Failure      400   {object}  ErrorResponse  "Bad request error"
 // @Failure      401   {object}   ErrorResponse  "Unauthorized error"
 // @Failure      404   {object}  ErrorResponse  "Not found error"
@@ -103,6 +105,8 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 
 	var from, to *time.Time
 	var categoryId int
+	offset := domain.DefaultOffset
+	limit := domain.DefaultLimit
 
 	fromStr := r.URL.Query().Get("from")
 	if fromStr != "" {
@@ -134,6 +138,30 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 		categoryId = categoryIdInt
 	}
 
+	offsetStr := r.URL.Query().Get("offset")
+	if offsetStr != "" {
+		parsedOffset, err := strconv.Atoi(offsetStr)
+		if err != nil || parsedOffset < 0 {
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid offset")
+			return
+		}
+		offset = parsedOffset
+	}
+
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr != "" {
+		parsedLimit, err := strconv.Atoi(limitStr)
+		if err != nil || parsedLimit <= 0 {
+			utils.WriteJSONError(w, http.StatusBadRequest, "invalid limit")
+			return
+		}
+		if parsedLimit > domain.MaxLimit {
+			utils.WriteJSONError(w, http.StatusBadRequest, "limit must be less than or equal to 100")
+			return
+		}
+		limit = parsedLimit
+	}
+
 	// If no dates provided, default to current month
 	if from == nil && to == nil {
 		now := time.Now()
@@ -142,7 +170,7 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 		to = &now
 	}
 
-	outcomes, err := h.service.GetAll(r.Context(), from, to, categoryId, userId)
+	outcomes, total, err := h.service.GetAll(r.Context(), from, to, categoryId, userId, limit, offset)
 	if err != nil {
 		if error, ok := errors.AsType[*domain.InvalidDateError](err); ok {
 			utils.WriteJSONError(w, http.StatusBadRequest, error.Error())
@@ -156,7 +184,14 @@ func (h *OutcomeHandler) GetAllOutcomes(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, toOutcomesResponse(outcomes))
+	utils.WriteJSON(w, http.StatusOK, PaginatedOutcomesResponse{
+		Data: toOutcomesResponse(outcomes),
+		Pagination: PaginationResponse{
+			Offset: offset,
+			Limit:  limit,
+			Total:  total,
+		},
+	})
 }
 
 // Get an outcome

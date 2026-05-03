@@ -13,7 +13,7 @@ import (
 
 type OutcomeServiceInterface interface {
 	Create(ctx context.Context, name string, amount int, categoryId int, createdAt *time.Time, userId int) (*domain.Outcome, error)
-	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error)
+	GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int, limit int, offset int) ([]domain.Outcome, int, error)
 	GetById(ctx context.Context, id int, userId int) (*domain.Outcome, error)
 	PatchById(ctx context.Context, id int, name string, amount int, categoryId int, createdAt *time.Time, userId int) (*domain.Outcome, error)
 	DeleteById(ctx context.Context, id int, userId int) error
@@ -79,9 +79,9 @@ func (s *OutcomeService) Create(ctx context.Context, name string, amount int, ca
 	return outcome, nil
 }
 
-func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error) {
+func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int, limit int, offset int) ([]domain.Outcome, int, error) {
 	if from != nil && to != nil && from.After(*to) {
-		return nil, &domain.InvalidDateError{
+		return nil, 0, &domain.InvalidDateError{
 			UnderlyingCause: errors.New("start date must be before end date"),
 		}
 	}
@@ -89,18 +89,23 @@ func (s *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.T
 	if categoryId != 0 {
 		_, err := s.categoryRepo.FindById(ctx, categoryId, userId)
 		if err != nil {
-			return nil, &domain.InvalidEntityError{
+			return nil, 0, &domain.InvalidEntityError{
 				UnderlyingCause: errors.New("invalid category"),
 			}
 		}
 	}
 
-	outcomes, err := s.repo.FindAll(ctx, from, to, categoryId, userId)
+	outcomes, err := s.repo.FindAll(ctx, from, to, categoryId, userId, limit, offset)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 
-	return outcomes, nil
+	total, err := s.repo.CountAll(ctx, from, to, categoryId, userId)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return outcomes, total, nil
 }
 
 func (s *OutcomeService) GetById(ctx context.Context, id int, userId int) (*domain.Outcome, error) {

@@ -583,16 +583,25 @@
                         "description": "End date filter (ISO 8601 format, defaults to now)",
                         "name": "to",
                         "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items offset (defaults to 0)",
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items limit (defaults to 20, max 100)",
+                        "name": "limit",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/v1.OutcomeResponse"
-                            }
+                            "$ref": "#/definitions/v1.PaginatedOutcomesResponse"
                         }
                     },
                     "400": {
@@ -1654,6 +1663,34 @@
                 "name": {
                     "description": "Name of the expense",
                     "type": "string"
+                }
+            }
+        },
+        "v1.PaginatedOutcomesResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1.OutcomeResponse"
+                    }
+                },
+                "pagination": {
+                    "$ref": "#/definitions/v1.PaginationResponse"
+                }
+            }
+        },
+        "v1.PaginationResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },

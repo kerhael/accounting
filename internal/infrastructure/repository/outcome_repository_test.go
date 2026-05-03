@@ -54,13 +54,33 @@ func TestPostgresOutcomeRepository_FindAll(t *testing.T) {
 		AddRow(2, "Food", 200, 2, &now, 123)
 
 	mock.ExpectQuery("SELECT (.+) FROM outcomes").
-		WithArgs(123).
+		WithArgs(123, 20, 0).
 		WillReturnRows(rows)
 
-	outcomes, err := repo.FindAll(context.Background(), nil, nil, 0, 123)
+	outcomes, err := repo.FindAll(context.Background(), nil, nil, 0, 123, 20, 0)
 
 	assert.NoError(t, err)
 	assert.Len(t, outcomes, 2)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+func TestPostgresOutcomeRepository_CountAll(t *testing.T) {
+	mock, _ := pgxmock.NewPool()
+	defer mock.Close()
+
+	repo := NewOutcomeRepository(mock)
+
+	rows := pgxmock.NewRows([]string{"count"}).AddRow(2)
+
+	mock.ExpectQuery("SELECT COUNT").
+		WithArgs(123).
+		WillReturnRows(rows)
+
+	total, err := repo.CountAll(context.Background(), nil, nil, 0, 123)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 2, total)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }

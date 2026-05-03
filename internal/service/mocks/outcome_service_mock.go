@@ -20,15 +20,20 @@ func (m *OutcomeService) Create(ctx context.Context, name string, amount int, ca
 	return nil, args.Error(1)
 }
 
-func (m *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error) {
-	args := m.Called(ctx, from, to, categoryId, userId)
+func (m *OutcomeService) GetAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int, limit int, offset int) ([]domain.Outcome, int, error) {
+	args := m.Called(ctx, from, to, categoryId, userId, limit, offset)
 
 	var outcomes []domain.Outcome
 	if args.Get(0) != nil {
 		outcomes = args.Get(0).([]domain.Outcome)
 	}
 
-	return outcomes, args.Error(1)
+	var total int
+	if args.Get(1) != nil {
+		total = args.Get(1).(int)
+	}
+
+	return outcomes, total, args.Error(2)
 }
 
 func (m *OutcomeService) GetById(ctx context.Context, id int, userId int) (*domain.Outcome, error) {

@@ -137,6 +137,24 @@ definitions:
         description: Name of the expense
         type: string
     type: object
+  v1.PaginatedOutcomesResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/v1.OutcomeResponse'
+        type: array
+      pagination:
+        $ref: '#/definitions/v1.PaginationResponse'
+    type: object
+  v1.PaginationResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
   v1.PatchIncomeByIdRequest:
     properties:
       amount:
@@ -582,15 +600,21 @@ paths:
         in: query
         name: to
         type: string
+      - description: Items offset (defaults to 0)
+        in: query
+        name: offset
+        type: integer
+      - description: Items limit (defaults to 20, max 100)
+        in: query
+        name: limit
+        type: integer
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            items:
-              $ref: '#/definitions/v1.OutcomeResponse'
-            type: array
+            $ref: '#/definitions/v1.PaginatedOutcomesResponse'
         "400":
           description: Bad request error
           schema:

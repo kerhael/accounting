@@ -10,7 +10,8 @@ import (
 
 type OutcomeRepository interface {
 	Create(ctx context.Context, c *domain.Outcome) error
-	FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error)
+	FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int, limit int, offset int) ([]domain.Outcome, error)
+	CountAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) (int, error)
 	FindById(ctx context.Context, id int, userId int) (*domain.Outcome, error)
 	Update(ctx context.Context, o *domain.Outcome) error
 	DeleteById(ctx context.Context, id int, userId int) error
@@ -37,7 +38,7 @@ func (r *PostgresOutcomeRepository) Create(ctx context.Context, o *domain.Outcom
 	return r.db.QueryRow(ctx, query, o.Name, o.Amount, o.CategoryId, &o.CreatedAt, o.UserId).Scan(&o.ID)
 }
 
-func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error) {
+func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int, limit int, offset int) ([]domain.Outcome, error) {
 	query := `SELECT id, name, amount, category_id, created_at, user_id FROM outcomes WHERE user_id = $1`
 	args := []any{userId}
 	argCount := 1
@@ -62,7 +63,13 @@ func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time
 		args = append(args, categoryId)
 	}
 
-	query += ` ORDER BY created_at DESC`
+	query += ` ORDER BY created_at DESC, id DESC`
+	argCount++
+	query += ` LIMIT $` + strconv.Itoa(argCount)
+	args = append(args, limit)
+	argCount++
+	query += ` OFFSET $` + strconv.Itoa(argCount)
+	args = append(args, offset)
 
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
@@ -84,6 +91,40 @@ func (r *PostgresOutcomeRepository) FindAll(ctx context.Context, from *time.Time
 	}
 
 	return outcomes, nil
+}
+
+func (r *PostgresOutcomeRepository) CountAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) (int, error) {
+	query := `SELECT COUNT(*) FROM outcomes WHERE user_id = $1`
+	args := []any{userId}
+	argCount := 1
+
+	if from != nil {
+		argCount++
+		query += ` AND created_at >= $` + strconv.Itoa(argCount)
+		args = append(args, *from)
+	}
+
+	if to != nil {
+		argCount++
+		query += ` AND created_at <= $` + strconv.Itoa(argCount)
+		args = append(args, *to)
+	} else {
+		query += ` AND created_at <= NOW()`
+	}
+
+	if categoryId != 0 {
+		argCount++
+		query += ` AND category_id = $` + strconv.Itoa(argCount)
+		args = append(args, categoryId)
+	}
+
+	var total int
+	err := r.db.QueryRow(ctx, query, args...).Scan(&total)
+	if err != nil {
+		return 0, err
+	}
+
+	return total, nil
 }
 
 func (r *PostgresOutcomeRepository) FindById(ctx context.Context, id int, userId int) (*domain.Outcome, error) {

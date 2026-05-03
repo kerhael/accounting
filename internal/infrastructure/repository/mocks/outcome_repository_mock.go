@@ -17,8 +17,8 @@ func (m *OutcomeRepository) Create(ctx context.Context, o *domain.Outcome) error
 	return args.Error(0)
 }
 
-func (m *OutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) ([]domain.Outcome, error) {
-	args := m.Called(ctx, from, to, categoryId, userId)
+func (m *OutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int, limit int, offset int) ([]domain.Outcome, error) {
+	args := m.Called(ctx, from, to, categoryId, userId, limit, offset)
 
 	var outcomes []domain.Outcome
 	if args.Get(0) != nil {
@@ -26,6 +26,17 @@ func (m *OutcomeRepository) FindAll(ctx context.Context, from *time.Time, to *ti
 	}
 
 	return outcomes, args.Error(1)
+}
+
+func (m *OutcomeRepository) CountAll(ctx context.Context, from *time.Time, to *time.Time, categoryId int, userId int) (int, error) {
+	args := m.Called(ctx, from, to, categoryId, userId)
+
+	var total int
+	if args.Get(0) != nil {
+		total = args.Get(0).(int)
+	}
+
+	return total, args.Error(1)
 }
 
 func (m *OutcomeRepository) FindById(ctx context.Context, id int, userId int) (*domain.Outcome, error) {

@@ -301,7 +301,7 @@ func TestOutcomeHandler_GetAllOutcomes_Success(t *testing.T) {
 			UserId:     userId,
 		},
 	}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId).Return(expectedOutcomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId, 20, 0).Return(expectedOutcomes, 2, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/", nil)
 	req = req.WithContext(ctx)
@@ -314,14 +314,17 @@ func TestOutcomeHandler_GetAllOutcomes_Success(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var data []domain.Outcome
+	var data PaginatedOutcomesResponse
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
-	assert.Len(t, data, 2)
-	assert.Equal(t, expectedOutcomes[0].ID, data[0].ID)
-	assert.Equal(t, expectedOutcomes[0].Name, data[0].Name)
-	assert.Equal(t, expectedOutcomes[1].ID, data[1].ID)
-	assert.Equal(t, expectedOutcomes[1].Name, data[1].Name)
+	assert.Len(t, data.Data, 2)
+	assert.Equal(t, expectedOutcomes[0].ID, data.Data[0].ID)
+	assert.Equal(t, expectedOutcomes[0].Name, data.Data[0].Name)
+	assert.Equal(t, expectedOutcomes[1].ID, data.Data[1].ID)
+	assert.Equal(t, expectedOutcomes[1].Name, data.Data[1].Name)
+	assert.Equal(t, 0, data.Pagination.Offset)
+	assert.Equal(t, 20, data.Pagination.Limit)
+	assert.Equal(t, 2, data.Pagination.Total)
 
 	mockService.AssertExpectations(t)
 }
@@ -352,7 +355,7 @@ func TestOutcomeHandler_GetAllOutcomes_EmptyList(t *testing.T) {
 	userId := 123
 	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	expectedOutcomes := []domain.Outcome{}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId).Return(expectedOutcomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId, 20, 0).Return(expectedOutcomes, 0, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/", nil)
 	req = req.WithContext(ctx)
@@ -365,11 +368,12 @@ func TestOutcomeHandler_GetAllOutcomes_EmptyList(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var data []domain.Outcome
+	var data PaginatedOutcomesResponse
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
-	assert.Len(t, data, 0)
-	assert.Empty(t, data)
+	assert.Len(t, data.Data, 0)
+	assert.Empty(t, data.Data)
+	assert.Equal(t, 0, data.Pagination.Total)
 
 	mockService.AssertExpectations(t)
 }
@@ -393,7 +397,7 @@ func TestOutcomeHandler_GetAllOutcomes_WithDateFilters(t *testing.T) {
 			UserId:     userId,
 		},
 	}
-	mockService.On("GetAll", ctx, &from, &to, 0, userId).Return(expectedOutcomes, nil)
+	mockService.On("GetAll", ctx, &from, &to, 0, userId, 20, 0).Return(expectedOutcomes, 1, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?from=2025-01-01T00:00:00Z&to=2026-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
@@ -406,15 +410,15 @@ func TestOutcomeHandler_GetAllOutcomes_WithDateFilters(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var data []domain.Outcome
+	var data PaginatedOutcomesResponse
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
-	assert.Len(t, data, 1)
-	assert.Equal(t, expectedOutcomes[0].ID, data[0].ID)
-	assert.Equal(t, expectedOutcomes[0].Name, data[0].Name)
-	assert.Equal(t, expectedOutcomes[0].Amount, data[0].Amount)
-	assert.Equal(t, expectedOutcomes[0].CategoryId, data[0].CategoryId)
-	assert.Equal(t, expectedOutcomes[0].CreatedAt, data[0].CreatedAt)
+	assert.Len(t, data.Data, 1)
+	assert.Equal(t, expectedOutcomes[0].ID, data.Data[0].ID)
+	assert.Equal(t, expectedOutcomes[0].Name, data.Data[0].Name)
+	assert.Equal(t, expectedOutcomes[0].Amount, data.Data[0].Amount)
+	assert.Equal(t, expectedOutcomes[0].CategoryId, data.Data[0].CategoryId)
+	assert.Equal(t, expectedOutcomes[0].CreatedAt, data.Data[0].CreatedAt)
 
 	mockService.AssertExpectations(t)
 }
@@ -437,7 +441,7 @@ func TestOutcomeHandler_GetAllOutcomes_WithCategoryFilter(t *testing.T) {
 			UserId:     userId,
 		},
 	}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), categoryId, userId).Return(expectedOutcomes, nil)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), categoryId, userId, 20, 0).Return(expectedOutcomes, 1, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?categoryId=1", nil)
 	req = req.WithContext(ctx)
@@ -450,17 +454,89 @@ func TestOutcomeHandler_GetAllOutcomes_WithCategoryFilter(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	var data []domain.Outcome
+	var data PaginatedOutcomesResponse
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
-	assert.Len(t, data, 1)
-	assert.Equal(t, expectedOutcomes[0].ID, data[0].ID)
-	assert.Equal(t, expectedOutcomes[0].Name, data[0].Name)
-	assert.Equal(t, expectedOutcomes[0].Amount, data[0].Amount)
-	assert.Equal(t, expectedOutcomes[0].CategoryId, data[0].CategoryId)
-	assert.Equal(t, expectedOutcomes[0].CreatedAt, data[0].CreatedAt)
+	assert.Len(t, data.Data, 1)
+	assert.Equal(t, expectedOutcomes[0].ID, data.Data[0].ID)
+	assert.Equal(t, expectedOutcomes[0].Name, data.Data[0].Name)
+	assert.Equal(t, expectedOutcomes[0].Amount, data.Data[0].Amount)
+	assert.Equal(t, expectedOutcomes[0].CategoryId, data.Data[0].CategoryId)
+	assert.Equal(t, expectedOutcomes[0].CreatedAt, data.Data[0].CreatedAt)
 
 	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetAllOutcomes_WithPagination(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	userId := 123
+	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
+	expectedOutcomes := []domain.Outcome{
+		{
+			ID:         3,
+			Name:       "Train",
+			Amount:     2500,
+			CategoryId: 1,
+			CreatedAt:  &time.Time{},
+			UserId:     userId,
+		},
+	}
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId, 10, 20).Return(expectedOutcomes, 31, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/?offset=20&limit=10", nil)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllOutcomes(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	var data PaginatedOutcomesResponse
+	err := json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Len(t, data.Data, 1)
+	assert.Equal(t, 20, data.Pagination.Offset)
+	assert.Equal(t, 10, data.Pagination.Limit)
+	assert.Equal(t, 31, data.Pagination.Total)
+
+	mockService.AssertExpectations(t)
+}
+
+func TestOutcomeHandler_GetAllOutcomes_InvalidOffset(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/?offset=-1", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllOutcomes(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "invalid offset")
+	mockService.AssertNotCalled(t, "GetAll")
+}
+
+func TestOutcomeHandler_GetAllOutcomes_InvalidLimit(t *testing.T) {
+	mockService := new(mocks.OutcomeService)
+	handler := NewOutcomeHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodGet, "/outcomes/?limit=101", nil)
+	ctx := auth.ContextWithUserIDForTests(req.Context(), 123)
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	handler.GetAllOutcomes(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "limit must be less than or equal to 100")
+	mockService.AssertNotCalled(t, "GetAll")
 }
 
 func TestOutcomeHandler_GetAllOutcomes_BadFromAndToDates(t *testing.T) {
@@ -470,7 +546,7 @@ func TestOutcomeHandler_GetAllOutcomes_BadFromAndToDates(t *testing.T) {
 	userId := 123
 	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	invalidDatesErr := &domain.InvalidDateError{UnderlyingCause: errors.New("start date must be before end date")}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId).Return([]domain.Outcome(nil), invalidDatesErr)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId, 20, 0).Return([]domain.Outcome(nil), 0, invalidDatesErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?from=2026-01-01T00:00:00Z&to=2025-01-01T00:00:00Z", nil)
 	req = req.WithContext(ctx)
@@ -534,7 +610,7 @@ func TestOutcomeHandler_GetAllOutcomes_CategoryNotFound(t *testing.T) {
 	userId := 123
 	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
 	invalidEntityErr := &domain.InvalidEntityError{UnderlyingCause: errors.New("invalid category")}
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 1, userId).Return([]domain.Outcome(nil), invalidEntityErr)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 1, userId, 20, 0).Return([]domain.Outcome(nil), 0, invalidEntityErr)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/?categoryId=1", nil)
 	req = req.WithContext(ctx)
@@ -557,7 +633,7 @@ func TestOutcomeHandler_GetAllOutcomes_ServiceError(t *testing.T) {
 
 	userId := 123
 	ctx := auth.ContextWithUserIDForTests(context.Background(), userId)
-	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId).Return([]domain.Outcome(nil), assert.AnError)
+	mockService.On("GetAll", ctx, mock.AnythingOfType("*time.Time"), mock.AnythingOfType("*time.Time"), 0, userId, 20, 0).Return([]domain.Outcome(nil), 0, assert.AnError)
 
 	req := httptest.NewRequest(http.MethodGet, "/outcomes/", nil)
 	req = req.WithContext(ctx)
