@@ -92,6 +92,9 @@ definitions:
     type: object
   v1.LoginResponse:
     properties:
+      refresh_token:
+        description: refresh token
+        type: string
       token:
         description: bearer token
         type: string
@@ -171,6 +174,20 @@ definitions:
         type: string
       password:
         description: User password (optional)
+        type: string
+    type: object
+  v1.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    type: object
+  v1.RefreshTokenResponse:
+    properties:
+      refresh_token:
+        description: refresh token
+        type: string
+      token:
+        description: bearer token
         type: string
     type: object
   v1.TotalOutcomeResponse:
@@ -921,6 +938,41 @@ paths:
       summary: Get total of outcomes
       tags:
       - outcomes
+  /refresh:
+    post:
+      consumes:
+      - application/json
+      description: Generate a new access token and refresh token from a valid refresh
+        token.
+      parameters:
+      - description: Refresh token payload
+        in: body
+        name: refresh
+        required: true
+        schema:
+          $ref: '#/definitions/v1.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1.RefreshTokenResponse'
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      summary: Refresh JWT tokens
+      tags:
+      - auth
   /users/:
     post:
       consumes:
@@ -957,6 +1009,38 @@ paths:
       tags:
       - users
   /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user by id
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad request error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "401":
+          description: Unauthorized error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/v1.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete a user
+      tags:
+      - users
     patch:
       consumes:
       - application/json

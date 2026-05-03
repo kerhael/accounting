@@ -6,7 +6,7 @@ A REST API for managing personal accounting data including categories and outcom
 
 ## Features
 
-- **Authentication**: Login
+- **Authentication**: Login and refresh token
 - **Users Management**: Create users
 - **Categories Management**: Create, read, and delete expense categories
 - **Incomes Tracking**: Record financial incomes with amounts, categories, and timestamps
@@ -124,6 +124,16 @@ Login.
 curl http://localhost:8080/api/v1/login/ \
   -H "Content-Type: application/json" \
   -d '{"email":"john.smith@gmail.com", "password":"plainPassword"}'
+```
+
+**POST** `/api/v1/refresh`
+
+Refresh access token.
+
+```bash
+curl http://localhost:8080/api/v1/refresh/ \
+  -H "Content-Type: application/json" \
+  -d '{"refresh_token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzI3MjA3NjQsInRva2VuX3R5cGUiOiJyZWZyZXNoIiwidXNlcl9pZCI6MX0.P6JL0ZpUL6r1s8DyGuUMQoRy8Rv9daE2tAupDuCseOg"}'
 ```
 
 #### Users
@@ -446,6 +456,5 @@ Error response format:
 
 
 TODO: 
-- refresh jwt token
 - pagination
 - frontend

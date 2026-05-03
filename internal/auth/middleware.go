@@ -14,7 +14,8 @@ type contextKey struct{}
 var userIDKey = contextKey{}
 
 type CustomClaims struct {
-	UserID int `json:"user_id"`
+	UserID    int    `json:"user_id"`
+	TokenType string `json:"token_type"`
 	jwt.RegisteredClaims
 }
 

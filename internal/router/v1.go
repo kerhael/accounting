@@ -38,4 +38,5 @@ func RegisterV1Routes(mux *http.ServeMux, h *handler.Handlers, rl *middleware.Ra
 	mux.Handle("DELETE  /api/v1/users/{id}", auth.AuthMiddleware(h.JWT)(http.HandlerFunc(h.V1.Users.DeleteUserById)))
 
 	mux.Handle("POST   /api/v1/login/", rl.RateLimitMiddleware(http.HandlerFunc(h.V1.Auth.Login)))
+	mux.Handle("POST   /api/v1/refresh/", rl.RateLimitMiddleware(http.HandlerFunc(h.V1.Auth.RefreshToken)))
 }

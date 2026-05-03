@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/kerhael/accounting/internal/domain"
 )
 
 const testSecret = "test_jwt_secret"
@@ -25,11 +26,11 @@ func TestNewJWTService(t *testing.T) {
 	})
 }
 
-func TestJWTService_GenerateJWT(t *testing.T) {
+func TestJWTService_GenerateAccessToken(t *testing.T) {
 	svc := newTestService()
 
 	t.Run("returns a non-empty token string", func(t *testing.T) {
-		tokenStr, err := svc.GenerateJWT(42)
+		tokenStr, err := svc.GenerateAccessToken(42)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -40,7 +41,7 @@ func TestJWTService_GenerateJWT(t *testing.T) {
 
 	t.Run("generated token contains correct user_id claim", func(t *testing.T) {
 		userID := 99
-		tokenStr, err := svc.GenerateJWT(userID)
+		tokenStr, err := svc.GenerateAccessToken(userID)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -56,8 +57,24 @@ func TestJWTService_GenerateJWT(t *testing.T) {
 		}
 	})
 
+	t.Run("generated token is an access token", func(t *testing.T) {
+		tokenStr, err := svc.GenerateAccessToken(1)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		claims, err := svc.ValidateJWT(tokenStr)
+		if err != nil {
+			t.Fatalf("expected valid token, got error: %v", err)
+		}
+
+		if claims.TokenType != domain.AccessTokenType {
+			t.Fatalf("expected token type %q, got %q", domain.AccessTokenType, claims.TokenType)
+		}
+	})
+
 	t.Run("generated token contains a future expiration claim", func(t *testing.T) {
-		tokenStr, err := svc.GenerateJWT(1)
+		tokenStr, err := svc.GenerateAccessToken(1)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -74,11 +91,72 @@ func TestJWTService_GenerateJWT(t *testing.T) {
 	})
 }
 
+func TestJWTService_GenerateRefreshToken(t *testing.T) {
+	svc := newTestService()
+
+	t.Run("returns a valid refresh token", func(t *testing.T) {
+		tokenStr, err := svc.GenerateRefreshToken(42)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		claims, err := svc.ValidateRefreshToken(tokenStr)
+		if err != nil {
+			t.Fatalf("expected valid refresh token, got error: %v", err)
+		}
+
+		if claims.UserID != 42 {
+			t.Fatalf("expected user_id %d, got %d", 42, claims.UserID)
+		}
+
+		if claims.TokenType != domain.RefreshTokenType {
+			t.Fatalf("expected token type %q, got %q", domain.RefreshTokenType, claims.TokenType)
+		}
+	})
+
+	t.Run("refresh token cannot be validated as access token", func(t *testing.T) {
+		tokenStr, err := svc.GenerateRefreshToken(42)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		_, err = svc.ValidateJWT(tokenStr)
+		if err == nil {
+			t.Fatal("expected an error when validating refresh token as access token")
+		}
+	})
+}
+
+func TestJWTService_GenerateTokenPair(t *testing.T) {
+	svc := newTestService()
+
+	accessToken, refreshToken, err := svc.GenerateTokenPair(42)
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+
+	if accessToken == "" {
+		t.Fatal("expected a non-empty access token")
+	}
+
+	if refreshToken == "" {
+		t.Fatal("expected a non-empty refresh token")
+	}
+
+	if _, err := svc.ValidateJWT(accessToken); err != nil {
+		t.Fatalf("expected valid access token, got %v", err)
+	}
+
+	if _, err := svc.ValidateRefreshToken(refreshToken); err != nil {
+		t.Fatalf("expected valid refresh token, got %v", err)
+	}
+}
+
 func TestJWTService_ValidateJWT(t *testing.T) {
 	svc := newTestService()
 
 	t.Run("valid token returns claims without error", func(t *testing.T) {
-		tokenStr, err := svc.GenerateJWT(7)
+		tokenStr, err := svc.GenerateAccessToken(7)
 		if err != nil {
 			t.Fatalf("expected no error generating token, got %v", err)
 		}
@@ -93,7 +171,7 @@ func TestJWTService_ValidateJWT(t *testing.T) {
 	})
 
 	t.Run("tampered token returns error", func(t *testing.T) {
-		tokenStr, err := svc.GenerateJWT(7)
+		tokenStr, err := svc.GenerateAccessToken(7)
 		if err != nil {
 			t.Fatalf("expected no error generating token, got %v", err)
 		}
@@ -106,8 +184,9 @@ func TestJWTService_ValidateJWT(t *testing.T) {
 
 	t.Run("token signed with different secret returns error", func(t *testing.T) {
 		claims := jwt.MapClaims{
-			"user_id": 1,
-			"exp":     time.Now().Add(24 * time.Hour).Unix(),
+			"user_id":    1,
+			"token_type": domain.AccessTokenType,
+			"exp":        time.Now().Add(24 * time.Hour).Unix(),
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenStr, err := token.SignedString([]byte("wrong_secret"))
@@ -123,8 +202,9 @@ func TestJWTService_ValidateJWT(t *testing.T) {
 
 	t.Run("expired token returns error", func(t *testing.T) {
 		claims := jwt.MapClaims{
-			"user_id": 1,
-			"exp":     time.Now().Add(-1 * time.Hour).Unix(),
+			"user_id":    1,
+			"token_type": domain.AccessTokenType,
+			"exp":        time.Now().Add(-1 * time.Hour).Unix(),
 		}
 		token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 		tokenStr, err := token.SignedString([]byte(testSecret))
@@ -147,7 +227,7 @@ func TestJWTService_ValidateJWT(t *testing.T) {
 
 	t.Run("two services with different secrets cannot validate each other's tokens", func(t *testing.T) {
 		svc2 := NewJWTService("another_secret")
-		tokenStr, err := svc2.GenerateJWT(1)
+		tokenStr, err := svc2.GenerateAccessToken(1)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}

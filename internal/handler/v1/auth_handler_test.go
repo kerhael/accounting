@@ -18,10 +18,6 @@ import (
 	"golang.org/x/time/rate"
 )
 
-type MockCheckPassword func(password, hash string) error
-
-type MockGenerateJWT func(userID int) (string, error)
-
 func TestAuthHandler_Login_Success(t *testing.T) {
 	mockService := new(mocks.UserService)
 	mockJWTService := auth.NewJWTService("test-secret")
@@ -59,8 +55,96 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 	err := json.NewDecoder(resp.Body).Decode(&data)
 	assert.NoError(t, err)
 	assert.Contains(t, data, "token")
+	assert.Contains(t, data, "refresh_token")
 
 	mockService.AssertExpectations(t)
+}
+
+func TestAuthHandler_RefreshToken_Success(t *testing.T) {
+	mockService := new(mocks.UserService)
+	mockJWTService := auth.NewJWTService("test-secret")
+	handler := NewAuthHandler(mockService, mockJWTService)
+
+	refreshToken, err := mockJWTService.GenerateRefreshToken(1)
+	assert.NoError(t, err)
+
+	input := RefreshTokenRequest{
+		RefreshToken: refreshToken,
+	}
+	body, _ := json.Marshal(input)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/refresh", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	handler.RefreshToken(w, req)
+
+	resp := w.Result()
+	defer resp.Body.Close()
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, "application/json", resp.Header.Get("Content-Type"))
+
+	var data map[string]interface{}
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	assert.NoError(t, err)
+	assert.Contains(t, data, "token")
+	assert.Contains(t, data, "refresh_token")
+
+	_, err = mockJWTService.ValidateJWT(data["token"].(string))
+	assert.NoError(t, err)
+	_, err = mockJWTService.ValidateRefreshToken(data["refresh_token"].(string))
+	assert.NoError(t, err)
+}
+
+func TestAuthHandler_RefreshToken_InvalidJSON(t *testing.T) {
+	mockService := new(mocks.UserService)
+	mockJWTService := auth.NewJWTService("test-secret")
+	handler := NewAuthHandler(mockService, mockJWTService)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/refresh", bytes.NewReader([]byte(`{invalid}`)))
+	w := httptest.NewRecorder()
+
+	handler.RefreshToken(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
+}
+
+func TestAuthHandler_RefreshToken_MissingRefreshToken(t *testing.T) {
+	mockService := new(mocks.UserService)
+	mockJWTService := auth.NewJWTService("test-secret")
+	handler := NewAuthHandler(mockService, mockJWTService)
+
+	body, _ := json.Marshal(RefreshTokenRequest{})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/refresh", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	handler.RefreshToken(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Result().StatusCode)
+	assert.Equal(t, "{\"message\":\"refresh_token is required\"}\n", w.Body.String())
+}
+
+func TestAuthHandler_RefreshToken_InvalidRefreshToken(t *testing.T) {
+	mockService := new(mocks.UserService)
+	mockJWTService := auth.NewJWTService("test-secret")
+	handler := NewAuthHandler(mockService, mockJWTService)
+
+	accessToken, err := mockJWTService.GenerateAccessToken(1)
+	assert.NoError(t, err)
+
+	input := RefreshTokenRequest{
+		RefreshToken: accessToken,
+	}
+	body, _ := json.Marshal(input)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/refresh", bytes.NewReader(body))
+	w := httptest.NewRecorder()
+
+	handler.RefreshToken(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Result().StatusCode)
+	assert.Equal(t, "{\"message\":\"invalid refresh token\"}\n", w.Body.String())
 }
 
 func TestAuthHandler_Login_InvalidJSON(t *testing.T) {

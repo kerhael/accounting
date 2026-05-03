@@ -66,13 +66,57 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := h.jwtService.GenerateJWT(user.ID)
+	token, refreshToken, err := h.jwtService.GenerateTokenPair(user.ID)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusInternalServerError, "could not generate token")
 		return
 	}
 
 	utils.WriteJSON(w, http.StatusOK, LoginResponse{
-		Token: token,
+		Token:        token,
+		RefreshToken: refreshToken,
+	})
+}
+
+// RefreshToken
+// @Summary      Refresh JWT tokens
+// @Description Generate a new access token and refresh token from a valid refresh token.
+// @Tags         auth
+// @Accept       json
+// @Produce      json
+// @Param        refresh  body      RefreshTokenRequest  true  "Refresh token payload"
+// @Success      200       {object}   RefreshTokenResponse
+// @Failure      400       {object}   ErrorResponse  "Bad request error"
+// @Failure      401       {object}   ErrorResponse  "Unauthorized error"
+// @Failure      500       {object}   ErrorResponse  "Internal server error"
+// @Router       /refresh [post]
+func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
+	var req RefreshTokenRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	if req.RefreshToken == "" {
+		utils.WriteJSONError(w, http.StatusBadRequest, "refresh_token is required")
+		return
+	}
+
+	claims, err := h.jwtService.ValidateRefreshToken(req.RefreshToken)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusUnauthorized, "invalid refresh token")
+		return
+	}
+
+	token, refreshToken, err := h.jwtService.GenerateTokenPair(claims.UserID)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusInternalServerError, "could not generate token")
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, RefreshTokenResponse{
+		Token:        token,
+		RefreshToken: refreshToken,
 	})
 }
